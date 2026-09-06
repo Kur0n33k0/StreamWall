@@ -8,7 +8,7 @@ une seule page.
 Contrairement à l'original (application Python/Pyramid nécessitant un
 serveur applicatif), cette version est un **site statique** : elle
 fonctionne sur n'importe quel hébergeur de fichiers statiques, sans base de
-données ni processus serveur (voir partie 6).
+données ni processus serveur.
 
 ## Sommaire
 
