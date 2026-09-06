@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StreamWall — Regardez plusieurs streams en même temps</title>
+  <meta name="description" content="Regroupez et regardez plusieurs streams Twitch en simultané sur une seule page." />
+
+  <!--
+    Établit à l'avance (DNS + TLS) la connexion vers les deux domaines
+    Twitch systématiquement utilisés par la page : le SDK d'embed
+    (chargé juste en dessous) et les iframes vidéo/chat (créées par
+    js/app.js dès que le SDK est prêt et qu'au moins un stream est
+    configuré). Sans indication du navigateur, cette négociation
+    réseau ne démarrerait qu'au moment de la toute première requête
+    réelle vers chaque domaine — ici gagné dès le tout début du
+    chargement de la page, pendant que le HTML/CSS finit de charger.
+    Pas de `crossorigin` : ni le script (chargé sans l'attribut
+    `crossorigin`), ni les iframes (navigations, pas des requêtes CORS)
+    n'en ont besoin — en ajouter un ouvrirait une connexion distincte,
+    inutile, en plus de celle-ci.
+  -->
+  <link rel="preconnect" href="https://embed.twitch.tv" />
+  <link rel="preconnect" href="https://www.twitch.tv" />
+
+  <!--
+    Applique le thème (sombre par défaut, ou clair si l'utilisateur l'a
+    choisi précédemment) AVANT le premier rendu de la page, pour éviter un
+    "flash" de thème sombre suivi d'un changement brutal vers le thème
+    clair au chargement. Ce script est volontairement minuscule et inline
+    (voir js/app.js pour toute la logique applicative, qui relit cette
+    même valeur au démarrage pour rester synchronisée).
+  -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("streamwall:theme");
+        document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
+      } catch (err) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- SDK officiel d'embed Twitch (lecteur + chat). Chargé une seule fois pour toute la page. -->
+  <script src="https://embed.twitch.tv/embed/v1.js" defer></script>
+</head>
+<body>
+
+  <!-- ======================= EN-TÊTE ======================= -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-name">StreamWall</span>
+    </div>
+
+    <!--
+      Menu déplacé en haut à droite, comme demandé.
+      Il n'y a plus de bouton "Changer les streams" dédié : l'ajout et la
+      gestion des chaînes se font uniquement depuis le mode "Réorganiser"
+      (tuile "+", voir #add-tile plus bas) ou depuis l'état vide (bouton
+      "Ajouter des streams", voir #btn-empty-add) quand aucun stream
+      n'est configuré. Il reste donc ici l'entrée "Réorganiser" et la
+      bascule thème sombre/clair tout à droite.
+      Pas de bouton "Copier le lien" ici non plus : le partage se fait
+      désormais par disposition favorite (bouton dédié sur chaque preset
+      dans la modale "Changer les streams", voir #modal-presets-list),
+      pas pour la composition affichée à l'instant t.
+    -->
+    <nav class="app-menu" aria-label="Menu principal">
+      <button id="btn-toggle-reorder" class="menu-btn" type="button" aria-pressed="false">
+        Réorganiser
+      </button>
+      <button id="btn-toggle-chat" class="menu-btn" type="button" aria-pressed="true">
+        Afficher/Masquer le chat
+      </button>
+      <!--
+        Bascule thème sombre/clair, positionnée tout à droite de la barre.
+        Les deux icônes (soleil/lune) sont toujours présentes dans le DOM ;
+        seul le CSS (sélecteur html[data-theme]) affiche la bonne selon le
+        thème courant. L'icône affichée représente l'action au clic
+        (passer au thème correspondant), pas le thème actuel.
+      -->
+      <button id="btn-toggle-theme" class="menu-btn menu-btn--icon" type="button"
+        aria-label="Basculer entre le thème sombre et le thème clair" aria-pressed="false">
+        <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.5" fill="currentColor" />
+          <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="12" y1="1.5" x2="12" y2="4" />
+            <line x1="12" y1="20" x2="12" y2="22.5" />
+            <line x1="1.5" y1="12" x2="4" y2="12" />
+            <line x1="20" y1="12" x2="22.5" y2="12" />
+            <line x1="4.2" y1="4.2" x2="6" y2="6" />
+            <line x1="18" y1="18" x2="19.8" y2="19.8" />
+            <line x1="4.2" y1="19.8" x2="6" y2="18" />
+            <line x1="18" y1="6" x2="19.8" y2="4.2" />
+          </g>
+        </svg>
+        <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M20 14.5a8.5 8.5 0 0 1-11-11 8.5 8.5 0 1 0 11 11z"
+            fill="currentColor"
+          />
+        </svg>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ======================= CONTENU PRINCIPAL ======================= -->
+  <main class="app-main">
+
+    <!--
+      Zone des lecteurs vidéo : UNE seule grille CSS (comme avant l'ajout
+      de la mise en avant). Quand un stream est mis en avant (bouton
+      étoile, mode Réorganiser), sa carte reçoit un `grid-column`/
+      `grid-row` en `span` posés en JS par applyGridLayout() — elle
+      occupe alors le quart supérieur gauche de la grille (la moitié des
+      colonnes × la moitié des lignes), et les autres tuiles se replacent
+      automatiquement autour (en "L") via l'auto-placement natif de CSS
+      Grid, qui saute les cellules déjà occupées. Voir la documentation
+      de computeFeaturedGrid() dans app.js pour le détail du calcul.
+    -->
+    <section id="players-grid" class="players-grid" aria-label="Streams en cours">
+      <!-- Les blocs .player-card sont injectés dynamiquement par js/app.js -->
+
+      <!--
+        Tuile "+" : uniquement visible en mode Réorganiser (voir
+        .players-grid.reorder-mode dans style.css). Dimensionnée par
+        js/app.js exactement comme les autres tuiles (voir la fonction
+        applyGridLayout), elle ouvre la fenêtre "Changer les streams" au
+        clic. js/app.js la replace systématiquement en dernière position
+        de la grille à chaque rendu.
+        C'est désormais le SEUL point d'entrée vers cette fenêtre quand
+        des streams sont déjà affichés (il n'y a plus de bouton "Changer
+        les streams" dans le menu) : pour ajouter/gérer des chaînes, il
+        faut d'abord activer le mode Réorganiser.
+      -->
+      <button id="add-tile" class="player-card add-tile" type="button" aria-label="Ajouter un stream">
+        <span class="add-tile-plus" aria-hidden="true">+</span>
+      </button>
+    </section>
+
+    <!-- Panneau de chat latéral -->
+    <aside id="chat-panel" class="chat-panel">
+      <div class="chat-panel-header">
+        <label for="chat-channel-select" class="chat-panel-label">Chat de :</label>
+        <select id="chat-channel-select" class="chat-select"></select>
+      </div>
+      <div id="chat-embed-container" class="chat-embed-container"></div>
+    </aside>
+
+    <!-- État vide affiché quand aucun stream n'est configuré -->
+    <div id="empty-state" class="empty-state" hidden>
+      <h1>Aucun stream à afficher</h1>
+      <p>Ajoutez des chaînes Twitch pour commencer à les regarder en simultané.</p>
+      <button id="btn-empty-add" class="menu-btn menu-btn--accent" type="button">
+        Ajouter des streams
+      </button>
+    </div>
+  </main>
+
+  <!-- ======================= MODALE "CHANGER LES STREAMS" ======================= -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Changer les streams</h2>
+      <p class="modal-help">
+        Cochez une chaîne pour l'afficher, décochez-la pour la retirer de la
+        grille (elle reste dans la liste pour la recocher plus tard). Utilisez
+        le bouton « × » pour l'oublier définitivement.
+      </p>
+
+      <!-- Ajout d'une nouvelle chaîne à la liste -->
+      <div class="modal-add-row">
+        <input
+          id="modal-add-input"
+          type="text"
+          class="modal-add-input"
+          placeholder="Nom de la chaîne (ex. zerator)"
+          autocomplete="off"
+        />
+        <button id="modal-add-btn" class="menu-btn" type="button">Ajouter</button>
+      </div>
+      <!--
+        Message d'erreur de validation (nom vide, caractères invalides,
+        longueur incorrecte), affiché par validateChannelName() dans
+        app.js AVANT même de tenter d'ajouter la chaîne : permet de
+        prévenir l'utilisateur immédiatement pour un nom manifestement
+        invalide, plutôt que de le laisser découvrir le problème via
+        l'écran d'erreur générique du lecteur Twitch une fois affiché.
+      -->
+      <p id="modal-add-error" class="modal-message modal-message--error" hidden></p>
+
+      <!-- Liste des chaînes connues, chacune avec sa case à cocher -->
+      <ul id="modal-channels-list" class="modal-channels-list">
+        <!-- Rempli dynamiquement par js/app.js -->
+      </ul>
+
+      <hr class="modal-divider" />
+
+      <!--
+        Dispositions favorites ("presets") : enregistre la combinaison de
+        streams actuellement affichée sous un nom, pour la rappeler plus
+        tard en un clic sans avoir à recocher chaque chaîne une à une.
+        Sauvegardées en localStorage (voir STORAGE_KEY_PRESETS dans
+        app.js) : propres à ce navigateur.
+        Chaque disposition de la liste ci-dessous a aussi un bouton de
+        partage (icône lien) qui copie, dans le presse-papiers, une URL
+        pointant directement vers SES chaînes à elle (pas forcément celles
+        actuellement affichées) — voir buildPresetShareUrl() dans app.js.
+      -->
+      <h3 class="modal-subtitle">Dispositions favorites</h3>
+      <div class="modal-preset-save-row">
+        <input
+          id="modal-preset-name-input"
+          type="text"
+          class="modal-add-input"
+          placeholder="Nom de la disposition (ex. Soirée ranked)"
+          maxlength="40"
+          autocomplete="off"
+        />
+        <button id="modal-preset-save-btn" class="menu-btn" type="button">Enregistrer</button>
+      </div>
+      <!-- Confirmation ("disposition enregistrée") ou erreur (nom vide,
+           aucun stream affiché) — voir showPresetFeedback() dans app.js. -->
+      <p id="modal-preset-feedback" class="modal-message" hidden></p>
+      <ul id="modal-presets-list" class="modal-presets-list">
+        <!-- Rempli dynamiquement par js/app.js : chaque ligne a un bouton
+             "Appliquer", un bouton de partage (copie le lien) et un
+             bouton "×" (suppression) -->
+      </ul>
+
+      <div class="modal-actions">
+        <button id="modal-confirm" class="menu-btn menu-btn--accent" type="button">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    Toast de confirmation ("Lien copié...", etc.), positionné en bas à
+    droite. Masqué par défaut, affiché temporairement par showToast()
+    dans app.js. `role="status"` + `aria-live="polite"` pour que les
+    lecteurs d'écran annoncent le message sans interrompre le focus en
+    cours.
+  -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
