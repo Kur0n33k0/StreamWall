@@ -1,4 +1,4 @@
-# StreamWall (réimplémentation JavaScript)
+# StreamWall — Regardez plusieurs streams en même temps
 
 Réimplémentation 100 % front-end (HTML / CSS / JavaScript, sans backend) du
 projet [bhamrick/multitwitch](https://github.com/bhamrick/multitwitch), qui
