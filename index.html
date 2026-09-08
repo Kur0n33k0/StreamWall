@@ -63,6 +63,13 @@
       "Ajouter des streams", voir #btn-empty-add) quand aucun stream
       n'est configuré. Il reste donc ici l'entrée "Réorganiser" et la
       bascule thème sombre/clair tout à droite.
+      Pas de bouton "Connexion Twitch" ici : un flux OAuth avait été
+      tenté (identité affichée dans le menu de StreamWall), mais retiré
+      car il ne connecte de toute façon PAS le panneau de chat/vidéo
+      ci-dessous — ces iframes n'ont aucun moyen technique d'accepter un
+      jeton fourni par la page qui les embarque, seul un lien "Se
+      connecter" DANS le panneau de chat lui-même (fourni par Twitch)
+      fonctionne pour ça. Voir buildChatEmbedUrl() dans app.js.
       Pas de bouton "Copier le lien" ici non plus : le partage se fait
       désormais par disposition favorite (bouton dédié sur chaque preset
       dans la modale "Changer les streams", voir #modal-presets-list),
@@ -178,7 +185,21 @@
           class="modal-add-input"
           placeholder="Nom de la chaîne (ex. zerator)"
           autocomplete="off"
+          list="modal-known-channels"
         />
+        <!--
+          Suggestions d'auto-complétion : liste native <datalist>, remplie
+          dynamiquement par renderKnownChannelsDatalist() (app.js) à partir
+          des chaînes DÉJÀ connues de ce navigateur (state.entries, visibles
+          ou non). Taper "ze" propose donc "zerator" s'il a déjà été ajouté
+          ici au moins une fois — voir la section 11 du README pour le
+          détail (et ses limites : ça ne recherche PAS l'intégralité du
+          catalogue Twitch, seulement l'historique local).
+          <datalist> plutôt qu'un menu déroulant fait main : le filtrage
+          "commence par ce qui est tapé" et la navigation clavier sont
+          gérés nativement par le navigateur, sans JS supplémentaire.
+        -->
+        <datalist id="modal-known-channels"></datalist>
         <button id="modal-add-btn" class="menu-btn" type="button">Ajouter</button>
       </div>
       <!--

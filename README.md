@@ -64,11 +64,23 @@ données ni processus serveur.
 - **Bascule thème sombre / clair**, via une icône tout à droite du menu
   (thème sombre par défaut).
 - Panneau de **chat Twitch** avec sélection de la chaîne à afficher, et
-  bouton pour l'afficher/masquer.
+  bouton pour l'afficher/masquer. Le panneau reste **connecté en
+  arrière-plan** quand il est masqué (masquage purement visuel) : pas
+  besoin de se reconnecter à chaque affichage. Pour pouvoir **écrire**
+  dans les chats (pas seulement les lire), il suffit de se connecter à
+  Twitch n'importe où dans ce navigateur — y compris via le lien "Se
+  connecter" affiché directement dans le panneau de chat lui-même : aucun
+  compte ni jeton n'est géré par StreamWall, le panneau étant une iframe
+  Twitch à part entière qui partage automatiquement la session.
 - **Validation à l'ajout** : un nom de chaîne vide, contenant des
   caractères invalides, ou de longueur incorrecte est refusé immédiatement
   dans la modale, avec un message explicite — sans attendre l'écran
   d'erreur générique du lecteur Twitch.
+- **Auto-complétion à l'ajout** : le champ propose, au fil de la saisie,
+  les chaînes déjà connues de ce navigateur qui commencent par ce qui est
+  tapé (ex. "ze" propose "zerator" s'il a déjà été ajouté ici). Limité aux
+  chaînes déjà utilisées dans ce navigateur, pas au catalogue Twitch
+  complet (voir "Limitations connues").
 - **Dispositions favorites ("presets")** : la combinaison de streams
   actuellement affichée peut être enregistrée sous un nom, pour être
   rappelée en un clic depuis la modale "Changer les streams", sans avoir
@@ -587,15 +599,83 @@ posée comme `src` d'un élément `<iframe>` inséré dans
 - à chaque ajout/suppression/case cochée-décochée d'une chaîne (le chat
   peut devoir basculer sur une autre chaîne si celle affichée est
   retirée) ;
-- à l'affichage/masquage du panneau de chat ;
 - à chaque bascule de thème (pour ajouter/retirer `darkpopout`).
 
-`renderChatOnly()` vide d'abord `#chat-embed-container`
-(`innerHTML = ""`) avant d'insérer la nouvelle iframe, ce qui détruit et
-recrée l'iframe de chat (et donc son état de connexion) à chaque appel —
-comportement attendu, comme pour l'ancien code basé sur le SDK.
+**Le panneau tourne en arrière-plan, même masqué.** Contrairement à une
+version précédente, masquer/afficher le panneau de chat (bouton
+"Afficher/Masquer le chat") n'appelle PLUS `renderChatOnly()` : c'est
+`updateChatPanelVisibility()` qui s'en charge, en ne touchant qu'à
+l'attribut `hidden` du panneau (donc à sa seule visibilité CSS, voir
+`.chat-panel[hidden]` dans `style.css`). L'iframe déjà montée n'est
+jamais détruite pour une simple bascule de visibilité : elle continue de
+tourner derrière, connexion Twitch comprise — masquer le chat pour
+regarder les vidéos en plein écran, puis le rouvrir, ne force donc
+jamais l'utilisateur à se reconnecter ou à recharger le fil de
+discussion.
 
-### 11. Validation du nom de chaîne à l'ajout
+`renderChatOnly()` est en outre **idempotente** : avant de reconstruire
+quoi que ce soit, elle compare l'URL cible (`buildChatEmbedUrl()`) au
+`src` de l'iframe déjà montée, et ne fait rien si elles sont identiques.
+Sans cette vérification, un appel sans rapport avec le chat affiché (ex.
+ajouter une chaîne à la grille, ce qui déclenche aussi
+`applyEntriesChange()` → `renderChatOnly()`) détruirait et recréerait
+l'iframe — donc sa session — pour rien. Elle n'est donc réellement
+reconstruite que lorsque la chaîne de chat sélectionnée ou le thème
+changent réellement.
+
+**Se connecter pour écrire dans le chat.** Comme l'iframe pointe
+directement vers `www.twitch.tv`, avec **ses propres cookies de
+session**, totalement indépendants du site qui l'embarque : se connecter
+à Twitch n'importe où dans ce même navigateur (via le lien "Se
+connecter" affiché directement DANS le panneau de chat par Twitch
+lui-même pour un visiteur non identifié, ou sur `twitch.tv` dans un
+autre onglet) suffit à connecter automatiquement le chat, sans que
+StreamWall n'ait rien à transmettre à cette iframe.
+
+> ⚠️ **Un flux OAuth applicatif (Implicit Grant, etc.) a été
+> volontairement écarté ici** : il aurait exigé d'enregistrer une
+> application sur https://dev.twitch.tv/console/apps (un `Client-Id`
+> propre à ce déploiement, à maintenir) pour, au final, ne RIEN changer à
+> l'état de connexion de cette iframe — elle ne sait lire que le cookie
+> de session twitch.tv, pas un jeton fourni par la page qui l'embarque.
+> Un jeton OAuth applicatif ne serait utile que pour appeler l'API Twitch
+> (Helix) **depuis StreamWall lui-même** (afficher un pseudo connecté
+> dans son propre menu, chercher des chaînes...), un axe volontairement
+> non poursuivi pour l'instant.
+
+### 11. Auto-complétion des chaînes déjà connues
+
+Le champ d'ajout (`#modal-add-input`) est relié à un `<datalist>` HTML
+natif (`#modal-known-channels`, attribut `list` sur le champ) : taper
+quelques lettres (ex. "ze") propose, dans un menu déroulant natif du
+navigateur, les chaînes déjà connues de CE navigateur qui correspondent
+— sans code de filtrage à écrire ni de composant de menu déroulant fait
+main, le navigateur s'en charge entièrement (filtrage au fil de la
+saisie, navigation au clavier, accessibilité).
+
+`renderKnownChannelsDatalist()` (dans `app.js`) reconstruit la liste des
+`<option>` à partir de `state.entries` (**toutes** les chaînes déjà
+ajoutées un jour dans ce navigateur, visibles ou non — pas seulement
+celles actuellement affichées), triées alphabétiquement. Elle est
+appelée à chaque changement de cette liste (`applyEntriesChange()`),
+à l'ouverture de la modale (`openModal()`), et une fois au chargement de
+la page (`init()`) pour refléter immédiatement les chaînes restaurées
+depuis `localStorage`.
+
+> ⚠️ **Limite assumée, volontaire** : cette auto-complétion ne propose
+> QUE des chaînes déjà tapées/ajoutées par le passé dans ce navigateur —
+> pas n'importe quel streamer Twitch existant. Proposer l'intégralité du
+> catalogue Twitch demanderait d'interroger son moteur de recherche en
+> direct pendant la saisie ; l'API officielle documentée pour ça (Helix,
+> endpoint "Search Channels") exige **toujours** un `Client-Id` ET un
+> jeton OAuth, sans exception, ce qui imposerait soit un backend pour
+> garder un `Client Secret` au chaud (contraire à l'architecture 100 %
+> statique de ce projet), soit un vrai flux de connexion Twitch côté
+> utilisateur — une portée bien plus large qu'un simple champ
+> d'auto-complétion, écartée ici pour cette raison (voir aussi l'encadré
+> de la section 10).
+
+### 12. Validation du nom de chaîne à l'ajout
 
 `validateChannelName()` (dans `app.js`) vérifie, **avant** tout appel à
 `addChannelEntry()`, que la saisie correspond aux règles Twitch (4 à 25
@@ -621,7 +701,7 @@ puisqu'un humain est en train de regarder le formulaire.
 > formé mais inexistant affichera donc toujours l'écran d'erreur standard
 > du lecteur Twitch une fois ajouté (voir aussi "Limitations connues").
 
-### 12. Dispositions favorites (presets) et partage
+### 13. Dispositions favorites (presets) et partage
 
 Section dédiée dans la modale "Changer les streams" (sous la liste des
 chaînes), qui permet d'enregistrer la combinaison de chaînes **visibles**
@@ -658,13 +738,13 @@ construction) : `renderPresetsList()` les passe systématiquement par
 `escapeHtml()` avant de les insérer dans un gabarit `innerHTML`, pour
 éviter toute injection HTML.
 
-### 13. Copier le lien et toast de confirmation
+### 14. Copier le lien et toast de confirmation
 
 `copyShareLink(url)` (dans `app.js`) copie l'URL reçue en paramètre dans
 le presse-papiers via `navigator.clipboard.writeText()`, puis affiche un
 toast de confirmation (`showToast()`). C'est une fonction générique — ce
 n'est qu'un appelant, le bouton de partage de chaque preset (voir section
-11), qui décide QUELLE url partager.
+13), qui décide QUELLE url partager.
 
 `navigator.clipboard` exige un **contexte sécurisé** (HTTPS, ou
 `http://localhost`/`http://127.0.0.1` en développement) et peut être
@@ -850,11 +930,16 @@ pointant vers votre propre fichier dans `<head>`.
   le projet d'origine), sélectionnable via le menu déroulant du panneau de
   chat.
 - Les noms de chaînes ne sont validés côté client que sur leur **format**
-  (4 à 25 caractères, alphanumériques et underscore — voir section 11) ;
+  (4 à 25 caractères, alphanumériques et underscore — voir section 12) ;
   un nom bien formé mais correspondant à une chaîne inexistante ou hors
   ligne affichera tout de même l'écran d'erreur standard du lecteur
   Twitch, faute de pouvoir vérifier une existence réelle sans backend
-  (voir l'encadré de la section 11).
+  (voir l'encadré de la section 12).
+- L'auto-complétion du champ d'ajout (voir section 11) ne propose que des
+  chaînes déjà ajoutées par le passé dans ce navigateur, jamais
+  n'importe quel streamer Twitch existant — voir l'encadré de la
+  section 11 pour la raison technique (API Twitch nécessitant toujours
+  un jeton OAuth).
 - Le calcul dynamique de la grille s'appuie sur l'API `ResizeObserver`,
   supportée par tous les navigateurs modernes (Chrome, Firefox, Safari,
   Edge) mais absente des très anciens navigateurs (Internet Explorer).
@@ -869,12 +954,12 @@ pointant vers votre propre fichier dans `<head>`.
   de l'espace vide autour de la page.
 - Les **dispositions favorites** (presets) sont un état local à ce
   navigateur, sauvegardé en `localStorage` : pas synchronisées entre
-  appareils. Un lien de partage de preset (voir section 12), lui, voyage
+  appareils. Un lien de partage de preset (voir section 13), lui, voyage
   normalement puisque c'est une URL classique.
 - Le bouton de partage d'un preset utilise l'API Clipboard moderne
   (`navigator.clipboard`), qui exige un **contexte sécurisé** (HTTPS, ou
   `http://localhost` en développement) ; un repli existe pour les autres
-  cas (voir section 13) mais reste moins fiable selon le navigateur.
+  cas (voir section 14) mais reste moins fiable selon le navigateur.
 - Le son suit une règle unique et automatique : le stream mis en avant
   s'il y en a un (voir section 5), sinon le premier stream visible ; il
   n'y a pas de contrôle individuel du son/volume dans l'interface pour
@@ -884,6 +969,15 @@ pointant vers votre propre fichier dans `<head>`.
   navigateur (`localStorage`), non incluse dans le hash d'URL partagé :
   ouvrir un lien partagé n'active la mise en avant de personne, même si
   elle était active chez qui l'a partagé.
+- Il n'y a pas de bouton "Connexion Twitch" dédié dans StreamWall (voir
+  section 10) : se connecter passe par le lien "Se connecter" du panneau
+  de chat lui-même (fourni par Twitch) ou par `twitch.tv` directement.
+  Comme `renderChatOnly()` ne reconstruit l'iframe que lorsque la chaîne
+  ou le thème changent réellement (voir section 10), une connexion
+  effectuée SANS changer ni l'un ni l'autre (ex. dans un autre onglet,
+  puis retour sans toucher au sélecteur de chaîne) peut ne devenir
+  visible dans le chat qu'au prochain changement de chaîne ou de thème,
+  faute d'un signal fiable indiquant qu'une connexion vient d'avoir lieu.
 - Le découpage en quadrants de la mise en avant (section 5) est un
   découpage FIXE (toujours 1/4 + 3/4), pas un algorithme qui chercherait
   à minimiser l'espace perdu : avec très peu d'autres streams (1 à 3),

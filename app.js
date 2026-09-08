@@ -14,7 +14,10 @@
  *      la liste de la modale "Changer les streams" avec une case à cocher.
  *      Cocher l'affiche dans la grille, décocher la retire de la grille SANS
  *      l'oublier. Le bouton « × » à côté d'une chaîne l'oublie définitivement.
- *      L'ajout est validé (format du nom) avant d'être tenté.
+ *      L'ajout est validé (format du nom) avant d'être tenté, et le champ
+ *      propose une auto-complétion (`<datalist>` natif) des chaînes déjà
+ *      connues de ce navigateur au fil de la saisie (voir
+ *      `renderKnownChannelsDatalist()`).
  *   3. Mode "Réorganiser" (bouton du menu) : affiche/masque l'en-tête de
  *      chaque lecteur (poignée de glisser-déposer + nom + boutons "mettre en
  *      avant"/« × »), ainsi qu'une tuile "+" de la même taille qu'un lecteur,
@@ -38,7 +41,15 @@
  *      que soit leur nombre, sans jamais provoquer de défilement (voir la
  *      fonction `computeBestGrid`).
  *   8. Panneau de chat Twitch, avec sélection de la chaîne à afficher et
- *      bouton pour l'afficher/masquer.
+ *      bouton pour l'afficher/masquer. Le panneau reste monté et connecté
+ *      en arrière-plan même quand il est masqué (masquage purement CSS,
+ *      voir `updateChatPanelVisibility()`) : pas besoin de rouvrir/relancer
+ *      la connexion à chaque affichage. L'iframe pointe directement vers
+ *      twitch.tv (voir `buildChatEmbedUrl()`), avec SES PROPRES cookies de
+ *      session : se connecter à Twitch n'importe où dans ce navigateur
+ *      (y compris via le lien "Se connecter" du chat lui-même) suffit à
+ *      connecter le chat automatiquement — inutile d'implémenter un flux
+ *      OAuth applicatif ou un bouton dédié dans StreamWall.
  *   9. Le menu est affiché en haut à droite de la page (cf. index.html +
  *      style.css).
  *  10. Dispositions favorites ("presets") : la combinaison de streams
@@ -133,6 +144,9 @@
     modalAddBtn: document.getElementById("modal-add-btn"),
     modalAddError: document.getElementById("modal-add-error"),
     modalChannelsList: document.getElementById("modal-channels-list"),
+    // <datalist> d'auto-complétion du champ d'ajout, voir
+    // renderKnownChannelsDatalist() (section 11 du README).
+    modalKnownChannels: document.getElementById("modal-known-channels"),
     modalPresetNameInput: document.getElementById("modal-preset-name-input"),
     modalPresetSaveBtn: document.getElementById("modal-preset-save-btn"),
     modalPresetFeedback: document.getElementById("modal-preset-feedback"),
@@ -315,7 +329,7 @@
   /**
    * Indique si la mise en avant doit s'appliquer visuellement (la tuile
    * occupant le quart supérieur gauche de la grille, voir
-   * `computeFeaturedGrid()`, section 5). Il faut :
+   * `computeFeaturedGrid()`, section 6). Il faut :
    *  - qu'une chaîne soit désignée (`state.featuredChannel`) ;
    *  - qu'elle soit toujours visible ;
    *  - qu'il reste au moins une AUTRE chaîne visible à côté d'elle, sinon
@@ -819,7 +833,7 @@
     attachDragEvents(card, [header, dragZone]);
 
     // Alternative clavier au glisser-déposer : les 4 flèches, quand
-    // l'en-tête a le focus (voir moveChannelByKeyboard(), section 7).
+    // l'en-tête a le focus (voir moveChannelByKeyboard(), section 8).
     header.setAttribute(
       "aria-label",
       `${channel} — glisser-déposer, ou flèches du clavier, pour réorganiser`
@@ -1155,15 +1169,40 @@
     return url;
   }
 
+  /**
+   * (Re)construit l'iframe du panneau de chat si nécessaire.
+   *
+   * Volontairement INDÉPENDANT de `state.chatVisible` : le panneau peut
+   * être masqué par pur CSS (voir `updateChatPanelVisibility()`) sans que
+   * son iframe soit détruite, pour qu'elle continue de tourner "en
+   * arrière-plan" (connexion Twitch, session de chat) pendant qu'elle
+   * n'est pas affichée — masquer/afficher le panneau ne doit jamais
+   * obliger l'utilisateur à se reconnecter.
+   *
+   * Idempotent : si une iframe existe déjà avec exactement la même URL
+   * cible (même chaîne, même thème), elle est laissée telle quelle plutôt
+   * que détruite et recréée. Sans cette vérification, le moindre appel
+   * (ex. ajout d'une chaîne sans rapport avec le chat affiché, voir
+   * `applyEntriesChange()`) recréerait l'iframe et romprait sa session en
+   * cours pour rien. Elle n'est donc réellement recréée que lorsque la
+   * chaîne de chat ou le thème changent réellement.
+   */
   function renderChatOnly() {
-    el.chatEmbedContainer.innerHTML = "";
-    if (!state.chatVisible || !state.chatChannel) return;
+    if (!state.chatChannel) {
+      el.chatEmbedContainer.innerHTML = "";
+      return;
+    }
+
+    const targetUrl = buildChatEmbedUrl(state.chatChannel);
+    const existingIframe = el.chatEmbedContainer.querySelector("iframe");
+    if (existingIframe && existingIframe.src === targetUrl) return;
 
     // Pas besoin d'attendre `whenTwitchReady()` ici : à la différence du
     // lecteur vidéo, le chat n'utilise pas le SDK JS, seulement une
     // iframe simple, disponible dès que le DOM l'est.
+    el.chatEmbedContainer.innerHTML = "";
     const iframe = document.createElement("iframe");
-    iframe.src = buildChatEmbedUrl(state.chatChannel);
+    iframe.src = targetUrl;
     iframe.title = `Chat Twitch de ${state.chatChannel}`;
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("scrolling", "yes");
@@ -1174,6 +1213,11 @@
    * Met à jour la visibilité du panneau de chat, puis recalcule la grille :
    * masquer/afficher le chat change la largeur disponible pour les
    * lecteurs, donc leur taille optimale change aussi.
+   *
+   * Ne touche VOLONTAIREMENT PAS à l'iframe de chat elle-même (voir
+   * `renderChatOnly()`) : masquer le panneau n'est qu'un `hidden` CSS
+   * (voir `.chat-panel[hidden]` dans style.css), la connexion en cours
+   * continue de tourner derrière.
    */
   function updateChatPanelVisibility() {
     el.chatPanel.hidden = !state.chatVisible;
@@ -1213,6 +1257,11 @@
     renderPlayersGrid();
     renderChatSelect();
     renderChatOnly();
+    // Tient la liste d'auto-complétion à jour dès qu'une chaîne est
+    // ajoutée/oubliée (state.entries change de longueur) : sans ça, une
+    // chaîne tout juste ajoutée ne serait suggérée qu'à la PROCHAINE
+    // ouverture de la modale plutôt qu'immédiatement.
+    renderKnownChannelsDatalist();
   }
 
   function addChannelEntry(rawName) {
@@ -1245,6 +1294,36 @@
     }
     applyEntriesChange();
     renderModalChannelsList();
+  }
+
+  /**
+   * Remplit le `<datalist>` d'auto-complétion (`#modal-known-channels`)
+   * du champ d'ajout de chaîne, à partir de TOUTES les chaînes déjà
+   * connues de ce navigateur (`state.entries`, visibles ou non — pas
+   * seulement celles actuellement affichées).
+   *
+   * Pourquoi seulement les chaînes déjà connues, et pas "n'importe quel
+   * streamer Twitch existant" : proposer le catalogue Twitch complet
+   * demanderait d'interroger son API en direct (Helix, endpoint "Search
+   * Channels"), qui exige TOUJOURS un `Client-Id` ET un jeton OAuth, sans
+   * exception — impossible à faire proprement depuis ce code sans
+   * réintroduire soit un backend (contraire à l'architecture 100%
+   * statique du projet), soit un vrai flux de connexion Twitch côté
+   * utilisateur. Voir la section 11 du README pour le détail de cette
+   * limite.
+   *
+   * Triée alphabétiquement pour un parcours prévisible dans la liste
+   * déroulante (l'ordre de `state.entries`, lui, reflète l'ordre
+   * d'affichage voulu par l'utilisateur — pas pertinent ici).
+   */
+  function renderKnownChannelsDatalist() {
+    const sortedNames = state.entries
+      .map((entry) => entry.name)
+      .sort((a, b) => a.localeCompare(b));
+
+    el.modalKnownChannels.innerHTML = sortedNames
+      .map((name) => `<option value="${escapeHtml(name)}"></option>`)
+      .join("");
   }
 
   /** Affiche un message d'erreur sous le champ d'ajout de chaîne. */
@@ -1465,6 +1544,7 @@
 
   function openModal() {
     renderModalChannelsList();
+    renderKnownChannelsDatalist();
     hideModalAddError();
     renderPresetsList();
     hidePresetFeedback();
@@ -1576,10 +1656,12 @@
     });
 
     el.btnToggleChat.addEventListener("click", () => {
+      // Bascule purement CSS (voir updateChatPanelVisibility()) : pas
+      // d'appel à renderChatOnly() ici, l'iframe déjà montée continue de
+      // tourner derrière sans être détruite/recréée à chaque bascule.
       state.chatVisible = !state.chatVisible;
       updateChatPanelVisibility();
       persistState();
-      renderChatOnly();
     });
 
     el.btnToggleTheme.addEventListener("click", toggleTheme);
@@ -1655,6 +1737,12 @@
     updateReorderModeUI(); // applique aussi renderPlayersGrid() + applyGridLayout()
     renderChatSelect();
     renderChatOnly();
+    // Pré-remplit l'auto-complétion dès le chargement, avec les chaînes
+    // restaurées depuis localStorage (voir loadInitialState()) : sans ça,
+    // il faudrait attendre le premier ajout/suppression de cette session
+    // pour que la liste apparaisse (applyEntriesChange() la maintient à
+    // jour ENSUITE, mais ne s'exécute jamais au tout premier chargement).
+    renderKnownChannelsDatalist();
   }
 
   if (document.readyState === "loading") {
