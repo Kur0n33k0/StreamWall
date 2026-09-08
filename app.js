@@ -109,7 +109,7 @@
   const state = {
     entries: [],
     players: new Map(),
-    chatVisible: true,
+    chatVisible: false,
     chatChannel: null,
     reorderMode: false,
     theme: "dark",
@@ -423,10 +423,15 @@
     }
 
     try {
+      // `savedVisible === null` : première visite, rien encore en
+      // localStorage — le chat démarre alors MASQUÉ par défaut (voir
+      // aussi `state.chatVisible` plus haut et `#chat-panel` dans
+      // index.html, qui porte `hidden` dès le HTML pour éviter un flash
+      // de panneau visible avant que ce script ne s'exécute).
       const savedVisible = localStorage.getItem(STORAGE_KEY_CHAT_VISIBLE);
-      state.chatVisible = savedVisible === null ? true : JSON.parse(savedVisible);
+      state.chatVisible = savedVisible === null ? false : JSON.parse(savedVisible);
     } catch (err) {
-      state.chatVisible = true;
+      state.chatVisible = false;
     }
 
     try {

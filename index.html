@@ -79,7 +79,15 @@
       <button id="btn-toggle-reorder" class="menu-btn" type="button" aria-pressed="false">
         Réorganiser
       </button>
-      <button id="btn-toggle-chat" class="menu-btn" type="button" aria-pressed="true">
+      <!--
+        `aria-pressed="false"` par défaut : le chat est masqué au premier
+        chargement (voir `state.chatVisible` dans app.js). Cet attribut
+        n'a de toute façon qu'une valeur de départ : `app.js` le remet à
+        jour dès `init()` (`updateChatPanelVisibility()`) selon l'état
+        réellement restauré depuis `localStorage` pour un visiteur
+        récurrent.
+      -->
+      <button id="btn-toggle-chat" class="menu-btn" type="button" aria-pressed="false">
         Afficher/Masquer le chat
       </button>
       <!--
@@ -148,16 +156,19 @@
       </button>
     </section>
 
-    <!-- Panneau de chat latéral -->
-    <aside id="chat-panel" class="chat-panel">
-      <div class="chat-panel-header">
-        <label for="chat-channel-select" class="chat-panel-label">Chat de :</label>
-        <select id="chat-channel-select" class="chat-select"></select>
-      </div>
-      <div id="chat-embed-container" class="chat-embed-container"></div>
-    </aside>
-
-    <!-- État vide affiché quand aucun stream n'est configuré -->
+    <!--
+      État vide affiché quand aucun stream n'est configuré. DOIT rester
+      AVANT #chat-panel dans le DOM (comme #players-grid juste au-dessus,
+      mutuellement exclusif avec lui) : .app-main est un flex row sans
+      `order` explicite, donc l'ordre visuel des enfants suit leur ordre
+      DANS LE DOM. Si cet élément passait APRÈS #chat-panel, le panneau
+      de chat se retrouverait à GAUCHE dès que #players-grid est masqué
+      (aucun stream configuré) et #empty-state affiché à sa place — c'est
+      exactement le bug corrigé ici : le chat "sautait" de droite à
+      gauche selon que la grille ou l'état vide était visible. En restant
+      systématiquement le DERNIER enfant de .app-main, #chat-panel reste
+      toujours à droite, quel que soit l'état affiché à sa gauche.
+    -->
     <div id="empty-state" class="empty-state" hidden>
       <h1>Aucun stream à afficher</h1>
       <p>Ajoutez des chaînes Twitch pour commencer à les regarder en simultané.</p>
@@ -165,6 +176,23 @@
         Ajouter des streams
       </button>
     </div>
+
+    <!--
+      Panneau de chat latéral. `hidden` par défaut dans le HTML (chat
+      masqué au premier chargement, voir `state.chatVisible` dans
+      app.js) : évite un flash visible avant que
+      `updateChatPanelVisibility()` ne s'exécute au chargement. Pour un
+      visiteur récurrent ayant déjà réaffiché le chat, ce même appel
+      retire l'attribut dès `init()`, d'après la valeur restaurée depuis
+      `localStorage`.
+    -->
+    <aside id="chat-panel" class="chat-panel" hidden>
+      <div class="chat-panel-header">
+        <label for="chat-channel-select" class="chat-panel-label">Chat de :</label>
+        <select id="chat-channel-select" class="chat-select"></select>
+      </div>
+      <div id="chat-embed-container" class="chat-embed-container"></div>
+    </aside>
   </main>
 
   <!-- ======================= MODALE "CHANGER LES STREAMS" ======================= -->

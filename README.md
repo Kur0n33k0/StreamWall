@@ -64,9 +64,10 @@ données ni processus serveur.
 - **Bascule thème sombre / clair**, via une icône tout à droite du menu
   (thème sombre par défaut).
 - Panneau de **chat Twitch** avec sélection de la chaîne à afficher, et
-  bouton pour l'afficher/masquer. Le panneau reste **connecté en
-  arrière-plan** quand il est masqué (masquage purement visuel) : pas
-  besoin de se reconnecter à chaque affichage. Pour pouvoir **écrire**
+  bouton pour l'afficher/masquer — **masqué par défaut** au premier
+  chargement (l'utilisateur choisit de l'ouvrir). Le panneau reste
+  **connecté en arrière-plan** quand il est masqué (masquage purement
+  visuel) : pas besoin de se reconnecter à chaque affichage. Pour pouvoir **écrire**
   dans les chats (pas seulement les lire), il suffit de se connecter à
   Twitch n'importe où dans ce navigateur — y compris via le lien "Se
   connecter" affiché directement dans le panneau de chat lui-même : aucun
