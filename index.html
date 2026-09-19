@@ -7,10 +7,23 @@
   <meta name="description" content="Regroupez et regardez plusieurs streams Twitch en simultané sur une seule page." />
 
   <!--
+    Favicon : l'icône affichée dans l'onglet du navigateur, les favoris et
+    l'historique. Un seul fichier .ico qui embarque trois tailles (16, 32 et
+    48 px) : le navigateur choisit celle qui convient à l'endroit où il
+    l'affiche (onglet, écran haute densité, raccourci…). Le fichier est dans
+    assets/ et non à la racine du site, donc cette balise est nécessaire :
+    sans elle, les navigateurs iraient chercher `/favicon.ico` à la racine
+    et n'y trouveraient rien. Le chemin est volontairement RELATIF (pas de
+    "/" au début) pour que ça fonctionne aussi quand le site est hébergé
+    dans un sous-dossier (par exemple GitHub Pages, voir documentation.md).
+  -->
+  <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="assets/favicon.ico" />
+
+  <!--
     Établit à l'avance (DNS + TLS) la connexion vers les deux domaines
     Twitch systématiquement utilisés par la page : le SDK d'embed
     (chargé juste en dessous) et les iframes vidéo/chat (créées par
-    js/app.js dès que le SDK est prêt et qu'au moins un stream est
+    app.js dès que le SDK est prêt et qu'au moins un stream est
     configuré). Sans indication du navigateur, cette négociation
     réseau ne démarrerait qu'au moment de la toute première requête
     réelle vers chaque domaine — ici gagné dès le tout début du
@@ -28,7 +41,7 @@
     choisi précédemment) AVANT le premier rendu de la page, pour éviter un
     "flash" de thème sombre suivi d'un changement brutal vers le thème
     clair au chargement. Ce script est volontairement minuscule et inline
-    (voir js/app.js pour toute la logique applicative, qui relit cette
+    (voir app.js pour toute la logique applicative, qui relit cette
     même valeur au démarrage pour rester synchronisée).
   -->
   <script>
@@ -51,17 +64,47 @@
 
   <!-- ======================= EN-TÊTE ======================= -->
   <header class="app-header">
+    <!--
+      Logo StreamWall : l'ICÔNE (à gauche), suivie du NOM écrit en texte.
+      Les fichiers du dossier assets/ ne contiennent que l'icône ; le nom
+      est du vrai texte (.brand-name), lisible à toute taille, aux couleurs
+      du thème, sélectionnable.
+      Deux variantes de l'icône, une par thème : son contour est clair pour
+      le thème sombre et foncé pour le thème clair, faute de quoi il se
+      fondrait dans le fond de l'un des deux. Les deux <img> sont toujours
+      dans le DOM ; seul le CSS (sélecteur html[data-theme]) affiche la bonne
+      selon le thème courant, comme pour les icônes soleil/lune de la
+      bascule de thème plus bas — donc le logo change en même temps que le
+      thème, sans aucun JavaScript.
+      `loading="lazy"` : le navigateur ne télécharge pas une image qui n'est
+      pas affichée, donc seule la variante du thème en cours est chargée
+      (chaque fichier pèse plus de 200 Ko) ; l'autre ne l'est
+      qu'au premier passage à l'autre thème.
+      `width`/`height` : les dimensions d'origine des fichiers, qui servent
+      uniquement à réserver la bonne place avant le chargement (proportions),
+      la taille affichée étant fixée en CSS.
+      `alt=""` : l'icône est décorative, le nom de l'application étant déjà
+      donné par le texte à côté (sinon un lecteur d'écran l'annoncerait
+      deux fois).
+    -->
     <div class="brand">
+      <img class="brand-logo brand-logo--dark" src="assets/logo_mode_sombre.png"
+        alt="" width="415" height="453" loading="lazy" decoding="async" />
+      <img class="brand-logo brand-logo--light" src="assets/logo_mode_clair0.png"
+        alt="" width="416" height="453" loading="lazy" decoding="async" />
       <span class="brand-name">StreamWall</span>
     </div>
 
     <!--
       Menu déplacé en haut à droite, comme demandé.
-      Il n'y a plus de bouton "Changer les streams" dédié : l'ajout et la
-      gestion des chaînes se font uniquement depuis le mode "Réorganiser"
-      (tuile "+", voir #add-tile plus bas) ou depuis l'état vide (bouton
-      "Ajouter des streams", voir #btn-empty-add) quand aucun stream
-      n'est configuré. Il reste donc ici l'entrée "Réorganiser" et la
+      Le bouton « + » (#btn-add), à gauche de "Réorganiser" et TOUJOURS
+      affiché (mode Réorganiser ou non), ouvre la fenêtre "Changer les
+      streams" : c'est par lui qu'on ajoute et qu'on gère les chaînes. L'autre
+      point d'entrée est le bouton "Ajouter des streams" de l'état vide (voir
+      #btn-empty-add) quand aucun stream n'est configuré. Il n'y a plus de
+      tuile "+" dans la zone des lecteurs, ni de bouton "Changer les streams"
+      dédié. Le menu contient donc, dans l'ordre : "+", "Réorganiser" (et, dans
+      ce mode, "Réinitialiser la vue"), le chat, le bouton d'aide « i » et la
       bascule thème sombre/clair tout à droite.
       Pas de bouton "Connexion Twitch" ici : un flux OAuth avait été
       tenté (identité affichée dans le menu de StreamWall), mais retiré
@@ -76,8 +119,34 @@
       pas pour la composition affichée à l'instant t.
     -->
     <nav class="app-menu" aria-label="Menu principal">
+      <!--
+        Bouton « + » : ouvre la fenêtre "Changer les streams" (voir openModal()
+        dans app.js), dans les deux modes. Icône seule, comme le bouton d'aide
+        et la bascule de thème plus bas : `aria-label` donne son nom aux
+        lecteurs d'écran, `title` l'infobulle à la souris. `aria-haspopup`
+        annonce qu'il ouvre une boîte de dialogue.
+      -->
+      <button id="btn-add" class="menu-btn menu-btn--icon" type="button"
+        aria-label="Ajouter un stream (ouvre la fenêtre Changer les streams)" title="Ajouter un stream"
+        aria-haspopup="dialog">
+        <svg class="add-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+        </svg>
+      </button>
       <button id="btn-toggle-reorder" class="menu-btn" type="button" aria-pressed="false">
         Réorganiser
+      </button>
+      <!--
+        "Réinitialiser la vue" : remet la taille de tous les streams à sa
+        valeur par défaut (voir resetManualLayout() dans app.js). Comme le
+        redimensionnement lui-même, il n'existe qu'en mode Réorganiser :
+        app.js le masque (`hidden`) hors de ce mode, et le désactive tant
+        que les tailles n'ont pas été ajustées à la main pour la
+        combinaison de streams affichée (rien à réinitialiser).
+      -->
+      <button id="btn-reset-layout" class="menu-btn" type="button" hidden disabled
+        title="Remet la taille de tous les streams à sa valeur par défaut">
+        Réinitialiser la vue
       </button>
       <!--
         `aria-pressed="false"` par défaut : le chat est masqué au premier
@@ -87,8 +156,35 @@
         réellement restauré depuis `localStorage` pour un visiteur
         récurrent.
       -->
-      <button id="btn-toggle-chat" class="menu-btn" type="button" aria-pressed="false">
-        Afficher/Masquer le chat
+      <!--
+        Libellé en deux parties : sur écran étroit (≤ 600 px, voir
+        style.css) la partie `.menu-btn-extra` est masquée et le bouton se
+        réduit à « Chat », pour que TOUS les boutons du menu (dont le bouton
+        d'aide « i » ajouté après lui) tiennent dans la largeur d'un
+        téléphone sans faire défiler le menu. `aria-label` garde le nom
+        complet pour les lecteurs d'écran, quelle que soit la partie
+        affichée.
+      -->
+      <button id="btn-toggle-chat" class="menu-btn" type="button" aria-pressed="false"
+        aria-label="Afficher/Masquer le chat">
+        <span class="menu-btn-extra">Afficher/Masquer le </span>chat
+      </button>
+      <!--
+        Bouton d'aide (icône "i" dans un cercle) : ouvre la fenêtre #help-overlay
+        plus bas, qui explique toutes les options du site avec des captures
+        d'écran (voir openHelp(), section 14 d'app.js). Icône seule, comme la
+        bascule de thème juste après : `aria-label` donne son nom aux lecteurs
+        d'écran, `title` l'infobulle à la souris. `aria-haspopup="dialog"`
+        annonce qu'il ouvre une boîte de dialogue.
+      -->
+      <button id="btn-help" class="menu-btn menu-btn--icon" type="button"
+        aria-label="Aide : découvrir les options de StreamWall" title="Aide"
+        aria-haspopup="dialog">
+        <svg class="help-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <circle cx="12" cy="7.6" r="1.35" fill="currentColor" />
+          <path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+        </svg>
       </button>
       <!--
         Bascule thème sombre/clair, positionnée tout à droite de la barre.
@@ -126,34 +222,28 @@
   <main class="app-main">
 
     <!--
-      Zone des lecteurs vidéo : UNE seule grille CSS (comme avant l'ajout
-      de la mise en avant). Quand un stream est mis en avant (bouton
-      étoile, mode Réorganiser), sa carte reçoit un `grid-column`/
-      `grid-row` en `span` posés en JS par applyGridLayout() — elle
-      occupe alors le quart supérieur gauche de la grille (la moitié des
-      colonnes × la moitié des lignes), et les autres tuiles se replacent
-      automatiquement autour (en "L") via l'auto-placement natif de CSS
-      Grid, qui saute les cellules déjà occupées. Voir la documentation
-      de computeFeaturedGrid() dans app.js pour le détail du calcul.
+      Zone des lecteurs vidéo : UN seul conteneur pour toutes les tuiles, y
+      compris celles des streams mis en avant (bouton étoile, mode
+      Réorganiser — jusqu'à deux simultanément). Ce n'est plus une grille
+      CSS : app.js pave la zone de rectangles (voir l'en-tête de la
+      section 5 d'app.js) et pose sur chaque carte sa position et sa taille
+      en pixels (`left`/`top`/`width`/`height`, en `position: absolute`).
+      Ce pavage garantit que les tuiles remplissent TOUJOURS 100% de la
+      zone, quel que soit leur nombre. En mode Réorganiser, chaque carte
+      porte une poignée dans chacun de ses quatre angles (`.player-card-resize`,
+      créées avec la carte dans app.js) : en tirer une redimensionne la tuile, et toutes les
+      autres se réorganisent autour d'elle. Par défaut, chaque stream mis
+      en avant occupe un quart de la surface, en haut (le premier à
+      gauche, le second à sa droite), et les autres tuiles se répartissent
+      autour ; voir getDefaultPins() et solveLayout() dans app.js.
     -->
     <section id="players-grid" class="players-grid" aria-label="Streams en cours">
-      <!-- Les blocs .player-card sont injectés dynamiquement par js/app.js -->
-
       <!--
-        Tuile "+" : uniquement visible en mode Réorganiser (voir
-        .players-grid.reorder-mode dans style.css). Dimensionnée par
-        js/app.js exactement comme les autres tuiles (voir la fonction
-        applyGridLayout), elle ouvre la fenêtre "Changer les streams" au
-        clic. js/app.js la replace systématiquement en dernière position
-        de la grille à chaque rendu.
-        C'est désormais le SEUL point d'entrée vers cette fenêtre quand
-        des streams sont déjà affichés (il n'y a plus de bouton "Changer
-        les streams" dans le menu) : pour ajouter/gérer des chaînes, il
-        faut d'abord activer le mode Réorganiser.
+        Les blocs .player-card sont injectés dynamiquement par app.js. Cette
+        zone ne contient QUE les cartes des streams : il n'y a plus de tuile
+        "+" ici (l'ajout d'un stream passe par le bouton #btn-add du menu),
+        donc les tuiles ont la même disposition en mode Réorganiser ou non.
       -->
-      <button id="add-tile" class="player-card add-tile" type="button" aria-label="Ajouter un stream">
-        <span class="add-tile-plus" aria-hidden="true">+</span>
-      </button>
     </section>
 
     <!--
@@ -220,7 +310,7 @@
           dynamiquement par renderKnownChannelsDatalist() (app.js) à partir
           des chaînes DÉJÀ connues de ce navigateur (state.entries, visibles
           ou non). Taper "ze" propose donc "zerator" s'il a déjà été ajouté
-          ici au moins une fois — voir la section 11 du README pour le
+          ici au moins une fois — voir la section 11 de documentation.md pour le
           détail (et ses limites : ça ne recherche PAS l'intégralité du
           catalogue Twitch, seulement l'historique local).
           <datalist> plutôt qu'un menu déroulant fait main : le filtrage
@@ -242,7 +332,7 @@
 
       <!-- Liste des chaînes connues, chacune avec sa case à cocher -->
       <ul id="modal-channels-list" class="modal-channels-list">
-        <!-- Rempli dynamiquement par js/app.js -->
+        <!-- Rempli dynamiquement par app.js -->
       </ul>
 
       <hr class="modal-divider" />
@@ -251,14 +341,23 @@
         Dispositions favorites ("presets") : enregistre la combinaison de
         streams actuellement affichée sous un nom, pour la rappeler plus
         tard en un clic sans avoir à recocher chaque chaîne une à une.
+        Elle retient aussi LA DISPOSITION DES TUILES : l'ordre des streams,
+        ceux qui sont mis en avant (étoiles) et la taille de chaque tuile
+        ajustée à la main (voir captureCurrentLayout() et applyPresetLayout()
+        dans app.js). Un clic sur son nom rétablit tout cela.
         Sauvegardées en localStorage (voir STORAGE_KEY_PRESETS dans
         app.js) : propres à ce navigateur.
         Chaque disposition de la liste ci-dessous a aussi un bouton de
         partage (icône lien) qui copie, dans le presse-papiers, une URL
         pointant directement vers SES chaînes à elle (pas forcément celles
-        actuellement affichées) — voir buildPresetShareUrl() dans app.js.
+        actuellement affichées) — voir buildPresetShareUrl() dans app.js. Le
+        lien ne porte que les chaînes, pas les tailles ni les favoris.
       -->
       <h3 class="modal-subtitle">Dispositions favorites</h3>
+      <p class="modal-help">
+        Retient les streams affichés, leur ordre, ceux mis en avant (★) et la
+        taille de chaque tuile. Un clic sur son nom rétablit tout cela.
+      </p>
       <div class="modal-preset-save-row">
         <input
           id="modal-preset-name-input"
@@ -274,13 +373,372 @@
            aucun stream affiché) — voir showPresetFeedback() dans app.js. -->
       <p id="modal-preset-feedback" class="modal-message" hidden></p>
       <ul id="modal-presets-list" class="modal-presets-list">
-        <!-- Rempli dynamiquement par js/app.js : chaque ligne a un bouton
-             "Appliquer", un bouton de partage (copie le lien) et un
-             bouton "×" (suppression) -->
+        <!-- Rempli dynamiquement par app.js : chaque ligne a un bouton
+             "Appliquer", une pastille quand des tailles de tuiles sont
+             mémorisées, un bouton de partage (copie le lien) et un bouton "×"
+             (suppression) -->
       </ul>
 
       <div class="modal-actions">
         <button id="modal-confirm" class="menu-btn menu-btn--accent" type="button">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= FENÊTRE D'AIDE ======================= -->
+  <!--
+    Fenêtre d'aide ouverte par le bouton #btn-help de l'en-tête : elle décrit
+    chaque option du site, avec des captures d'écran (dossier assets/help/,
+    régénérables avec tools/generate-help-screenshots.js, voir documentation.md).
+    Le contenu est ENTIÈREMENT statique (du HTML écrit ici) : aucune donnée
+    n'est chargée ni calculée à l'ouverture. Elle réutilise l'habillage de la
+    modale "Changer les streams" (.modal-overlay / .modal), en plus large :
+    voir .help-* dans style.css.
+    Accessibilité : role="dialog" + aria-modal + aria-labelledby ; app.js
+    (section 14) déplace le focus dedans à l'ouverture, le garde à l'intérieur
+    (Tab) et le rend au bouton d'aide à la fermeture ; Échap, le bouton « × » ou
+    un clic à côté la ferment.
+    ATTENTION : pas de lien "#ancre" dans cette fenêtre. Le site utilise le
+    hash de l'adresse pour la liste des streams (#chaine1/chaine2, voir
+    readChannelsFromHash() dans app.js) : un lien "#help-add" écraserait cette
+    liste. Le sommaire et les renvois internes sont donc des boutons
+    portant `data-help-target="<id de la section>"`, que app.js fait défiler
+    (scrollIntoView) sans toucher à l'adresse.
+    Chaque légende numérotée (<ol class="help-legend">) correspond aux pastilles
+    violettes dessinées sur la capture juste au-dessus (même numéro).
+    Les <img> ont `loading="lazy"` : comme la fenêtre est masquée tant qu'elle
+    n'est pas ouverte, aucune capture n'est téléchargée avant que
+    l'utilisateur ne la fasse défiler jusque-là. `width`/`height` sont les
+    dimensions réelles des fichiers, pour réserver la place et éviter que le
+    contenu ne "saute" quand une capture arrive.
+  -->
+  <div id="help-overlay" class="modal-overlay" hidden>
+    <div id="help-dialog" class="modal help-modal" role="dialog" aria-modal="true"
+      aria-labelledby="help-title" tabindex="-1">
+
+      <header class="help-header">
+        <h2 id="help-title">Aide — les options de StreamWall</h2>
+        <button id="help-close" class="help-close" type="button" aria-label="Fermer l'aide">×</button>
+      </header>
+
+      <div class="help-layout">
+        <!-- Sommaire : boutons (pas des liens #ancre, voir plus haut) -->
+        <nav class="help-toc" aria-label="Sommaire de l'aide">
+          <ol>
+            <li><button type="button" class="help-toc-link" data-help-target="help-intro">Pour commencer</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-menu">Le menu du haut</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-add">Ajouter des streams</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-wall">Le mur et le son</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-reorder">Mode Réorganiser</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-favorites">Mettre en avant</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-resize">Redimensionner</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-chat">Le chat</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-presets">Dispositions favorites</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-theme">Thème clair / sombre</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-keyboard">Clavier et écran tactile</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-data">Vos données</button></li>
+          </ol>
+        </nav>
+
+        <!-- Contenu défilant. tabindex="0" : permet de le faire défiler aux flèches du clavier. -->
+        <div id="help-body" class="help-body" tabindex="0">
+
+          <section id="help-intro" class="help-section" aria-labelledby="help-intro-title">
+            <h3 id="help-intro-title">Pour commencer</h3>
+            <p>
+              StreamWall affiche <strong>plusieurs streams Twitch en même temps</strong>
+              sur une seule page. Les tuiles se partagent toujours <strong>100 % de
+              l'écran</strong> : jamais de case vide, quel que soit le nombre de streams.
+            </p>
+            <p>
+              Tout se passe dans votre navigateur : pas de compte, pas de serveur.
+              Vos réglages sont mémorisés sur cet appareil (voir
+              <button type="button" class="help-link" data-help-target="help-data">Vos données</button>).
+            </p>
+            <p><strong>En deux gestes :</strong></p>
+            <ol>
+              <li>cliquez sur le bouton <strong>+</strong> du menu du haut (ou, si la page est vide, sur
+                « Ajouter des streams ») ;</li>
+              <li>tapez le nom d'une chaîne Twitch, puis appuyez sur Entrée : le stream s'affiche. « Valider »
+                referme la fenêtre.</li>
+            </ol>
+            <p>
+              Le bouton <strong>Réorganiser</strong>, à côté, sert ensuite à changer les streams de place, les
+              mettre en avant, les retirer ou les agrandir.
+            </p>
+          </section>
+
+          <section id="help-menu" class="help-section" aria-labelledby="help-menu-title">
+            <h3 id="help-menu-title">Le menu du haut</h3>
+            <figure class="help-figure">
+              <img src="assets/help/help-header.png" width="1520" height="192" loading="lazy" decoding="async"
+                alt="Capture de l'en-tête : le logo StreamWall à gauche, puis les boutons Plus, Réorganiser, Afficher/Masquer le chat, Aide et la bascule de thème, numérotés de 1 à 5." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Ajouter (+)</strong> : ouvre la fenêtre « Changer les streams » pour ajouter un stream ou
+                gérer ceux que vous avez déjà (voir
+                <button type="button" class="help-link" data-help-target="help-add">Ajouter des streams</button>).
+                Il est <strong>toujours affiché</strong>, mode Réorganiser ou non.</li>
+              <li><strong>Réorganiser</strong> : active le mode qui permet de changer de place, mettre en avant, retirer ou agrandir des streams (voir
+                <button type="button" class="help-link" data-help-target="help-reorder">Mode Réorganiser</button>).
+                Tant qu'il est actif, un bouton <strong>Réinitialiser la vue</strong> apparaît à côté.</li>
+              <li><strong>Afficher/Masquer le chat</strong> : ouvre ou ferme le panneau de discussion
+                (voir <button type="button" class="help-link" data-help-target="help-chat">Le chat</button>).</li>
+              <li><strong>Aide</strong> (le bouton « i ») : ouvre cette fenêtre.</li>
+              <li><strong>Soleil / lune</strong> : passe du thème sombre au thème clair, et inversement
+                (voir <button type="button" class="help-link" data-help-target="help-theme">Thème clair / sombre</button>).</li>
+            </ol>
+            <p class="help-note">
+              Sur un petit écran, le menu défile horizontalement si tous les boutons ne tiennent pas.
+            </p>
+          </section>
+
+          <section id="help-add" class="help-section" aria-labelledby="help-add-title">
+            <h3 id="help-add-title">Ajouter des streams</h3>
+            <p>
+              La fenêtre <strong>« Changer les streams »</strong> s'ouvre avec le bouton
+              <strong>+</strong> du menu du haut, <strong>toujours affiché</strong> (il n'est pas nécessaire
+              d'activer le mode Réorganiser) ou, quand aucun stream n'est affiché, avec le bouton
+              « Ajouter des streams » au milieu de la page.
+            </p>
+            <figure class="help-figure">
+              <img src="assets/help/help-add-streams.png" width="936" height="712" loading="lazy" decoding="async"
+                alt="Capture de la fenêtre Changer les streams : champ de saisie, liste des chaînes avec cases à cocher et boutons de suppression, numérotés de 1 à 3." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Champ de saisie</strong> : tapez le nom d'une chaîne (par exemple <code>zerator</code>) ou
+                collez son adresse <code>twitch.tv/…</code>, puis appuyez sur Entrée ou sur « Ajouter ».
+                Un nom Twitch compte de 4 à 25 caractères : lettres, chiffres et « _ ». Le champ propose
+                en auto-complétion les chaînes déjà utilisées sur cet appareil.</li>
+              <li><strong>Case à cocher</strong> : coche = la chaîne est affichée ; décochée, elle disparaît
+                du mur mais reste dans la liste pour la remettre plus tard.</li>
+              <li><strong>Croix « × »</strong> : oublie définitivement la chaîne (elle sort de la liste).</li>
+            </ol>
+            <p>« Valider », la touche Échap ou un clic à côté de la fenêtre la referme.</p>
+          </section>
+
+          <section id="help-wall" class="help-section" aria-labelledby="help-wall-title">
+            <h3 id="help-wall-title">Le mur et le son</h3>
+            <figure class="help-figure">
+              <img src="assets/help/help-wall.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture du mur de streams : quatre lecteurs vidéo qui se partagent tout l'écran en deux rangées de deux." />
+            </figure>
+            <ul>
+              <li>Chaque tuile est le <strong>lecteur officiel de Twitch</strong> : pause, volume, qualité,
+                plein écran… tout est dans ses propres commandes.</li>
+              <li>Les tuiles <strong>se répartissent automatiquement</strong> selon leur nombre et la taille
+                de la fenêtre, sans laisser de vide.</li>
+              <li><strong>Un seul stream a le son au chargement</strong> : le premier stream mis en avant s'il y en a,
+                sinon le premier affiché. Les autres démarrent muets ; utilisez le volume de leur lecteur pour en écouter un autre.</li>
+            </ul>
+          </section>
+
+          <section id="help-reorder" class="help-section" aria-labelledby="help-reorder-title">
+            <h3 id="help-reorder-title">Mode Réorganiser</h3>
+            <p>
+              Le bouton <strong>Réorganiser</strong> fait apparaître, sur chaque tuile, une barre d'outils
+              et des poignées dans les coins. Cliquez à nouveau dessus pour revenir au mur seul. Les tuiles
+              gardent exactement la même place et la même taille dans les deux modes.
+            </p>
+            <figure class="help-figure">
+              <img src="assets/help/help-reorder.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture du mode Réorganiser : chaque tuile porte une barre avec une poignée, une étoile et une croix, des poignées triangulaires dans les coins ; quatre éléments sont numérotés." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Poignée ✥ / toute la tuile</strong> : glissez-la sur une autre tuile pour changer de place.
+                Le stream prend l'emplacement de celui où vous le déposez, et les autres se décalent d'un cran.</li>
+              <li><strong>Étoile ☆</strong> : met le stream en avant
+                (voir <button type="button" class="help-link" data-help-target="help-favorites">Mettre en avant</button>).</li>
+              <li><strong>Croix « × »</strong> : retire le stream du mur. Il reste dans la liste de la fenêtre
+                « Changer les streams » pour le remettre plus tard.</li>
+              <li><strong>Poignée de coin</strong> : agrandit ou réduit la tuile
+                (voir <button type="button" class="help-link" data-help-target="help-resize">Redimensionner</button>).</li>
+            </ol>
+          </section>
+
+          <section id="help-favorites" class="help-section" aria-labelledby="help-favorites-title">
+            <h3 id="help-favorites-title">Mettre en avant</h3>
+            <p>
+              Cliquez sur l'<strong>étoile</strong> d'un stream (mode Réorganiser) pour en faire un favori :
+              l'étoile devient pleine (★). <strong>Deux streams au maximum</strong> peuvent être mis en avant.
+            </p>
+            <figure class="help-figure">
+              <img src="assets/help/help-favorites.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture avec deux streams mis en avant : ils occupent chacun un quart de l'écran, côte à côte en haut, et les quatre autres tuiles se répartissent autour." />
+            </figure>
+            <ol class="help-legend">
+              <li>Le <strong>premier favori</strong>, à gauche.</li>
+              <li>Le <strong>second favori</strong>, à sa droite.</li>
+            </ol>
+            <ul>
+              <li><strong>Deux favoris</strong> : chacun occupe un quart de la surface, côte à côte en haut ;
+                les autres tuiles se répartissent en dessous.</li>
+              <li><strong>Un favori</strong> : il occupe le quart supérieur gauche ; s'il n'y a qu'un autre stream, il prend
+                60 % de la largeur sur toute la hauteur.</li>
+              <li>Le premier favori garde le son au chargement. La mise en avant n'a d'effet que s'il reste au moins un autre stream affiché.</li>
+              <li>Une <button type="button" class="help-link" data-help-target="help-presets">disposition favorite</button>
+                retient quels streams sont mis en avant, et les rétablit quand vous l'appliquez.</li>
+              <li>Les favoris peuvent eux aussi être agrandis à la main
+                (<button type="button" class="help-link" data-help-target="help-resize">Redimensionner</button>).</li>
+              <li>Recliquez sur une étoile pleine pour retirer la mise en avant.</li>
+            </ul>
+          </section>
+
+          <section id="help-resize" class="help-section" aria-labelledby="help-resize-title">
+            <h3 id="help-resize-title">Redimensionner une tuile</h3>
+            <p>
+              En mode Réorganiser, chaque tuile a une <strong>poignée dans chacun de ses quatre coins</strong>.
+              Tirez-en une : la tuile grandit ou rétrécit en largeur <em>et</em> en hauteur, le coin opposé
+              restant en place.
+            </p>
+            <figure class="help-figure">
+              <img src="assets/help/help-resize.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture d'un stream agrandi par son coin bas droit : les autres tuiles se sont réorganisées autour de lui en gardant des tailles comparables ; trois éléments sont numérotés." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Poignée de coin</strong> : à tirer à la souris ou au doigt.</li>
+              <li><strong>Les autres tuiles s'adaptent</strong> : elles se réorganisent autour, sans trou, en
+                gardant des tailles à peu près égales.</li>
+              <li><strong>Réinitialiser la vue</strong> : remet toutes les tuiles à leur taille par défaut.</li>
+            </ol>
+            <ul>
+              <li>Un léger <strong>effet d'aimant</strong> colle la tuile au bord tout proche, plutôt que de laisser
+                une bande trop étroite à côté d'elle.</li>
+              <li>Aucune tuile ne descend sous 120 × 68 pixels : au-delà, le geste s'arrête.</li>
+              <li>Le réglage est <strong>mémorisé par combinaison</strong> (nombre de streams et de favoris) :
+                si vous ajoutez ou retirez un stream, la taille par défaut revient pour la nouvelle combinaison,
+                et retrouve votre réglage quand vous revenez à l'ancienne.</li>
+              <li>Pour retrouver un réglage précis avec des streams précis, enregistrez-le dans une
+                <button type="button" class="help-link" data-help-target="help-presets">disposition favorite</button> :
+                elle retient la taille de chaque tuile.</li>
+              <li>Le redimensionnement n'existe qu'en mode Réorganiser.</li>
+            </ul>
+          </section>
+
+          <section id="help-chat" class="help-section" aria-labelledby="help-chat-title">
+            <h3 id="help-chat-title">Le chat</h3>
+            <figure class="help-figure">
+              <img src="assets/help/help-chat.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture avec le panneau de chat ouvert à droite : le menu déroulant du choix de chaîne en haut, et la discussion en dessous ; trois éléments sont numérotés." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Afficher/Masquer le chat</strong> : ouvre ou ferme le panneau. Il est masqué au premier
+                chargement, puis votre choix est retenu.</li>
+              <li><strong>« Chat de : »</strong> : choisit la chaîne dont vous voyez la discussion, parmi celles affichées.</li>
+              <li><strong>La discussion</strong> : c'est le chat officiel de Twitch. Pour écrire, connectez-vous
+                <em>dans ce panneau</em> avec le lien fourni par Twitch.</li>
+            </ol>
+            <p class="help-note">Sur un petit écran, le chat s'affiche sous les vidéos plutôt qu'à côté.</p>
+          </section>
+
+          <section id="help-presets" class="help-section" aria-labelledby="help-presets-title">
+            <h3 id="help-presets-title">Dispositions favorites</h3>
+            <p>
+              Une <strong>disposition favorite</strong> retient une combinaison de streams sous un nom
+              (« Soirée entre amis »), pour la rappeler en un clic. Elle retient aussi
+              <strong>la disposition des tuiles</strong> : l'ordre des streams, ceux qui sont mis en avant
+              et <strong>la taille de chaque tuile</strong> que vous avez ajustée à la main. Un clic la rétablit
+              telle que vous l'aviez laissée. Elle se gère en bas de la fenêtre
+              « Changer les streams » (bouton <strong>+</strong> du menu).
+            </p>
+            <figure class="help-figure">
+              <img src="assets/help/help-presets.png" width="936" height="526" loading="lazy" decoding="async"
+                alt="Capture du bas de la fenêtre Changer les streams : le champ de nom et le bouton Enregistrer, puis une disposition avec son nom, l'icône de tailles mémorisées, et ses boutons de partage et de suppression, numérotés de 1 à 4." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Nom + « Enregistrer »</strong> : enregistre les streams actuellement affichés, leur ordre,
+                ceux mis en avant (★) et la taille de chaque tuile.
+                Réutiliser un nom existant met cette disposition à jour, tailles comprises.</li>
+              <li><strong>Le nom de la disposition</strong> : un clic l'applique. Ses streams s'affichent
+                avec leurs étoiles et la taille de leurs tuiles ; les autres streams sont masqués (sans être oubliés).</li>
+              <li><strong>Icône de tuiles</strong> : elle signale que des tailles ajustées à la main sont mémorisées
+                dans cette disposition.</li>
+              <li><strong>Icône de partage</strong> : copie dans le presse-papiers un lien vers cette disposition.
+                Quiconque ouvre ce lien voit les mêmes streams, <em>mais pas</em> les tailles ni les étoiles, qui restent
+                dans votre navigateur. La croix « × » à côté supprime la disposition.</li>
+            </ol>
+            <ul>
+              <li>Enregistrée <strong>sans avoir redimensionné</strong> de tuile, une disposition rétablit la taille par
+                défaut : elle efface les tailles que vous auriez ajustées depuis pour cette combinaison.</li>
+              <li>Ajuster les tailles <strong>après</strong> avoir appliqué une disposition ne la modifie pas : pour la
+                mettre à jour, enregistrez-la à nouveau sous le même nom.</li>
+              <li>Les dispositions enregistrées avant cette fonction ne rétablissent que leurs streams (taille des
+                tuiles et étoiles inchangées). Enregistrez-les à nouveau sous le même nom pour qu'elles retiennent
+                aussi les tailles.</li>
+            </ul>
+          </section>
+
+          <section id="help-theme" class="help-section" aria-labelledby="help-theme-title">
+            <h3 id="help-theme-title">Thème clair / sombre</h3>
+            <figure class="help-figure">
+              <img src="assets/help/help-light-theme.png" width="1100" height="620" loading="lazy" decoding="async"
+                alt="Capture du site en thème clair : en-tête blanc avec le logo à contour foncé, et la bascule de thème numérotée." />
+            </figure>
+            <ol class="help-legend">
+              <li><strong>Le logo</strong> change en même temps que le thème, pour rester lisible sur le fond.</li>
+              <li><strong>Le bouton soleil / lune</strong> bascule entre les deux thèmes. L'icône montre le thème
+                vers lequel vous allez passer. Votre choix est retenu.</li>
+            </ol>
+          </section>
+
+          <section id="help-keyboard" class="help-section" aria-labelledby="help-keyboard-title">
+            <h3 id="help-keyboard-title">Clavier et écran tactile</h3>
+            <p>Tout ce qui précède est utilisable au clavier (Tab / Maj+Tab pour circuler) :</p>
+            <div class="help-table-wrap">
+              <table class="help-table">
+                <thead>
+                  <tr><th scope="col">Où</th><th scope="col">Touches</th><th scope="col">Effet</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Barre d'une tuile (mode Réorganiser)</td>
+                    <td><kbd>←</kbd> <kbd>↑</kbd> / <kbd>→</kbd> <kbd>↓</kbd></td>
+                    <td>Avance / recule le stream d'un cran dans l'ordre d'affichage.</td>
+                  </tr>
+                  <tr>
+                    <td>Poignée de coin d'une tuile</td>
+                    <td><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></td>
+                    <td>Déplace le coin par petits pas (2 % de la zone) ; avec <kbd>Maj</kbd>, par pas cinq fois plus grands.</td>
+                  </tr>
+                  <tr>
+                    <td>Champs de la fenêtre « Changer les streams »</td>
+                    <td><kbd>Entrée</kbd></td>
+                    <td>Ajoute la chaîne / enregistre la disposition.</td>
+                  </tr>
+                  <tr>
+                    <td>Fenêtre « Changer les streams »</td>
+                    <td><kbd>Échap</kbd></td>
+                    <td>La ferme (comme « Valider »).</td>
+                  </tr>
+                  <tr>
+                    <td>Cette fenêtre d'aide</td>
+                    <td><kbd>Échap</kbd></td>
+                    <td>La ferme et rend le focus au bouton « i ».</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Sur <strong>écran tactile</strong>, les poignées de coin se tirent au doigt. Le glisser-déposer des
+              tuiles dépend du navigateur : sinon, utilisez les flèches sur la barre de la tuile, ou la fenêtre
+              « Changer les streams » pour recomposer le mur.
+            </p>
+          </section>
+
+          <section id="help-data" class="help-section" aria-labelledby="help-data-title">
+            <h3 id="help-data-title">Vos données</h3>
+            <ul>
+              <li><strong>Mémorisé sur cet appareil</strong> (dans le navigateur, sans aucun serveur) : les chaînes
+                connues et affichées, les favoris, le mode Réorganiser, le chat, le thème, les tailles ajustées à la
+                main et les dispositions favorites (avec, pour chacune, ses étoiles et ses tailles de tuiles).</li>
+              <li><strong>L'adresse de la page</strong> contient la liste des streams affichés
+                (<code>…#chaine1/chaine2</code>) : copier l'adresse, ou le lien d'une disposition favorite, suffit pour
+                partager le mur (les tailles ajustées à la main et les étoiles ne sont, elles, pas partagées).</li>
+              <li>Pour tout remettre à zéro, effacez les données du site dans les réglages de votre navigateur.</li>
+            </ul>
+          </section>
+
+        </div>
       </div>
     </div>
   </div>
