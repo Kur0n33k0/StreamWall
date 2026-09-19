@@ -104,8 +104,8 @@
       #btn-empty-add) quand aucun stream n'est configuré. Il n'y a plus de
       tuile "+" dans la zone des lecteurs, ni de bouton "Changer les streams"
       dédié. Le menu contient donc, dans l'ordre : "+", "Réorganiser" (et, dans
-      ce mode, "Réinitialiser la vue"), le chat, le bouton d'aide « i » et la
-      bascule thème sombre/clair tout à droite.
+      ce mode, "Réinitialiser la vue"), le chat, le bouton d'aide « i », la
+      bascule thème sombre/clair et, tout à droite, le lien GitHub.
       Pas de bouton "Connexion Twitch" ici : un flux OAuth avait été
       tenté (identité affichée dans le menu de StreamWall), mais retiré
       car il ne connecte de toute façon PAS le panneau de chat/vidéo
@@ -215,6 +215,34 @@
           />
         </svg>
       </button>
+      <!--
+        Lien vers le dépôt GitHub du projet (code source), tout à droite de la
+        barre. C'est un vrai LIEN (<a>) et non un bouton : il navigue, sans
+        aucun JavaScript. Habillé comme les autres boutons d'icône du menu
+        (classes menu-btn menu-btn--icon, voir style.css).
+        - `target="_blank"` l'ouvre dans un nouvel onglet, pour ne pas quitter
+          le mur de streams (les lecteurs seraient rechargés au retour) ;
+          `rel="noopener noreferrer"` empêche la page ouverte d'accéder à
+          celle-ci (`window.opener`) et de recevoir son adresse : c'est le
+          réflexe pour tout lien sortant en `_blank`.
+        - `aria-label` donne son nom au lien (l'icône est décorative) et
+          prévient qu'il s'ouvre dans un nouvel onglet ; `title` est
+          l'infobulle à la souris.
+        - L'icône est la "mark" GitHub (Octicons, licence MIT), en
+          `currentColor` : elle suit la couleur du thème sombre/clair.
+        Pour pointer vers un autre dépôt (un fork, par exemple), changer ce
+        `href` — ou supprimer tout le lien : voir documentation.md.
+      -->
+      <a id="github-link" class="menu-btn menu-btn--icon"
+        href="https://github.com/Kur0n33k0/kur0n33k0.github.io"
+        target="_blank" rel="noopener noreferrer"
+        aria-label="Code source de StreamWall sur GitHub (s'ouvre dans un nouvel onglet)"
+        title="Code source sur GitHub">
+        <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true">
+          <path fill="currentColor"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+      </a>
     </nav>
   </header>
 
@@ -388,8 +416,9 @@
   <!-- ======================= FENÊTRE D'AIDE ======================= -->
   <!--
     Fenêtre d'aide ouverte par le bouton #btn-help de l'en-tête : elle décrit
-    chaque option du site, avec des captures d'écran (dossier assets/help/,
-    régénérables avec tools/generate-help-screenshots.js, voir documentation.md).
+    chaque option du site, avec des captures d'écran (images fixes du dossier
+    assets/help/ ; voir documentation.md, section 16, pour la façon dont elles
+    ont été réalisées et les refaire).
     Le contenu est ENTIÈREMENT statique (du HTML écrit ici) : aucune donnée
     n'est chargée ni calculée à l'ouverture. Elle réutilise l'habillage de la
     modale "Changer les streams" (.modal-overlay / .modal), en plus large :
@@ -472,7 +501,7 @@
             <h3 id="help-menu-title">Le menu du haut</h3>
             <figure class="help-figure">
               <img src="assets/help/help-header.png" width="1520" height="192" loading="lazy" decoding="async"
-                alt="Capture de l'en-tête : le logo StreamWall à gauche, puis les boutons Plus, Réorganiser, Afficher/Masquer le chat, Aide et la bascule de thème, numérotés de 1 à 5." />
+                alt="Capture de l'en-tête : le logo StreamWall à gauche, puis les boutons Plus, Réorganiser, Afficher/Masquer le chat, Aide, la bascule de thème et le logo GitHub, numérotés de 1 à 6." />
             </figure>
             <ol class="help-legend">
               <li><strong>Ajouter (+)</strong> : ouvre la fenêtre « Changer les streams » pour ajouter un stream ou
@@ -487,6 +516,8 @@
               <li><strong>Aide</strong> (le bouton « i ») : ouvre cette fenêtre.</li>
               <li><strong>Soleil / lune</strong> : passe du thème sombre au thème clair, et inversement
                 (voir <button type="button" class="help-link" data-help-target="help-theme">Thème clair / sombre</button>).</li>
+              <li><strong>Logo GitHub</strong> (tout à droite) : ouvre le code source du projet sur GitHub, dans un nouvel
+                onglet — votre mur de streams n'est pas quitté.</li>
             </ol>
             <p class="help-note">
               Sur un petit écran, le menu défile horizontalement si tous les boutons ne tiennent pas.

@@ -199,8 +199,8 @@ html[data-theme="light"] .brand-logo--light {
   border-color: var(--twitch-purple);
 }
 
-/* Bouton icône seule (ajout « + », bascule de thème, aide) : carré, icône
-   centrée */
+/* Bouton icône seule (ajout « + », bascule de thème, aide, lien GitHub) :
+   carré, icône centrée */
 .menu-btn--icon {
   padding: 8px;
   width: 36px;
@@ -219,6 +219,21 @@ html[data-theme="light"] .brand-logo--light {
 /* Icône « + » du bouton d'ajout de stream (#btn-add) : même taille et même
    couleur que celles de la bascule de thème et du bouton d'aide. */
 .add-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* Lien GitHub (#github-link, tout à droite du menu) : c'est un <a> habillé
+   comme les boutons du menu (.menu-btn). Un lien est souligné par défaut et
+   prend la couleur des liens : on retire le soulignement (le texte est absent
+   de toute façon, seule l'icône est affichée) ; la couleur, elle, vient déjà
+   de .menu-btn. Son icône suit la couleur du thème comme les autres. */
+a.menu-btn {
+  text-decoration: none;
+}
+
+.github-icon {
   width: 18px;
   height: 18px;
   color: var(--text-primary);
@@ -1171,8 +1186,8 @@ html[data-theme="light"] .help-link {
 
 /*
  * Légende numérotée d'une capture : le numéro de chaque ligne est une pastille
- * violette, IDENTIQUE à celles dessinées sur l'image (tools/generate-help-
- * screenshots.js), pour qu'on associe d'un coup d'œil « 3 » sur la capture à
+ * violette, IDENTIQUE à celles dessinées sur l'image (voir documentation.md,
+ * section 16), pour qu'on associe d'un coup d'œil « 3 » sur la capture à
  * « 3 » dans la liste. Les numéros viennent d'un compteur CSS : pas de nombre à
  * saisir à la main dans le HTML, l'ordre des <li> fait foi.
  */
@@ -1352,8 +1367,9 @@ html[data-theme="light"] .help-link {
   }
 
   /*
-   * En-tête sur petit écran : le menu (jusqu'à 4 boutons en mode
-   * Réorganiser) plus le logo ne tiennent pas toujours sur une ligne. Plutôt
+   * En-tête sur petit écran : le menu (jusqu'à 7 éléments en mode
+   * Réorganiser : +, Réorganiser, Réinitialiser la vue, chat, aide, thème et
+   * lien GitHub) plus le logo ne tiennent pas toujours sur une ligne. Plutôt
    * que de faire déborder la page, le logo garde sa taille (`flex-shrink:
    * 0`) et c'est le MENU qui rétrécit et défile horizontalement au doigt
    * (`min-width: 0` l'autorise à devenir plus étroit que son contenu ;
@@ -1407,11 +1423,11 @@ html[data-theme="light"] .help-link {
  * Très petit écran (téléphone en portrait) : le nom "StreamWall" est masqué
  * (il ne reste que l'icône du logo, comme avant l'ajout du logo, où le nom
  * était déjà masqué ici pour gagner de la place), et l'en-tête et les
- * boutons sont un peu plus compacts, pour que l'icône et les quatre boutons
- * du menu (Réorganiser, chat, aide, thème) tiennent tous sans avoir à faire
- * défiler le menu — à partir de 360px de large, la largeur de téléphone la
- * plus courante. En dessous de 520px, le nom et le menu ne tiendraient de
- * toute façon pas ensemble.
+ * boutons sont un peu plus compacts, pour que l'icône et les six éléments
+ * du menu (+, Réorganiser, chat, aide, thème et lien GitHub) tiennent tous
+ * sans avoir à faire défiler le menu — à partir de 360px de large, la largeur
+ * de téléphone la plus courante. En dessous de 520px, le nom et le menu ne
+ * tiendraient de toute façon pas ensemble.
  */
 @media (max-width: 520px) {
   .brand-name {
@@ -1422,8 +1438,11 @@ html[data-theme="light"] .help-link {
     padding: 0 8px;
   }
 
+  /* 4px entre deux éléments du menu (8px sur grand écran) : c'est ce qui
+     permet à l'ajout du lien GitHub (36px) de tenir dans les 360px d'un
+     téléphone sans faire défiler le menu. */
   .app-menu {
-    gap: 6px;
+    gap: 4px;
   }
 
   .menu-btn:not(.menu-btn--icon) {

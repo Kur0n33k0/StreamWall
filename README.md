@@ -111,6 +111,7 @@ Python.
 **Confort**
 - Panneau de **chat Twitch** (masqué par défaut) avec choix de la chaîne.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
+- Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées.
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
@@ -164,9 +165,6 @@ disposition), Pointer Events (redimensionnement souris, doigt et stylet), Drag a
 100 % de remplissage, quelles que soient les tailles ajustées à la main.
 Voir [le détail dans la documentation](documentation.md#fonctionnement-technique).
 
-**Outil de développement (facultatif)** : [`puppeteer-core`](https://pptr.dev/) sert uniquement à régénérer les
-captures de l'aide, et n'est jamais chargé par le site.
-
 ## 🌍 Déploiement
 
 Le site n'a besoin d'aucune configuration : il se déploie tel quel sur n'importe quel hébergement de fichiers
@@ -194,7 +192,6 @@ règles.
 ├── style.css               Feuille de style (thèmes, mur de streams, fenêtres)
 ├── app.js                  Toute la logique de l'application, commentée en français
 ├── assets/                 Logo (thème sombre / clair), favicon et captures de l'aide
-├── tools/                  Outil facultatif de génération des captures d'écran
 ├── documentation.md        Documentation technique détaillée
 └── README.md               Cette présentation
 ```

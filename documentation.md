@@ -136,11 +136,12 @@ données ni processus serveur.
   chaînes à elle, indépendamment de ce qui est affiché à l'instant t —
   pas de bouton "Copier le lien" global dans le menu.
 - Menu **« + » / "Réorganiser" / "Afficher-Masquer le chat" / aide « i » /
-  thème**, positionné en haut à droite de la page (pas de bouton "Changer
-  les streams" séparé dans le menu : voir le point sur le bouton « + »
-  ci-dessus ;
-  pas de bouton "Copier le lien" non plus : voir le point sur les
-  dispositions favorites). Sur téléphone, « Afficher/Masquer le chat » se
+  thème / logo GitHub**, positionné en haut à droite de la page (pas de
+  bouton "Changer les streams" séparé dans le menu : voir le point sur le
+  bouton « + » ci-dessus ; pas de bouton "Copier le lien" non plus : voir le
+  point sur les dispositions favorites). Le **logo GitHub**, tout à droite,
+  ouvre le dépôt du projet dans un nouvel onglet (voir "Lien GitHub du menu"
+  dans la Personnalisation). Sur téléphone, « Afficher/Masquer le chat » se
   réduit à « Chat » pour que tout tienne.
 - **Fenêtre d'aide** (bouton **« i »** du menu) : elle explique **toutes les
   options du site, avec des captures d'écran** numérotées et un sommaire
@@ -170,16 +171,14 @@ streamwall/
 │   ├── logo_mode_clair0.png   Icône du logo pour le thème clair (contour foncé)
 │   ├── favicon.ico            Favicon (fichier ICO : 16, 32 et 48 px)
 │   └── help/                  Captures d'écran de la fenêtre d'aide (9 PNG, voir section 16)
-├── tools/
-│   └── generate-help-screenshots.js   Outil de développement FACULTATIF : régénère assets/help/
 ├── documentation.md    Cette documentation technique (fonctionnement, déploiement, personnalisation)
 └── README.md           Présentation du projet (page d'accueil GitHub)
 ```
 
 Il n'y a **aucune étape de build** (pas de Webpack/Vite/npm install) : les
 fichiers sont servis tels quels par n'importe quel serveur HTTP statique.
-Le dossier `tools/` n'est pas servi au visiteur et n'est jamais chargé par
-la page : il ne sert qu'à régénérer les captures de l'aide (section 16).
+Le dépôt ne contient aucun outil de développement : rien à installer, ni pour servir
+le site ni pour le modifier.
 
 ## Fonctionnement technique
 
@@ -1351,7 +1350,7 @@ arrive, et pour que les sauts du sommaire tombent au bon endroit.
 
 | Fichier | Ce qu'il montre | Pastilles |
 | --- | --- | --- |
-| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, thème (2× pour rester net) | 5 |
+| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, thème, logo GitHub (2× pour rester net) | 6 |
 | `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste (2×) | 3 |
 | `help-wall.png` | le mur de streams, sans rien d'autre | — |
 | `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles | 4 |
@@ -1368,41 +1367,36 @@ compteur CSS (l'ordre des `<li>` fait foi, aucun numéro n'est écrit à la main
 Si vous ajoutez ou retirez une pastille sur une capture, la légende doit
 suivre.
 
-**Les captures sont générées, pas dessinées à la main** :
-`tools/generate-help-screenshots.js` (un outil de développement,
-**facultatif** — le site reste 100 % statique, sans étape de build)
-ouvre le VRAI site dans un Chrome sans fenêtre, le met dans chaque état à
-illustrer en remplissant le `localStorage` (mêmes clés que l'application :
-chaînes, favoris, mode Réorganiser, tailles ajustées, thème, chat,
-dispositions), puis prend la capture. Deux choses sont simulées, faute de
+**Comment les captures ont été réalisées.** Ce sont des images FIXES : elles
+ne se mettent pas à jour toutes seules. Chacune a été prise sur le VRAI site,
+ouvert dans un Chrome sans fenêtre et mis dans l'état à illustrer en
+remplissant le `localStorage` (mêmes clés que l'application : chaînes,
+favoris, mode Réorganiser, tailles ajustées, thème, chat, dispositions), puis
+annotée de ses pastilles numérotées. Deux choses sont simulées, faute de
 pouvoir (ni vouloir) charger Twitch : les **lecteurs vidéo** sont remplacés par
 des images factices (dégradé, "EN DIRECT", nom de chaîne fictif :
 `exemple_un`, `exemple_deux`…) — on ne montre donc aucun vrai streamer — et le
-**chat** par quelques messages fictifs. Tout le réseau externe est bloqué
-pendant la prise de vue : les captures ne dépendent pas d'Internet et sont
-identiques d'une exécution à l'autre.
+**chat** par quelques messages fictifs. Le réseau externe était bloqué pendant
+la prise de vue.
 
-Pour les régénérer (après un changement d'interface) :
+Le script qui automatisait tout cela (`tools/generate-help-screenshots.js`,
+fondé sur `puppeteer-core`) **n'est plus dans le dépôt** : le site est resté
+sans aucun outil de développement. Il reste récupérable dans l'historique git
+(`git show 4350241^:tools/generate-help-screenshots.js`) pour refaire les
+captures après un changement d'interface — à adapter, il ne connaît pas
+forcément les derniers éléments de l'interface ; sinon, on les prend à la main,
+dans les mêmes états et avec les mêmes noms de chaînes fictifs. Dans les deux
+cas, si la taille d'une capture change, mettez à jour les attributs
+`width`/`height` de son `<img>` dans `index.html`.
 
-```bash
-python3 -m http.server 8080                     # 1. servir le site
-npm install puppeteer-core                      # 2. dans un dossier TEMPORAIRE (pas dans le projet)
-NODE_PATH=/chemin/vers/node_modules \
-  node tools/generate-help-screenshots.js       # 3. régénérer assets/help/*.png
-```
-
-`CHROME_PATH` désigne un Chrome/Edge précis (sinon les emplacements usuels sont
-essayés) et `STREAMWALL_URL` une autre adresse que
-`http://localhost:8080/index.html`. Si la taille d'une capture change, mettez à
-jour les attributs `width`/`height` de son `<img>` dans `index.html`.
-
-**Le menu sur téléphone.** Avec le bouton « + » et le bouton « i », le menu
-compte cinq boutons (+, Réorganiser, chat, aide, thème) ; pour qu'ils tiennent
-tous sur un écran de
-360 px sans faire défiler le menu, le libellé « Afficher/Masquer le chat » se
-réduit à **« Chat »** jusqu'à 600 px de large (`.menu-btn-extra`, une partie du
-libellé masquée en CSS ; `aria-label` garde le nom complet pour les lecteurs
-d'écran). Au-delà de 600 px, rien ne change.
+**Le menu sur téléphone.** Avec le bouton « + », le bouton « i » et le lien
+GitHub, le menu compte six éléments (cinq boutons — +, Réorganiser, chat, aide,
+thème — et le lien) ; pour qu'ils tiennent tous sur un écran de 360 px sans
+faire défiler le menu, deux choses changent : le libellé « Afficher/Masquer le
+chat » se réduit à **« Chat »** jusqu'à 600 px de large (`.menu-btn-extra`, une
+partie du libellé masquée en CSS ; `aria-label` garde le nom complet pour les
+lecteurs d'écran), et l'écart entre deux éléments passe de 8 à 4 px sous
+520 px. Au-delà de 600 px, rien ne change.
 
 ## Lancer le projet en local
 
@@ -1634,8 +1628,8 @@ ensemble.
 
 **Le menu de l'en-tête sur téléphone.** Pour que le logo ne fasse jamais
 déborder la page, l'en-tête et les boutons sont un peu plus compacts sous
-520 px (à partir de 360 px de large, l'icône et les cinq boutons
-+ / Réorganiser / chat / aide / thème tiennent sans défiler, le libellé du bouton
+520 px (à partir de 360 px de large, l'icône et les six éléments du menu
++ / Réorganiser / chat / aide / thème / GitHub tiennent sans défiler, le libellé du bouton
 de chat étant alors réduit à « Chat » : voir section 16) ; et quand le menu a
 plus de boutons que la largeur ne le permet — typiquement le mode
 Réorganiser, qui ajoute "Réinitialiser la vue" — c'est le menu qui **défile
@@ -1666,6 +1660,37 @@ Si votre nouveau logo contient déjà le nom "StreamWall" dans l'image,
 supprimez le `<span class="brand-name">` pour ne pas l'écrire deux fois (et
 donnez alors un `alt="StreamWall"` aux images).
 
+### Lien GitHub du menu
+
+Tout à droite du menu, le **logo GitHub** (`#github-link`, dans `index.html`)
+ouvre le dépôt du projet, `https://github.com/Kur0n33k0/kur0n33k0.github.io`,
+dans un nouvel onglet. C'est un simple lien HTML (`<a>`), sans aucun
+JavaScript :
+
+- `target="_blank"` l'ouvre dans un **nouvel onglet**, pour ne pas quitter le
+  mur de streams (les lecteurs seraient rechargés au retour) ;
+  `rel="noopener noreferrer"` empêche la page ouverte d'accéder à celle-ci
+  (`window.opener`) et de recevoir son adresse : le réflexe pour tout lien
+  sortant en `_blank`.
+- Il est habillé comme les autres boutons d'icône du menu
+  (`.menu-btn .menu-btn--icon`). L'icône est la "mark" GitHub des Octicons
+  (licence MIT), en SVG inline dessiné en `currentColor` : elle suit la couleur
+  du thème sombre/clair, sans image ni requête de plus. `a.menu-btn` retire le
+  soulignement que les liens ont par défaut.
+- Accessibilité : l'icône est décorative (`aria-hidden`), c'est `aria-label`
+  (« Code source de StreamWall sur GitHub (s'ouvre dans un nouvel onglet) »)
+  qui nomme le lien, `title` fournit l'infobulle, et il est atteignable au
+  clavier (Tab, juste après la bascule de thème).
+- Il fait partie du menu : sur téléphone, l'écart entre les éléments du menu
+  est réduit (4 px sous 520 px) pour que tout tienne encore sans faire défiler
+  le menu (voir section 16).
+
+**Pointer vers un autre dépôt** (un fork, par exemple) : changez l'attribut
+`href` de `#github-link`. **Le retirer** : supprimez le `<a id="github-link">`
+d'`index.html` ; rien d'autre dans le code n'y fait référence. L'aide le cite
+dans la légende de la capture de l'en-tête (`help-header.png`) : retirez aussi
+cet élément de la légende (et la pastille de la capture).
+
 ### Modifier la fenêtre d'aide
 
 Le texte de l'aide est du HTML dans `index.html`, bloc `#help-overlay` :
@@ -1687,10 +1712,9 @@ modifiez-le directement (aucune autre étape). Pour **ajouter une rubrique** :
 Aucun code JavaScript n'est à toucher : `app.js` repère les sections et les
 rubriques d'après leurs classes (`.help-section`, `.help-toc-link`).
 
-**Ajouter ou refaire une capture** : décrivez son état dans
-`tools/generate-help-screenshots.js` (un bloc numéroté par capture : état
-du `localStorage`, pastilles à poser avec `addCallouts()`, nom du fichier),
-relancez l'outil (commandes en section 16), puis ajoutez dans la section un
+**Ajouter ou refaire une capture** : prenez-la dans l'état voulu (faux
+lecteurs, pastilles numérotées : voir section 16), placez le fichier PNG dans
+`assets/help/`, puis ajoutez dans la section un
 `<figure class="help-figure"><img …></figure>` suivi de sa légende
 `<ol class="help-legend">` (une ligne par pastille, dans l'ordre) ; donnez à
 l'`<img>` un `alt` descriptif, `loading="lazy"` et les `width`/`height`
@@ -1819,15 +1843,15 @@ réels du fichier.
   dans `<head>` si vous voulez que le site s'installe avec une icône
   soignée sur iOS/Android.
 - Sur très petit écran (moins de 520 px de large), le nom "StreamWall" est
-  masqué et il ne reste que l'icône du logo ; et en mode Réorganiser (6
-  boutons dans le menu, avec "Réinitialiser la vue") le menu défile
+  masqué et il ne reste que l'icône du logo ; et en mode Réorganiser (7
+  éléments dans le menu, avec "Réinitialiser la vue") le menu défile
   horizontalement au lieu de tout afficher d'un coup (voir "Logo et
   favicon"). Jusqu'à 600 px, le bouton de chat s'écrit « Chat » au lieu de
   « Afficher/Masquer le chat » (section 16).
 - **La fenêtre d'aide** (section 16) est rédigée **en français uniquement**,
   comme le reste de l'interface. Ses captures sont des images fixes : elles
-  ne suivent pas l'interface d'elles-mêmes et doivent être **régénérées**
-  quand celle-ci change (`tools/generate-help-screenshots.js`). Elles
+  ne suivent pas l'interface d'elles-mêmes et doivent être **refaites**
+  quand celle-ci change (voir section 16). Elles
   montrent de **faux** lecteurs (aucun vrai stream) et l'en-tête en thème
   sombre, même quand le site est affiché en thème clair. Elle n'a pas de
   moteur de recherche interne (le sommaire suffit pour douze rubriques).
