@@ -84,8 +84,6 @@ Python.
   </tr>
 </table>
 
-<sub>Captures réalisées avec de faux lecteurs (`exemple_un`, `exemple_deux`…) : aucun vrai streamer n'y figure.
-Elles sont générées par [`tools/generate-help-screenshots.js`](tools/generate-help-screenshots.js).</sub>
 
 ## 🎛️ Fonctionnalités
 
