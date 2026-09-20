@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plan du site pour les moteurs de recherche (protocole sitemaps.org).
+  StreamWall est une application d'une seule page : une seule adresse, l'accueil.
+  Les variantes ?lang=en et #chaine1/chaine2 n'en sont pas des pages distinctes
+  (voir <link rel="canonical"> dans index.html), elles ne figurent donc pas ici.
+  <lastmod> : date de la dernière modification importante du contenu ; à mettre
+  à jour à la main quand le site change.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://kur0n33k0.github.io/</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

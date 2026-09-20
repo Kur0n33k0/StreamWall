@@ -1,0 +1,8 @@
+# StreamWall — robots.txt
+# Tous les robots d'indexation sont les bienvenus : le site est public et statique.
+User-agent: *
+Allow: /
+
+# Le plan du site (une seule page : l'application). À garder synchronisé avec
+# l'adresse canonique de index.html.
+Sitemap: https://kur0n33k0.github.io/sitemap.xml

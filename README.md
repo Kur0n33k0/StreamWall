@@ -21,6 +21,7 @@ Un mur de streams qui remplit toujours 100 % de l'écran, que vous réorganisez 
 ![Aucun backend](https://img.shields.io/badge/backend-aucun-2ea44f)
 ![Aucun build](https://img.shields.io/badge/build-aucun-2ea44f)
 ![Aucune dépendance npm](https://img.shields.io/badge/d%C3%A9pendances%20npm-aucune-2ea44f)
+![Langues : français et anglais](https://img.shields.io/badge/langues-FR%20%7C%20EN-blue)
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-en%20ligne-222222?logo=githubpages&logoColor=white)](https://kur0n33k0.github.io/)
 
 [**🌐 Voir le site en ligne**](https://kur0n33k0.github.io/) ·
@@ -110,6 +111,8 @@ Python.
 
 **Confort**
 - Panneau de **chat Twitch** (masqué par défaut) avec choix de la chaîne.
+- **Site bilingue, français et anglais** : le bouton **EN / FR** du menu traduit toute l'interface, aide et captures
+  comprises. Le choix est mémorisé, et `?lang=en` dans l'adresse ouvre le site en anglais.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées.
@@ -161,6 +164,9 @@ Ouvrez ensuite **http://localhost:8080**.
 **API du navigateur utilisées** : `localStorage` (mémorisation des réglages), `ResizeObserver` (recalcul de la
 disposition), Pointer Events (redimensionnement souris, doigt et stylet), Drag and Drop HTML5, Clipboard.
 
+**Traductions** : deux dictionnaires en JavaScript pur (`i18n.js`), sans bibliothèque ; l'aide existe en deux versions.
+Voir [la documentation, section 17](documentation.md#17-langues-français--anglais).
+
 **Sous le capot** : un petit solveur de découpage récursif (« guillotine ») pave la zone en rectangles pour garantir
 100 % de remplissage, quelles que soient les tailles ajustées à la main.
 Voir [le détail dans la documentation](documentation.md#fonctionnement-technique).
@@ -188,23 +194,27 @@ règles.
 ## 📁 Structure du projet
 
 ```
-├── index.html              Page unique (structure HTML et texte de l'aide)
+├── index.html              Page unique (structure HTML, référencement, texte de l'aide en français et en anglais)
 ├── style.css               Feuille de style (thèmes, mur de streams, fenêtres)
 ├── app.js                  Toute la logique de l'application, commentée en français
-├── assets/                 Logo (thème sombre / clair), favicon et captures de l'aide
+├── i18n.js                 Langues : dictionnaires français / anglais et moteur de traduction
+├── robots.txt, sitemap.xml Référencement (moteurs de recherche)
+├── assets/                 Logo (thème sombre / clair), favicon, image d'aperçu et captures de l'aide (FR / EN)
 ├── documentation.md        Documentation technique détaillée
 └── README.md               Cette présentation
 ```
 
 ## 📖 Documentation
 
-La **[documentation technique](documentation.md)** détaille le fonctionnement interne (16 sections : affichage des
+La **[documentation technique](documentation.md)** détaille le fonctionnement interne (17 sections : affichage des
 streams, modèle de données, disposition dynamique, mise en avant, redimensionnement manuel, dispositions favorites,
 fenêtre d'aide…), ainsi que :
 
 - [Lancer le projet en local](documentation.md#lancer-le-projet-en-local)
 - [Déploiement](documentation.md#déploiement)
-- [Personnalisation](documentation.md#personnalisation) (couleurs, logo, réglages de la disposition, fenêtre d'aide)
+- [Langues (français / anglais)](documentation.md#17-langues-français--anglais)
+- [Référencement (SEO)](documentation.md#référencement-seo)
+- [Personnalisation](documentation.md#personnalisation) (couleurs, logo, réglages de la disposition, fenêtre d'aide, traductions)
 - [Limitations connues](documentation.md#limitations-connues)
 
 Le code est intégralement commenté en français.

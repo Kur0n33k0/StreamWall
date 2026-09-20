@@ -22,9 +22,10 @@ données ni processus serveur.
 4. [Lancer le projet en local](#lancer-le-projet-en-local)
 5. [Déploiement](#déploiement)
 6. [Le paramètre `parent` de Twitch (point critique)](#le-paramètre-parent-de-twitch-point-critique)
-7. [Personnalisation](#personnalisation)
-8. [Limitations connues](#limitations-connues)
-9. [Licence](#licence)
+7. [Référencement (SEO)](#référencement-seo)
+8. [Personnalisation](#personnalisation)
+9. [Limitations connues](#limitations-connues)
+10. [Licence](#licence)
 
 ## Fonctionnalités
 
@@ -136,7 +137,7 @@ données ni processus serveur.
   chaînes à elle, indépendamment de ce qui est affiché à l'instant t —
   pas de bouton "Copier le lien" global dans le menu.
 - Menu **« + » / "Réorganiser" / "Afficher-Masquer le chat" / aide « i » /
-  thème / logo GitHub**, positionné en haut à droite de la page (pas de
+  langue « EN » / thème / logo GitHub**, positionné en haut à droite de la page (pas de
   bouton "Changer les streams" séparé dans le menu : voir le point sur le
   bouton « + » ci-dessus ; pas de bouton "Copier le lien" non plus : voir le
   point sur les dispositions favorites). Le **logo GitHub**, tout à droite,
@@ -149,13 +150,22 @@ données ni processus serveur.
   redimensionnement, chat, dispositions favorites, thème, clavier et écran
   tactile, données mémorisées. Elle se ferme avec « × », un clic à côté ou la
   touche Échap, et son focus clavier est géré (voir section 16).
+- **Site bilingue, français et anglais** : le bouton **« EN » / « FR »** du
+  menu change la langue de TOUTE l'interface (menus, messages, fenêtre d'aide et
+  ses captures d'écran) sans recharger les lecteurs. Le choix est mémorisé ;
+  `?lang=en` dans l'adresse ouvre le site en anglais, et les liens de partage le
+  conservent. Le français reste la langue par défaut (voir section 17).
+- **Référencement soigné** : titre et description avec les bons mots-clés,
+  adresse canonique, aperçus Open Graph / Twitter Card avec une image dédiée,
+  données structurées JSON-LD, `robots.txt`, `sitemap.xml`, un `<h1>` unique et
+  un accueil avec du vrai texte (voir "Référencement (SEO)").
 - Interface reprenant le **code couleur officiel de Twitch.tv** (violet
   `#9147FF` dans les deux thèmes), sans logo ni favicon Twitch.
 - Les chaînes actuellement **affichées** sont encodées dans **l'URL**
   (`#chaine1/chaine2/...`), ce qui permet de partager un lien direct vers
   une composition de streams précise.
 - La disposition complète (chaînes connues et leur statut, mode
-  Réorganiser, thème, visibilité du chat, chaîne de chat sélectionnée,
+  Réorganiser, thème, langue, visibilité du chat, chaîne de chat sélectionnée,
   dispositions favorites) est sauvegardée en `localStorage` pour être
   restaurée à la prochaine visite.
 
@@ -163,14 +173,18 @@ données ni processus serveur.
 
 ```
 streamwall/
-├── index.html          Page unique de l'application (structure HTML, y compris le texte de la fenêtre d'aide)
+├── index.html          Page unique de l'application (structure HTML, balises de référencement, texte de la fenêtre d'aide en français et en anglais)
 ├── style.css           Feuille de style (thèmes, zone vidéo, poignées, drag&drop, modale, fenêtre d'aide)
 ├── app.js              Toute la logique applicative, abondamment commentée
+├── i18n.js             Langues : dictionnaires français / anglais et moteur de traduction (section 17)
+├── robots.txt          Consignes aux robots d'indexation (référencement)
+├── sitemap.xml         Plan du site pour les moteurs de recherche
 ├── assets/
 │   ├── logo_mode_sombre.png   Icône du logo pour le thème sombre (contour clair)
 │   ├── logo_mode_clair0.png   Icône du logo pour le thème clair (contour foncé)
 │   ├── favicon.ico            Favicon (fichier ICO : 16, 32 et 48 px)
-│   └── help/                  Captures d'écran de la fenêtre d'aide (9 PNG, voir section 16)
+│   ├── og-image.jpg           Image d'aperçu pour les réseaux sociaux (1200 x 630)
+│   └── help/                  Captures d'écran de la fenêtre d'aide : 9 PNG en français, 9 dans en/ en anglais (section 16)
 ├── documentation.md    Cette documentation technique (fonctionnement, déploiement, personnalisation)
 └── README.md           Présentation du projet (page d'accueil GitHub)
 ```
@@ -660,6 +674,11 @@ serveur, donc le site fonctionne à l'identique sur un simple hébergement
 statique. Voir `readChannelsFromHash()` et `writeChannelsToHash()` dans
 `app.js`.
 
+L'adresse peut aussi porter un paramètre de **langue**, `?lang=en`, placé AVANT
+le hash (`https://votre-domaine.com/?lang=en#zerator/gotaga`) : il ne concerne
+pas les chaînes, et `writeChannelsToHash()` le conserve puisqu'elle ne réécrit
+que le hash (section 17).
+
 ### 7. Glisser-déposer (drag and drop)
 
 Le réordonnancement utilise l'**API HTML5 Drag and Drop native du
@@ -762,7 +781,8 @@ s'affiche d'emblée, sans flash, et `applyTheme()` n'a rien à faire pour lui.
 ### 9. Persistance
 
 En plus du hash d'URL (qui ne porte que les chaînes visibles), l'état
-complet — chaînes connues et leur statut, mode Réorganiser, thème,
+complet — chaînes connues et leur statut, mode Réorganiser, thème, langue
+(clé `streamwall:lang`, écrite par i18n.js : section 17),
 visibilité du chat, chaîne de chat sélectionnée, chaînes mises en avant
 (section 5), tailles ajustées à la main (section 15) et dispositions
 favorites (avec, pour chacune, ses favoris et ses tailles : section 13) — est
@@ -979,7 +999,8 @@ stockée ainsi (`state.presets`, écrit dans `streamwall:presets`) :
   `location.href`, précisément pour ignorer le hash courant et ne
   refléter que les chaînes du preset. **Le lien ne porte que les chaînes** :
   les favoris et les tailles ne voyagent pas (le hash d'URL n'a jamais
-  contenu autre chose que la liste des streams). Il n'y a donc **pas** de
+  contenu autre chose que la liste des streams). Quand le site est en anglais,
+  il porte aussi `?lang=en` (section 17). Il n'y a donc **pas** de
   bouton "Copier le lien" global dans le menu : partager "ce qui est affiché
   maintenant" passe par enregistrer un preset (même éphémère) puis
   cliquer sur son bouton de partage.
@@ -996,9 +1017,11 @@ stockée ainsi (`state.presets`, écrit dans `streamwall:presets`) :
 
 Les noms de presets sont du **texte libre** saisi par l'utilisateur
 (contrairement aux noms de chaînes, restreints à `[a-z0-9_]` par
-construction) : `renderPresetsList()` les passe systématiquement par
-`escapeHtml()` avant de les insérer dans un gabarit `innerHTML`, pour
-éviter toute injection HTML.
+construction) : `renderPresetsList()` ne les insère jamais dans du HTML — le
+gabarit ne contient que de la structure fixe, et le nom (comme tous les
+libellés, traduits : section 17) est posé par `textContent` / `setAttribute`,
+qui n'interprètent jamais de HTML. Aucune injection n'est possible, même avec
+des guillemets ou des balises dans le nom.
 
 La modale contient désormais, sous le titre « Dispositions favorites », une
 phrase qui explique ce qu'une disposition retient (streams, ordre, mis en
@@ -1285,7 +1308,7 @@ cas.
 
 ### 16. Fenêtre d'aide (bouton « i »)
 
-Le bouton **« i »** du menu (`#btn-help`, à gauche de la bascule de thème)
+Le bouton **« i »** du menu (`#btn-help`, à gauche du bouton de langue)
 ouvre une fenêtre qui explique **toutes les options du site, avec des
 captures d'écran** : le menu, l'ajout de streams, le son, le mode
 Réorganiser, la mise en avant, le redimensionnement par les coins, le chat,
@@ -1294,11 +1317,23 @@ ce qui est mémorisé. Un sommaire à gauche permet d'aller directement à une
 rubrique ; sur un écran étroit (≤ 720 px), il passe au-dessus du texte sous
 forme d'une rangée de boutons qui défile horizontalement.
 
-**Un contenu 100 % statique.** Le texte et les captures sont du HTML écrit
-directement dans `index.html` (bloc `#help-overlay`) : aucun texte n'est
-construit en JavaScript, aucune donnée n'est chargée ni calculée à
+**Un contenu 100 % statique, en deux versions.** Le texte et les captures sont
+du HTML écrit directement dans `index.html` (bloc `#help-overlay`) : aucun texte
+n'est construit en JavaScript, aucune donnée n'est chargée ni calculée à
 l'ouverture, et la fenêtre reste donc un simple fichier à éditer (voir
-"Modifier la fenêtre d'aide" dans la section Personnalisation). Elle
+"Modifier la fenêtre d'aide" dans la section Personnalisation). Comme elle est
+longue, elle n'est pas dans le dictionnaire de traduction (section 17) : chaque
+rubrique (`<div class="help-section">`) contient **deux blocs**,
+`<section class="help-lang" lang="fr">` et `lang="en"`, avec leurs propres
+titres (`help-xxx-title` et `help-xxx-title-en`) et leurs propres captures
+(`assets/help/` et `assets/help/en/`). Le CSS n'en affiche qu'un, celui de la
+langue de la page (`html[lang="fr"] .help-lang[lang="fr"]`…) : l'autre est en
+`display: none`, donc ignoré des lecteurs d'écran, et ses images
+`loading="lazy"` ne sont jamais téléchargées. Le titre de la fenêtre, le
+sommaire et les libellés passent, eux, par le dictionnaire (`data-i18n`).
+Les rubriques et leurs identifiants (`help-intro`, `help-menu`…) sont
+communs aux deux langues, donc le sommaire, le défilement et la rubrique
+courante fonctionnent à l'identique. Elle
 réutilise l'habillage de la modale "Changer les streams" (`.modal-overlay` et
 `.modal`), en plus large (`.help-modal`, 980 px au plus) ; toutes ses
 couleurs sont les variables de thème, donc elle suit le thème sombre/clair.
@@ -1340,17 +1375,19 @@ seule peut donc être atteinte à la fois. Échap ferme l'une comme l'autre
   animé (`scroll-behavior: smooth`), sauf pour qui a demandé moins
   d'animations (`prefers-reduced-motion`).
 
-**Les captures d'écran.** Elles sont dans `assets/help/`, avec des
+**Les captures d'écran.** Il y en a **deux jeux de neuf** : les françaises dans
+`assets/help/`, les anglaises (mêmes noms) dans `assets/help/en/`, avec des
 `<img loading="lazy">` : la fenêtre étant masquée tant qu'elle n'est pas
 ouverte, **aucune capture n'est téléchargée avant que l'utilisateur ne fasse
-défiler l'aide jusque-là** (elles pèsent de 28 à 275 Ko chacune, environ 1,6 Mo au total). Les attributs
+défiler l'aide jusque-là**, et seul le jeu de la langue affichée l'est (elles
+pèsent de 28 à 290 Ko chacune, environ 1,7 Mo par langue). Les attributs
 `width`/`height` de chaque `<img>` sont les dimensions réelles du fichier :
 ils réservent la place, pour que le texte ne "saute" pas quand une capture
 arrive, et pour que les sauts du sommaire tombent au bon endroit.
 
 | Fichier | Ce qu'il montre | Pastilles |
 | --- | --- | --- |
-| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, thème, logo GitHub (2× pour rester net) | 6 |
+| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, langue, thème, logo GitHub (2× pour rester net) | 7 |
 | `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste (2×) | 3 |
 | `help-wall.png` | le mur de streams, sans rien d'autre | — |
 | `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles | 4 |
@@ -1377,7 +1414,10 @@ pouvoir (ni vouloir) charger Twitch : les **lecteurs vidéo** sont remplacés pa
 des images factices (dégradé, "EN DIRECT", nom de chaîne fictif :
 `exemple_un`, `exemple_deux`…) — on ne montre donc aucun vrai streamer — et le
 **chat** par quelques messages fictifs. Le réseau externe était bloqué pendant
-la prise de vue.
+la prise de vue. Les captures anglaises sont prises de la même façon avec la
+langue anglaise mémorisée (`streamwall:lang` = `en`), et des libellés adaptés :
+"LIVE", `example_one`, `example_two`…, messages de chat en anglais, disposition
+« Friends night ».
 
 Le script qui automatisait tout cela (`tools/generate-help-screenshots.js`,
 fondé sur `puppeteer-core`) **n'est plus dans le dépôt** : le site est resté
@@ -1389,14 +1429,105 @@ dans les mêmes états et avec les mêmes noms de chaînes fictifs. Dans les deu
 cas, si la taille d'une capture change, mettez à jour les attributs
 `width`/`height` de son `<img>` dans `index.html`.
 
-**Le menu sur téléphone.** Avec le bouton « + », le bouton « i » et le lien
-GitHub, le menu compte six éléments (cinq boutons — +, Réorganiser, chat, aide,
-thème — et le lien) ; pour qu'ils tiennent tous sur un écran de 360 px sans
-faire défiler le menu, deux choses changent : le libellé « Afficher/Masquer le
-chat » se réduit à **« Chat »** jusqu'à 600 px de large (`.menu-btn-extra`, une
-partie du libellé masquée en CSS ; `aria-label` garde le nom complet pour les
-lecteurs d'écran), et l'écart entre deux éléments passe de 8 à 4 px sous
-520 px. Au-delà de 600 px, rien ne change.
+**Le menu sur téléphone.** Avec le bouton « + », le bouton « i », le bouton de
+langue et le lien GitHub, le menu compte sept éléments (six boutons — +,
+Réorganiser, chat, aide, langue, thème — et le lien) ; pour qu'ils tiennent tous
+sur un écran de 360 px sans faire défiler le menu, le menu devient **compact**
+jusqu'à 600 px de large : le libellé « Afficher/Masquer le chat » se réduit à
+**« Chat »** (`.menu-btn-extra`, une partie du libellé masquée en CSS ;
+`aria-label` garde le nom complet pour les lecteurs d'écran ; en anglais,
+« Show/Hide chat » se réduit de même), l'écart entre deux éléments passe de 8 à
+3 px, les boutons d'icône de 36 à 32 px (largement au-dessus des 24 px minimum
+recommandés pour une cible tactile) et les boutons à texte sont plus serrés.
+Sous 520 px, le nom « StreamWall » est en plus masqué et l'en-tête resserré.
+Au-delà de 600 px, rien ne change.
+
+### 17. Langues (français / anglais)
+
+Le site existe en **français** (langue par défaut) et en **anglais**. Le
+bouton de langue du menu (`#btn-lang`, entre l'aide « i » et la bascule de
+thème) montre **l'autre** langue — « EN » quand le site est en français, « FR »
+quand il est en anglais — et la bascule au clic. Rien n'est rechargé : les
+lecteurs vidéo et le chat gardent leur session. Tout passe par **`i18n.js`**
+(dictionnaires et moteur de traduction, sans dépendance), chargé dans `<head>`
+avant le CSS et `app.js`, et exposé par `window.StreamWallI18n`.
+
+**Comment la langue est choisie**, par ordre de priorité
+(`resolveInitialLanguage()`) :
+
+1. le paramètre d'adresse **`?lang=en`** (ou `?lang=fr`) : un lien partagé
+   s'ouvre dans la langue de celui qui l'a partagé (`readLanguageFromUrl()`) ;
+2. le **choix mémorisé** par le bouton de langue, en `localStorage`, clé
+   `streamwall:lang` (`readStoredLanguage()`) ;
+3. sinon le **français**. La langue du navigateur n'est PAS consultée, sauf si la
+   constante `AUTO_DETECT_BROWSER_LANGUAGE` est passée à `true` : elle est
+   désactivée volontairement, car les robots d'indexation se présentent en
+   anglais et verraient donc la version anglaise à la place de la française sur
+   l'adresse principale (voir "Référencement (SEO)"). Un visiteur anglophone
+   utilise le bouton « EN ».
+
+Une valeur inconnue (`?lang=de`, choix mémorisé corrompu) est ignorée. Un clic
+sur le bouton (`setLanguage()`) pose `<html lang>`, traduit la page, mémorise le
+choix et met à jour l'adresse (`syncUrlParameter()`) : `?lang=en` pour
+l'anglais, rien pour le français ; le chemin et le **hash** (la liste des
+streams) sont conservés, et `writeChannelsToHash()` ne perd jamais le
+paramètre (son `replaceState` ne réécrit que le hash).
+
+**Trois façons d'avoir un texte dans une langue :**
+
+- **Texte statique** (`index.html`) : un attribut **`data-i18n="clé"`** remplace
+  le texte de l'élément, **`data-i18n-attr="aria-label:clé;title:clé2"`**
+  remplace des attributs (`aria-label`, `title`, `placeholder`, et même le
+  `content` des balises `<meta>` et le `<title>`). Le HTML contient déjà le
+  texte **français** : c'est ce que voient les robots et les navigateurs sans
+  JavaScript, et le français ne demande aucun travail au chargement (aucun
+  clignotement). Le dictionnaire français doit donc rester IDENTIQUE à ce texte
+  (`applyTranslations()` n'est appelé au chargement que pour les autres
+  langues) ; en anglais, les textes sont appliqués dès que le DOM est construit,
+  avant le démarrage d'`app.js`.
+- **Texte dynamique** (construit par `app.js`) : **`t("clé", { paramètres })`**.
+  `{nom}` est remplacé par `params.nom` ; si `params.count` est un nombre, la
+  clé est cherchée avec le suffixe du pluriel, `clé.one` ou `clé.other`, selon
+  `Intl.PluralRules` (le français met 0 et 1 au singulier, l'anglais seulement
+  1). Un texte absent de la langue courante retombe sur le français, puis sur la
+  clé elle-même (visible à l'écran : un oubli se voit tout de suite). `t()`
+  renvoie du TEXTE BRUT.
+- **Longue documentation** (la fenêtre d'aide) : elle n'est pas dans le
+  dictionnaire. `index.html` en contient **deux versions côte à côte** ; voir
+  section 16.
+
+**Le dictionnaire** (`MESSAGES`, une entrée par langue) regroupe les clés par
+zone (`meta.*`, `menu.*`, `empty.*`, `card.*`, `modal.*`, `preset.*`,
+`error.*`, `toast.*`, `help.*`). Les deux langues ont exactement les mêmes clés
+et les mêmes paramètres.
+
+**Au changement de langue**, i18n.js traduit les textes statiques puis rappelle
+`onLanguageChange()` (`app.js`, section « Langue »), qui refait ce que le code a
+construit lui-même : les libellés accessibles de chaque carte de stream
+(`localizePlayerCard()` : barre d'en-tête, bouton de retrait, quatre poignées,
+étoile), le titre de l'iframe de chat (l'iframe elle-même n'est pas recréée), et
+les listes de la fenêtre « Changer les streams » (reconstruites). Un message
+d'erreur ou de confirmation encore affiché, écrit dans l'ancienne langue, est
+effacé plutôt que traduit. L'attribut `lang` du bouton de langue (posé par
+`updateLanguageButton()`) est celui de la langue **cible** : son texte « EN » /
+« FR » est dans l'autre langue que la page, et un lecteur d'écran le prononce
+ainsi correctement.
+
+**Les liens de partage** gardent la langue : `buildPresetShareUrl()` ajoute
+`?lang=en` quand le site est en anglais, pour que le destinataire voie la même
+langue (il peut la changer ensuite). Ils ne portent toujours que les chaînes
+(section 13).
+
+**Sécurité, au passage.** Le nom d'une disposition favorite est du texte libre.
+`renderPresetsList()` ne le passe plus par `escapeHtml()` dans un gabarit
+`innerHTML` (qui n'échappe pas les guillemets, donc laissait une porte ouverte
+dans les attributs `aria-label`) : le gabarit ne contient que de la structure
+fixe, et le nom comme tous les libellés sont posés par `textContent` et
+`setAttribute`, qui n'interprètent jamais de HTML.
+
+**Le menu.** Avec le bouton de langue, le menu compte sept éléments ; les
+règles de compaction sous 600 px sont décrites en section 16.
+
 
 ## Lancer le projet en local
 
@@ -1506,6 +1637,85 @@ Points d'attention :
   sous-domaines (ex. `www.exemple.com` et `exemple.com`), assurez-vous que
   les utilisateurs accèdent toujours via le même nom d'hôte, ou adaptez
   `getParentDomain()` pour renvoyer une valeur fixe si nécessaire.
+
+## Référencement (SEO)
+
+Le référencement d'un site comme StreamWall repose peu sur son texte (c'est un
+outil) et beaucoup sur des **métadonnées correctes**, un **titre et une
+description qui contiennent les mots que les gens cherchent**, et des **liens
+venant d'ailleurs**. Ce qui est en place dans le dépôt :
+
+| Élément | Où | Rôle |
+| --- | --- | --- |
+| `<title>` | `index.html` (`data-i18n="meta.title"`) | « StreamWall — Regardez plusieurs streams Twitch en même temps » : contient « Twitch », 60 caractères (limite à ne pas dépasser : au-delà, Google risque de le tronquer) |
+| `<meta name="description">` | `index.html` (`meta.description`) | Texte affiché sous le titre dans les résultats : 100 à 160 caractères, avec « Twitch » |
+| `<meta name="robots">` | `index.html` | `index, follow, max-image-preview:large` : page indexable, grands aperçus autorisés |
+| `<link rel="canonical">` | `index.html` | Adresse **officielle** de la page (absolue) : `?lang=en` et `#chaine1/chaine2` n'en sont pas des pages distinctes |
+| Open Graph et Twitter Card | `index.html` | Aperçu (titre, description, image) quand on colle l'adresse dans Discord, Slack, Facebook, X… |
+| `assets/og-image.jpg` | image 1200 × 630 (~60 Ko) | Image de l'aperçu : un mur de faux lecteurs et le logo, **sans phrase** — valable pour les deux langues |
+| JSON-LD `WebApplication` | `index.html` (`<script type="application/ld+json">`) | Données structurées : nom, catégorie, gratuit, langues `fr`/`en`, dépôt — peut donner un résultat enrichi |
+| `robots.txt` | racine | Autorise tous les robots et annonce le sitemap |
+| `sitemap.xml` | racine | Le plan du site : une seule adresse (l'application) |
+| `<h1>` unique | `index.html` (`.brand`) | La marque est le `<h1>` de la page : « StreamWall » (visible) suivi d'une phrase de mots-clés masquée visuellement (`.sr-only`, lue par les moteurs et les lecteurs d'écran) |
+| Accueil avec du contenu | `#empty-state` | Ce que voit un nouveau visiteur (et un robot) : un `<h2>`, une phrase et cinq atouts, plutôt qu'un simple « aucun stream » |
+
+**Comment les robots voient la page.** Les robots qui n'exécutent pas de
+JavaScript (la plupart des aperçus sociaux) lisent le HTML brut : titre,
+description et balises Open Graph sont donc écrits en **français** dans
+`index.html`, même si la langue est ensuite changée. Google, lui, exécute le
+JavaScript, mais avec un navigateur en anglais : c'est la raison pour laquelle
+la langue du navigateur n'est pas utilisée par défaut (section 17) — l'adresse
+principale reste **en français pour tous les robots**.
+
+**Le français et l'anglais.** La version anglaise est du contenu produit par
+JavaScript sur la même adresse (`?lang=en`) : elle sert aux visiteurs, pas
+(encore) au référencement en anglais. Comme `<link rel="canonical">` désigne
+l'adresse principale, aucune balise `hreflang` n'est déclarée. Pour se
+positionner aussi en anglais, il faudrait une page dédiée à une adresse
+distincte (par exemple `/en/`), avec ses propres balises et des `hreflang`
+réciproques : voir "Ce qui n'est pas fait".
+
+**À adapter si le site est publié ailleurs** (un fork, un domaine à soi) :
+l'adresse `https://kur0n33k0.github.io/` est écrite dans `index.html`
+(`canonical`, `og:url`, `og:image`, `twitter:image`, JSON-LD : `url`, `image`),
+dans `robots.txt` (ligne `Sitemap:`) et dans `sitemap.xml` (`<loc>`). Mettez
+aussi à jour `<lastmod>` du sitemap quand le contenu change.
+
+**Après chaque mise en ligne**, à faire une fois (aucun outil ne peut le faire
+depuis le dépôt) :
+
+1. **Google Search Console** : ajoutez le site, validez-le (par une balise
+   `<meta name="google-site-verification" content="…">` à placer dans `<head>`,
+   ou par un fichier fourni par Google à la racine), puis envoyez
+   `https://kur0n33k0.github.io/sitemap.xml` et demandez l'indexation de la
+   page d'accueil (« Inspection de l'URL »). **Bing Webmaster Tools** propose
+   d'importer le site depuis la Search Console.
+2. Vérifiez les données structurées avec le **Test des résultats enrichis** de
+   Google, et l'aperçu social avec le **débogueur de partage** de Facebook ou
+   l'inspecteur de posts de LinkedIn (ces outils gardent l'ancienne version en
+   cache : ils permettent de la rafraîchir).
+3. Mesurez les performances avec **PageSpeed Insights** (Core Web Vitals, qui
+   comptent dans le classement).
+4. Sur GitHub, renseignez la **description**, le **site web** et les **topics**
+   du dépôt (`twitch`, `multitwitch`, `multistream`, `vanilla-js`) : c'est
+   souvent la première source de liens vers le site. Les liens venant d'autres
+   sites (forums, listes « awesome », réseaux) pèsent le plus pour un site aussi
+   petit.
+
+**Ce qui n'est pas fait** (pistes, par ordre d'intérêt) :
+
+- **Une page dédiée en anglais** (`/en/`) et une **page de guide** au contenu
+  riche : le seul moyen de viser des recherches longues comme « comment regarder
+  plusieurs streams Twitch » ou « watch multiple Twitch streams ».
+- **Alléger les logos** : `logo_mode_sombre.png` et `logo_mode_clair0.png` pèsent
+  220 à 270 Ko pour une icône affichée à 40 px de haut ; des versions d'environ
+  120 px (ou en WebP) coûteraient 10 à 20 fois moins et amélioreraient les Core
+  Web Vitals.
+- `apple-touch-icon` et manifeste web (installation sur mobile), balise
+  `theme-color`.
+- Une **page par combinaison de streams** n'est volontairement pas prévue : le
+  routage se fait par `#`, que les moteurs ignorent ; en faire de vraies pages
+  demanderait des chemins réels et un pré-rendu, donc une étape de build.
 
 ## Personnalisation
 
@@ -1628,8 +1838,8 @@ ensemble.
 
 **Le menu de l'en-tête sur téléphone.** Pour que le logo ne fasse jamais
 déborder la page, l'en-tête et les boutons sont un peu plus compacts sous
-520 px (à partir de 360 px de large, l'icône et les six éléments du menu
-+ / Réorganiser / chat / aide / thème / GitHub tiennent sans défiler, le libellé du bouton
+600 px (à partir de 360 px de large, l'icône et les sept éléments du menu
++ / Réorganiser / chat / aide / langue / thème / GitHub tiennent sans défiler, le libellé du bouton
 de chat étant alors réduit à « Chat » : voir section 16) ; et quand le menu a
 plus de boutons que la largeur ne le permet — typiquement le mode
 Réorganiser, qui ajoute "Réinitialiser la vue" — c'est le menu qui **défile
@@ -1679,8 +1889,9 @@ JavaScript :
   soulignement que les liens ont par défaut.
 - Accessibilité : l'icône est décorative (`aria-hidden`), c'est `aria-label`
   (« Code source de StreamWall sur GitHub (s'ouvre dans un nouvel onglet) »)
-  qui nomme le lien, `title` fournit l'infobulle, et il est atteignable au
-  clavier (Tab, juste après la bascule de thème).
+  qui nomme le lien, `title` fournit l'infobulle (les deux sont traduits :
+  clés `menu.github.*` d'i18n.js), et il est atteignable au clavier (Tab, juste
+  après la bascule de thème).
 - Il fait partie du menu : sur téléphone, l'écart entre les éléments du menu
   est réduit (4 px sous 520 px) pour que tout tienne encore sans faire défiler
   le menu (voir section 16).
@@ -1691,19 +1902,57 @@ d'`index.html` ; rien d'autre dans le code n'y fait référence. L'aide le cite
 dans la légende de la capture de l'en-tête (`help-header.png`) : retirez aussi
 cet élément de la légende (et la pastille de la capture).
 
+### Traduire un texte, ou ajouter une langue
+
+Tous les textes de l'interface sont dans `i18n.js` (section 17) : pour changer
+une formulation, modifiez la valeur de sa clé dans le dictionnaire de la langue
+concernée. Pour un texte STATIQUE (celui d'`index.html`), le dictionnaire
+français doit rester **identique** au texte français du HTML (c'est celui que
+voient les robots et les navigateurs sans JavaScript) : modifiez-les ensemble.
+
+**Ajouter un texte** : ajoutez la même clé dans les DEUX dictionnaires (mêmes
+paramètres `{nom}`), puis soit un attribut `data-i18n="clé"` /
+`data-i18n-attr="attribut:clé"` sur l'élément d'`index.html`, soit un appel
+`t("clé", { … })` dans `app.js`. Une clé absente d'une langue s'affiche en
+français, puis sous la forme de la clé : un oubli se voit tout de suite.
+
+**Ajouter une langue** (par exemple l'espagnol, `es`) :
+
+1. ajoutez `"es"` à `SUPPORTED_LANGUAGES` dans `i18n.js` et un dictionnaire
+   `es: { … }` complet dans `MESSAGES` ;
+2. ajoutez, dans chaque rubrique de l'aide, un troisième bloc
+   `<section class="help-lang" lang="es">` (avec ses titres et ses captures,
+   dans `assets/help/es/`) et la règle CSS correspondante
+   (`html[lang="es"] .help-lang[lang="es"]`, à côté de celles du français et de
+   l'anglais) ;
+3. le bouton de langue ne fait basculer que **deux** langues
+   (`getAlternateLanguage()` renvoie « l'autre ») : avec trois langues ou plus,
+   remplacez-le par un menu de choix (`setLanguage("es")` fait déjà le travail) ;
+4. mettez à jour les balises `<meta>` et le JSON-LD si vous voulez un aperçu
+   social dans cette langue (les robots ne lisent que le HTML brut : voir
+   "Référencement (SEO)").
+
 ### Modifier la fenêtre d'aide
 
-Le texte de l'aide est du HTML dans `index.html`, bloc `#help-overlay` :
-modifiez-le directement (aucune autre étape). Pour **ajouter une rubrique** :
+Le texte de l'aide est du HTML dans `index.html`, bloc `#help-overlay`, **en
+deux versions** (français et anglais, voir section 16) : **toute modification de
+texte se fait donc deux fois**, dans le bloc `lang="fr"` et dans le bloc
+`lang="en"` de la rubrique concernée. Les deux versions d'une rubrique doivent
+garder la même structure (mêmes légendes numérotées, mêmes listes, mêmes
+renvois) : c'est ce qui garantit que les captures et les pastilles concordent.
+Pour **ajouter une rubrique** :
 
-1. ajoutez une `<section id="help-xxx" class="help-section"
-   aria-labelledby="help-xxx-title">` dans `#help-body`, avec son titre
-   `<h3 id="help-xxx-title">` ;
+1. ajoutez dans `#help-body` un `<div id="help-xxx" class="help-section">`
+   contenant deux blocs, `<section class="help-lang" lang="fr"
+   aria-labelledby="help-xxx-title">` et `<section class="help-lang" lang="en"
+   aria-labelledby="help-xxx-title-en">`, chacun avec son titre
+   (`<h3 id="help-xxx-title">` et `<h3 id="help-xxx-title-en">` : les
+   identifiants doivent être uniques) ;
 2. ajoutez sa ligne dans le sommaire `.help-toc`, dans le MÊME ordre :
-   `<button type="button" class="help-toc-link"
-   data-help-target="help-xxx">Titre</button>` (l'ordre du sommaire doit
-   suivre celui des sections : c'est lui que suit la mise en évidence de la
-   rubrique courante) ;
+   `<button type="button" class="help-toc-link" data-help-target="help-xxx"
+   data-i18n="help.toc.xxx">Titre</button>`, et la clé `help.toc.xxx` dans les
+   DEUX dictionnaires d'`i18n.js` (l'ordre du sommaire doit suivre celui des
+   sections : c'est lui que suit la mise en évidence de la rubrique courante) ;
 3. pour un renvoi dans le texte, utilisez un
    `<button type="button" class="help-link" data-help-target="help-xxx">` —
    jamais un lien `#help-xxx` (il écraserait la liste des streams de
@@ -1713,8 +1962,9 @@ Aucun code JavaScript n'est à toucher : `app.js` repère les sections et les
 rubriques d'après leurs classes (`.help-section`, `.help-toc-link`).
 
 **Ajouter ou refaire une capture** : prenez-la dans l'état voulu (faux
-lecteurs, pastilles numérotées : voir section 16), placez le fichier PNG dans
-`assets/help/`, puis ajoutez dans la section un
+lecteurs, pastilles numérotées : voir section 16), **une fois par langue**
+(fichier PNG de même nom dans `assets/help/` et dans `assets/help/en/`, la
+seconde avec l'interface en anglais), puis ajoutez dans chaque bloc de langue un
 `<figure class="help-figure"><img …></figure>` suivi de sa légende
 `<ol class="help-legend">` (une ligne par pastille, dans l'ordre) ; donnez à
 l'`<img>` un `alt` descriptif, `loading="lazy"` et les `width`/`height`
@@ -1843,18 +2093,34 @@ réels du fichier.
   dans `<head>` si vous voulez que le site s'installe avec une icône
   soignée sur iOS/Android.
 - Sur très petit écran (moins de 520 px de large), le nom "StreamWall" est
-  masqué et il ne reste que l'icône du logo ; et en mode Réorganiser (7
+  masqué et il ne reste que l'icône du logo ; et en mode Réorganiser (8
   éléments dans le menu, avec "Réinitialiser la vue") le menu défile
   horizontalement au lieu de tout afficher d'un coup (voir "Logo et
-  favicon"). Jusqu'à 600 px, le bouton de chat s'écrit « Chat » au lieu de
-  « Afficher/Masquer le chat » (section 16).
-- **La fenêtre d'aide** (section 16) est rédigée **en français uniquement**,
-  comme le reste de l'interface. Ses captures sont des images fixes : elles
-  ne suivent pas l'interface d'elles-mêmes et doivent être **refaites**
-  quand celle-ci change (voir section 16). Elles
-  montrent de **faux** lecteurs (aucun vrai stream) et l'en-tête en thème
-  sombre, même quand le site est affiché en thème clair. Elle n'a pas de
-  moteur de recherche interne (le sommaire suffit pour douze rubriques).
+  favicon"). Jusqu'à 600 px, le menu est compact : le bouton de chat s'écrit
+  « Chat » au lieu de « Afficher/Masquer le chat », et les boutons d'icône font
+  32 px (section 16). Sous ~340 px de large, même sans le mode Réorganiser, le
+  menu défile.
+- **La fenêtre d'aide** (section 16) existe en **deux versions**, française et
+  anglaise, écrites à la main : toute modification de texte est à faire DEUX
+  fois, et les deux versions d'une rubrique doivent rester de même structure.
+  Ses captures sont des images fixes, elles aussi en deux jeux : elles ne
+  suivent pas l'interface d'elles-mêmes et doivent être **refaites** quand
+  celle-ci change (voir section 16). Elles montrent de **faux** lecteurs (aucun
+  vrai stream) et l'en-tête en thème sombre, même quand le site est affiché en
+  thème clair. Elle n'a pas de moteur de recherche interne (le sommaire suffit
+  pour douze rubriques).
+- **Langues** (section 17) : seuls le français et l'anglais existent, et le bouton
+  de langue ne bascule qu'entre deux langues. Les messages destinés aux
+  développeurs (`console.warn`) restent en français, comme les commentaires du
+  code, le README et la documentation. Les aperçus sociaux (Discord, X…) sont
+  toujours en français : ces robots lisent le HTML brut, pas la langue choisie
+  ensuite. Un lien `?lang=en` change la langue à l'ouverture, mais l'écran peut
+  brièvement montrer le français avant que la traduction ne s'applique.
+- **Référencement en anglais** : la version anglaise est du contenu produit par
+  JavaScript sur la même adresse que la française (`?lang=en`, dont la balise
+  canonique désigne l'adresse principale) : elle ne peut donc pas se positionner
+  seule sur des recherches en anglais. Il faudrait pour cela une page dédiée à
+  une adresse distincte (voir "Référencement (SEO)", « Ce qui n'est pas fait »).
 - Seuls les COINS des tuiles se tirent (les quatre), pas les côtés : les
   bords extérieurs de la zone vidéo sont fixes, puisque les tuiles doivent
   toujours la remplir à 100 %. Une tuile ne grandit donc que vers
