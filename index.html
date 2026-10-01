@@ -439,6 +439,18 @@
       <div class="chat-panel-header">
         <label for="chat-channel-select" class="chat-panel-label" data-i18n="chat.label">Chat de :</label>
         <select id="chat-channel-select" class="chat-select"></select>
+        <!--
+          Case "Garder chargé" : s'applique à la chaîne choisie juste à
+          gauche. Cochée, son chat reste connecté en arrière-plan quand on
+          passe à une autre chaîne, et n'est pas rechargé en y revenant ;
+          décochée, il est rechargé à chaque fois. Voir renderChatOnly()
+          dans app.js. `title` sert d'infobulle explicative.
+        -->
+        <label class="chat-keep" title="Garde ce chat connecté en arrière-plan quand vous passez à un autre chat : il ne sera pas rechargé en y revenant."
+          data-i18n-attr="title:chat.keep.title">
+          <input id="chat-keep-loaded" type="checkbox" class="chat-keep-checkbox" />
+          <span data-i18n="chat.keep.label">Garder chargé</span>
+        </label>
       </div>
       <div id="chat-embed-container" class="chat-embed-container"></div>
     </aside>
@@ -972,12 +984,14 @@
               <h3 id="help-chat-title">Le chat</h3>
               <figure class="help-figure">
                 <img src="assets/help/help-chat.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Capture avec le panneau de chat ouvert à droite : le menu déroulant du choix de chaîne en haut, et la discussion en dessous ; trois éléments sont numérotés." />
+                  alt="Capture avec le panneau de chat ouvert à droite : le menu déroulant du choix de chaîne et la case « Garder chargé » en haut, et la discussion en dessous ; trois éléments sont numérotés." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Afficher/Masquer le chat</strong> : ouvre ou ferme le panneau. Il est masqué au premier
                   chargement, puis votre choix est retenu.</li>
-                <li><strong>« Chat de : »</strong> : choisit la chaîne dont vous voyez la discussion, parmi celles affichées.</li>
+                <li><strong>« Chat de : »</strong> : choisit la chaîne dont vous voyez la discussion, parmi celles affichées.
+                  Cochez <strong>« Garder chargé »</strong> pour que ce chat reste connecté en arrière-plan quand vous
+                  passez à un autre : vous le retrouverez tel quel, sans rechargement.</li>
                 <li><strong>La discussion</strong> : c'est le chat officiel de Twitch. Pour écrire, connectez-vous
                   <em>dans ce panneau</em> avec le lien fourni par Twitch.</li>
               </ol>
@@ -987,12 +1001,14 @@
               <h3 id="help-chat-title-en">The chat</h3>
               <figure class="help-figure">
                 <img src="assets/help/en/help-chat.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Screenshot with the chat panel open on the right: the channel drop-down at the top, and the discussion below; three elements are numbered." />
+                  alt="Screenshot with the chat panel open on the right: the channel drop-down and the “Keep loaded” box at the top, and the discussion below; three elements are numbered." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Show/Hide chat</strong>: opens or closes the panel. It is hidden on first
                   load, then your choice is remembered.</li>
-                <li><strong>“Chat for:”</strong>: chooses the channel whose discussion you see, among the displayed ones.</li>
+                <li><strong>“Chat for:”</strong>: chooses the channel whose discussion you see, among the displayed ones.
+                  Tick <strong>“Keep loaded”</strong> to keep this chat connected in the background when you switch to
+                  another one: you will find it as you left it, without reloading.</li>
                 <li><strong>The discussion</strong>: it is Twitch's official chat. To write, log in
                   <em>inside this panel</em> with the link provided by Twitch.</li>
               </ol>

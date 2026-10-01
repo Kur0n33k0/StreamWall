@@ -809,8 +809,8 @@ https://www.twitch.tv/embed/<chaine>/chat?parent=<domaine>[&darkpopout]
   pour rester visuellement cohérent avec le thème de l'application.
 
 Cette URL est construite par `buildChatEmbedUrl()` dans `app.js`, puis
-posée comme `src` d'un élément `<iframe>` inséré dans
-`#chat-embed-container` par `renderChatOnly()`, qui est appelée :
+posée comme `src` d'un élément `<iframe data-channel="<chaine>">` inséré
+dans `#chat-embed-container` par `renderChatOnly()`, qui est appelée :
 
 - à chaque changement de chaîne sélectionnée dans le menu déroulant du
   chat ;
@@ -831,15 +831,45 @@ regarder les vidéos en plein écran, puis le rouvrir, ne force donc
 jamais l'utilisateur à se reconnecter ou à recharger le fil de
 discussion.
 
-`renderChatOnly()` est en outre **idempotente** : avant de reconstruire
-quoi que ce soit, elle compare l'URL cible (`buildChatEmbedUrl()`) au
-`src` de l'iframe déjà montée, et ne fait rien si elles sont identiques.
-Sans cette vérification, un appel sans rapport avec le chat affiché (ex.
-ajouter une chaîne à la grille, ce qui déclenche aussi
-`applyEntriesChange()` → `renderChatOnly()`) détruirait et recréerait
-l'iframe — donc sa session — pour rien. Elle n'est donc réellement
-reconstruite que lorsque la chaîne de chat sélectionnée ou le thème
-changent réellement.
+**Case « Garder chargé » : garder certains chats en arrière-plan.** Par
+défaut, changer de chaîne dans le menu déroulant du chat détruit l'iframe
+de l'ancienne chaîne, et revenir à celle-ci la recharge entièrement. La
+case « Garder chargé » (`#chat-keep-loaded`, à droite du menu) étend le
+principe du masquage au changement de chaîne, **chaîne par chaîne** :
+cochée pour la chaîne affichée, celle-ci est ajoutée à `state.keptChats`
+(mémorisé dans `localStorage`, clé `streamwall:keptChats`), et son chat
+reste monté — masqué par l'attribut `hidden` — quand on passe à une autre
+chaîne. Y revenir le retrouve tel quel, fil de discussion et connexion
+compris, sans rechargement. La case reflète toujours la chaîne affichée.
+
+`#chat-embed-container` contient donc au plus **une iframe par chaîne**
+(repérée par `data-channel`), et `renderChatOnly()` y monte exactement :
+
+- l'iframe de la chaîne affichée (`state.chatChannel`), visible ;
+- celles des chaînes de `state.keptChats` encore affichées sur le mur,
+  masquées. Elles sont chargées dès qu'on coche la case et dès
+  l'ouverture de la page, même si on ne les a pas encore affichées
+  pendant cette visite : « gardé chargé » veut dire connecté en
+  permanence.
+
+Toute autre iframe est détruite. Un chat gardé dont la chaîne est retirée
+ou décochée du mur est donc détruit, mais reste coché : il sera de nouveau
+gardé si la chaîne revient. Oublier définitivement une chaîne (bouton
+« × » de la fenêtre « Changer les streams ») la retire aussi de
+`state.keptChats`.
+
+`renderChatOnly()` est en outre **idempotente** : elle compare, pour
+chaque iframe montée, son `src` à l'URL attendue (`buildChatEmbedUrl()`)
+et ne touche à rien si tout correspond. Sans cette vérification, un appel
+sans rapport avec le chat affiché (ex. ajouter une chaîne à la grille, ce
+qui déclenche aussi `applyEntriesChange()` → `renderChatOnly()`)
+détruirait et recréerait les iframes — donc leur session — pour rien.
+Seule la bascule de thème recharge les chats montés, gardés compris :
+Twitch fixe le thème dans l'URL (`darkpopout`), il n'y a pas d'autre
+moyen de le changer.
+
+Chaque chat gardé consomme de la mémoire et une connexion au chat Twitch :
+c'est pourquoi ce n'est pas le comportement par défaut.
 
 **Se connecter pour écrire dans le chat.** Comme l'iframe pointe
 directement vers `www.twitch.tv`, avec **ses propres cookies de
@@ -1393,7 +1423,7 @@ arrive, et pour que les sauts du sommaire tombent au bon endroit.
 | `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles | 4 |
 | `help-favorites.png` | deux streams mis en avant | 2 |
 | `help-resize.png` | un stream agrandi par un coin, les autres réorganisés | 3 |
-| `help-chat.png` | le panneau de chat ouvert | 3 |
+| `help-chat.png` | le panneau de chat ouvert, avec la case « Garder chargé » | 3 |
 | `help-presets.png` | le bas de la fenêtre "Changer les streams" : enregistrement, nom, icône des tailles mémorisées, partage (2×) | 4 |
 | `help-light-theme.png` | le thème clair | 2 |
 

@@ -45,7 +45,12 @@
  *      bouton pour l'afficher/masquer. Le panneau reste monté et connecté
  *      en arrière-plan même quand il est masqué (masquage purement CSS,
  *      voir `updateChatPanelVisibility()`) : pas besoin de rouvrir/relancer
- *      la connexion à chaque affichage. L'iframe pointe directement vers
+ *      la connexion à chaque affichage. La case "Garder chargé" étend ce
+ *      principe au changement de chaîne : un chat coché garde sa propre
+ *      iframe, masquée (et non détruite) quand une autre chaîne est
+ *      affichée, et la retrouve telle quelle en y revenant ; un chat non
+ *      coché est rechargé à chaque fois (voir `renderChatOnly()`). L'iframe
+ *      pointe directement vers
  *      twitch.tv (voir `buildChatEmbedUrl()`), avec SES PROPRES cookies de
  *      session : se connecter à Twitch n'importe où dans ce navigateur
  *      (y compris via le lien "Se connecter" du chat lui-même) suffit à
@@ -101,6 +106,8 @@
   const STORAGE_KEY_ENTRIES = "streamwall:entries";
   const STORAGE_KEY_CHAT_VISIBLE = "streamwall:chatVisible";
   const STORAGE_KEY_CHAT_CHANNEL = "streamwall:chatChannel";
+  /** Chaînes dont le chat reste chargé en arrière-plan (case "Garder chargé"). */
+  const STORAGE_KEY_KEPT_CHATS = "streamwall:keptChats";
   const STORAGE_KEY_REORDER_MODE = "streamwall:reorderMode";
   const STORAGE_KEY_THEME = "streamwall:theme";
   const STORAGE_KEY_PRESETS = "streamwall:presets";
@@ -160,6 +167,9 @@
    *                 actifs, pour pouvoir les détruire proprement.
    * - chatVisible : booléen, le panneau de chat est-il affiché ?
    * - chatChannel : nom de la chaîne actuellement affichée dans le chat.
+   * - keptChats   : chaînes dont le chat reste chargé en arrière-plan même
+   *                 quand une autre chaîne est affichée (case "Garder
+   *                 chargé", voir `renderChatOnly()`).
    * - reorderMode : booléen, le mode "Réorganiser" est-il actif ? (affiche
    *                 les en-têtes de lecteurs et les poignées de
    *                 redimensionnement)
@@ -186,6 +196,7 @@
     players: new Map(),
     chatVisible: false,
     chatChannel: null,
+    keptChats: [],
     reorderMode: false,
     theme: "dark",
     dragSourceChannel: null,
@@ -201,6 +212,7 @@
     playersGrid: document.getElementById("players-grid"),
     chatPanel: document.getElementById("chat-panel"),
     chatSelect: document.getElementById("chat-channel-select"),
+    chatKeepLoaded: document.getElementById("chat-keep-loaded"),
     chatEmbedContainer: document.getElementById("chat-embed-container"),
     emptyState: document.getElementById("empty-state"),
     // Bouton "+" du menu, TOUJOURS affiché (mode Réorganiser ou non) : il
@@ -488,6 +500,7 @@
       localStorage.setItem(STORAGE_KEY_ENTRIES, JSON.stringify(state.entries));
       localStorage.setItem(STORAGE_KEY_CHAT_VISIBLE, JSON.stringify(state.chatVisible));
       localStorage.setItem(STORAGE_KEY_CHAT_CHANNEL, state.chatChannel || "");
+      localStorage.setItem(STORAGE_KEY_KEPT_CHATS, JSON.stringify(state.keptChats));
       localStorage.setItem(STORAGE_KEY_REORDER_MODE, JSON.stringify(state.reorderMode));
       localStorage.setItem(STORAGE_KEY_THEME, state.theme);
       localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(state.presets));
@@ -547,6 +560,16 @@
     } catch (err) {
       state.chatChannel = null;
     }
+
+    try {
+      const savedKept = localStorage.getItem(STORAGE_KEY_KEPT_CHATS);
+      state.keptChats = savedKept ? JSON.parse(savedKept) : [];
+    } catch (err) {
+      state.keptChats = [];
+    }
+    // Défense si le localStorage a été modifié à la main : un tableau de noms.
+    if (!Array.isArray(state.keptChats)) state.keptChats = [];
+    state.keptChats = state.keptChats.filter((channel) => typeof channel === "string");
 
     try {
       const savedReorder = localStorage.getItem(STORAGE_KEY_REORDER_MODE);
@@ -2719,43 +2742,87 @@
   }
 
   /**
-   * (Re)construit l'iframe du panneau de chat si nécessaire.
+   * Crée l'iframe de chat d'une chaîne et l'ajoute au panneau.
    *
-   * Volontairement INDÉPENDANT de `state.chatVisible` : le panneau peut
-   * être masqué par pur CSS (voir `updateChatPanelVisibility()`) sans que
-   * son iframe soit détruite, pour qu'elle continue de tourner "en
-   * arrière-plan" (connexion Twitch, session de chat) pendant qu'elle
-   * n'est pas affichée — masquer/afficher le panneau ne doit jamais
-   * obliger l'utilisateur à se reconnecter.
-   *
-   * Idempotent : si une iframe existe déjà avec exactement la même URL
-   * cible (même chaîne, même thème), elle est laissée telle quelle plutôt
-   * que détruite et recréée. Sans cette vérification, le moindre appel
-   * (ex. ajout d'une chaîne sans rapport avec le chat affiché, voir
-   * `applyEntriesChange()`) recréerait l'iframe et romprait sa session en
-   * cours pour rien. Elle n'est donc réellement recréée que lorsque la
-   * chaîne de chat ou le thème changent réellement.
+   * Pas besoin d'attendre `whenTwitchReady()` ici : à la différence du
+   * lecteur vidéo, le chat n'utilise pas le SDK JS, seulement une iframe
+   * simple, disponible dès que le DOM l'est.
+   * @param {string} channel
+   * @returns {HTMLIFrameElement}
    */
-  function renderChatOnly() {
-    if (!state.chatChannel) {
-      el.chatEmbedContainer.innerHTML = "";
-      return;
-    }
-
-    const targetUrl = buildChatEmbedUrl(state.chatChannel);
-    const existingIframe = el.chatEmbedContainer.querySelector("iframe");
-    if (existingIframe && existingIframe.src === targetUrl) return;
-
-    // Pas besoin d'attendre `whenTwitchReady()` ici : à la différence du
-    // lecteur vidéo, le chat n'utilise pas le SDK JS, seulement une
-    // iframe simple, disponible dès que le DOM l'est.
-    el.chatEmbedContainer.innerHTML = "";
+  function createChatIframe(channel) {
     const iframe = document.createElement("iframe");
-    iframe.src = targetUrl;
-    iframe.title = t("chat.iframeTitle", { channel: state.chatChannel });
+    iframe.src = buildChatEmbedUrl(channel);
+    iframe.dataset.channel = channel;
+    iframe.title = t("chat.iframeTitle", { channel: channel });
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("scrolling", "yes");
     el.chatEmbedContainer.appendChild(iframe);
+    return iframe;
+  }
+
+  /**
+   * Affiche le chat de `state.chatChannel` dans le panneau, et garde
+   * chargés en arrière-plan ceux des chaînes cochées "Garder chargé".
+   *
+   * Le panneau contient au plus UNE iframe par chaîne (repérée par son
+   * attribut `data-channel`), et monte exactement :
+   * - celle de la chaîne affichée (`state.chatChannel`) ;
+   * - celles des chaînes de `state.keptChats` encore affichées sur le mur,
+   *   masquées (attribut `hidden`, purement CSS) tant qu'elles ne sont pas
+   *   la chaîne affichée. Elles sont chargées dès qu'elles sont cochées et
+   *   dès l'ouverture de la page (même jamais affichées dans cette visite) :
+   *   "gardé chargé" veut dire connecté et à jour en permanence.
+   * Toute autre iframe est détruite. Changer de chaîne revient donc à :
+   * - pour un chat coché : simple bascule de visibilité, comme le bouton
+   *   "Afficher/Masquer le chat" (voir `updateChatPanelVisibility()`) — le
+   *   fil de discussion et la connexion Twitch continuent de tourner, et y
+   *   revenir le retrouve tel quel, sans rechargement ;
+   * - pour un chat non coché : destruction en le quittant, rechargement
+   *   complet en y revenant (comportement par défaut, économe en mémoire).
+   *
+   * Volontairement INDÉPENDANT de `state.chatVisible` : le panneau entier
+   * peut être masqué sans qu'aucune iframe soit détruite.
+   *
+   * Idempotent : appelée sans que rien n'ait changé (ex. ajout d'une
+   * chaîne sans rapport avec le chat affiché, voir `applyEntriesChange()`),
+   * elle ne touche à aucune iframe. Une iframe montée est aussi recréée si
+   * son URL ne correspond plus au thème courant (bascule sombre/clair, voir
+   * `buildChatEmbedUrl()`) : Twitch fixe le thème dans l'URL, ce
+   * rechargement-là est inévitable.
+   *
+   * Met aussi à jour la case "Garder chargé", qui reflète toujours la
+   * chaîne affichée.
+   */
+  function renderChatOnly() {
+    const visible = getVisibleChannels();
+    const mounted = state.keptChats.filter((channel) => visible.includes(channel));
+    if (state.chatChannel && !mounted.includes(state.chatChannel)) {
+      mounted.push(state.chatChannel);
+    }
+
+    // Détruit les iframes en trop (chaîne quittée et non gardée, ou retirée
+    // du mur) et celles dont l'URL n'est plus au bon thème.
+    const existing = new Map();
+    el.chatEmbedContainer.querySelectorAll("iframe").forEach((iframe) => {
+      const channel = iframe.dataset.channel;
+      if (!mounted.includes(channel) || iframe.src !== buildChatEmbedUrl(channel)) {
+        iframe.remove();
+      } else {
+        existing.set(channel, iframe);
+      }
+    });
+
+    // Crée celles qui manquent, puis n'en laisse qu'une visible : les
+    // autres restent montées derrière, comme le panneau entier quand on le
+    // masque.
+    mounted.forEach((channel) => {
+      const iframe = existing.get(channel) || createChatIframe(channel);
+      iframe.hidden = channel !== state.chatChannel;
+    });
+
+    el.chatKeepLoaded.disabled = !state.chatChannel;
+    el.chatKeepLoaded.checked = state.keptChats.includes(state.chatChannel);
   }
 
   /**
@@ -2766,7 +2833,8 @@
    * Ne touche VOLONTAIREMENT PAS à l'iframe de chat elle-même (voir
    * `renderChatOnly()`) : masquer le panneau n'est qu'un `hidden` CSS
    * (voir `.chat-panel[hidden]` dans style.css), la connexion en cours
-   * continue de tourner derrière.
+   * continue de tourner derrière (de même que les chats gardés chargés des
+   * autres chaînes, masqués individuellement par `renderChatOnly()`).
    */
   function updateChatPanelVisibility() {
     el.chatPanel.hidden = !state.chatVisible;
@@ -2791,8 +2859,9 @@
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme();
     persistState();
-    // Recharge l'iframe de chat pour appliquer/retirer `darkpopout` et
-    // rester cohérent avec le thème de l'appli (voir buildChatEmbedUrl()).
+    // Recharge les chats montés (affiché et gardés chargés) pour
+    // appliquer/retirer `darkpopout` et rester cohérent avec le thème de
+    // l'appli (voir buildChatEmbedUrl() et renderChatOnly()).
     renderChatOnly();
   }
 
@@ -2839,6 +2908,9 @@
     state.entries = state.entries.filter((e) => e.name !== name);
     // Une chaîne oubliée ne peut plus rester "mise en avant".
     state.featuredChannels = state.featuredChannels.filter((channel) => channel !== name);
+    // Ni rester "gardée chargée" : si elle est rajoutée plus tard, son chat
+    // repart du comportement par défaut (rechargé à chaque affichage).
+    state.keptChats = state.keptChats.filter((channel) => channel !== name);
     applyEntriesChange();
     renderModalChannelsList();
   }
@@ -3598,12 +3670,12 @@
       localizePlayerCard(card, card.dataset.channel);
     });
 
-    // L'iframe de chat n'est PAS recréée (ce qui romprait sa session, voir
-    // renderChatOnly()) : on ne change que son titre accessible.
-    const chatIframe = el.chatEmbedContainer.querySelector("iframe");
-    if (chatIframe && state.chatChannel) {
-      chatIframe.title = t("chat.iframeTitle", { channel: state.chatChannel });
-    }
+    // Les iframes de chat ne sont PAS recréées (ce qui romprait leur
+    // session, voir renderChatOnly()) : on ne change que leur titre
+    // accessible, y compris celui des chats gardés chargés en arrière-plan.
+    el.chatEmbedContainer.querySelectorAll("iframe").forEach((iframe) => {
+      iframe.title = t("chat.iframeTitle", { channel: iframe.dataset.channel });
+    });
 
     // Les listes de la fenêtre "Changer les streams" sont reconstruites dans la
     // langue courante ; un message d'erreur ou de confirmation encore affiché
@@ -3692,6 +3764,18 @@
 
     el.chatSelect.addEventListener("change", (event) => {
       state.chatChannel = event.target.value;
+      persistState();
+      renderChatOnly();
+    });
+
+    // Case "Garder chargé" : s'applique à la chaîne affichée. La cocher ne
+    // change rien à l'écran (le chat affiché est déjà chargé) ; c'est en
+    // passant à une autre chaîne que la différence se voit, voir
+    // renderChatOnly().
+    el.chatKeepLoaded.addEventListener("change", (event) => {
+      if (!state.chatChannel) return;
+      state.keptChats = state.keptChats.filter((channel) => channel !== state.chatChannel);
+      if (event.target.checked) state.keptChats.push(state.chatChannel);
       persistState();
       renderChatOnly();
     });

@@ -120,6 +120,8 @@
       /* ---- Chat ---- */
       "chat.label": "Chat de :",
       "chat.iframeTitle": "Chat Twitch de {channel}",
+      "chat.keep.label": "Garder chargé",
+      "chat.keep.title": "Garde ce chat connecté en arrière-plan quand vous passez à un autre chat : il ne sera pas rechargé en y revenant.",
 
       /* ---- Cartes des streams ---- */
       "card.header": "{channel} — glisser-déposer, ou flèches du clavier, pour réorganiser",
@@ -235,6 +237,8 @@
       /* ---- Chat ---- */
       "chat.label": "Chat for:",
       "chat.iframeTitle": "Twitch chat of {channel}",
+      "chat.keep.label": "Keep loaded",
+      "chat.keep.title": "Keeps this chat connected in the background when you switch to another chat: it will not reload when you come back.",
 
       /* ---- Stream cards ---- */
       "card.header": "{channel} — drag and drop, or use the arrow keys, to rearrange",
