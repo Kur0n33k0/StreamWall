@@ -663,6 +663,31 @@ html[data-theme="light"] .theme-icon--sun {
   white-space: nowrap;
 }
 
+/* Case "Garder chargé" : petite, à droite du menu, sans retour à la ligne. */
+.chat-keep {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chat-keep-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--twitch-purple);
+  cursor: pointer;
+}
+
+.chat-keep-checkbox:disabled,
+.chat-keep-checkbox:disabled + span {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .chat-select {
   flex: 1;
   background: var(--bg-panel-alt);

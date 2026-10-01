@@ -110,7 +110,8 @@ Python.
 - Un clic la rétablit ; un bouton copie un lien de partage vers ses streams.
 
 **Confort**
-- Panneau de **chat Twitch** (masqué par défaut) avec choix de la chaîne.
+- Panneau de **chat Twitch** (masqué par défaut) avec choix de la chaîne. Le masquer ne le recharge pas, et la case
+  **« Garder chargé »** garde les chats de votre choix connectés en arrière-plan quand vous passez à un autre.
 - **Site bilingue, français et anglais** : le bouton **EN / FR** du menu traduit toute l'interface, aide et captures
   comprises. Le choix est mémorisé, et `?lang=en` dans l'adresse ouvre le site en anglais.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
