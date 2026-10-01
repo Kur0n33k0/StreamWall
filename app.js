@@ -70,9 +70,13 @@
  *      combinaison "nombre de favoris + nombre de streams" ; le bouton
  *      "Réinitialiser la vue" les remet par défaut.
  *  12. Fenêtre d'aide (bouton « i » du menu) : texte et captures d'écran
- *      statiques écrits dans index.html (#help-overlay) ; ce fichier n'en gère
- *      que l'ouverture/fermeture, le focus clavier et le sommaire (voir la
- *      section 14).
+ *      statiques écrits dans index.html (#help-overlay), en deux versions
+ *      (française et anglaise) ; ce fichier n'en gère que l'ouverture/
+ *      fermeture, le focus clavier et le sommaire (voir la section 14).
+ *  13. Deux langues, français et anglais : tous les textes de l'interface
+ *      passent par i18n.js (dictionnaires + moteur, chargé avant ce fichier) ;
+ *      le bouton "EN / FR" du menu change la langue, qui est mémorisée et
+ *      peut aussi venir de l'adresse (`?lang=en`). Voir la section 15.
  *
  * Aucune dépendance externe autre que le SDK officiel Twitch.
  * ============================================================================
@@ -80,6 +84,14 @@
 
 (function () {
   "use strict";
+
+  /**
+   * Moteur de traduction (i18n.js, chargé avant ce fichier). `t("clé", { ... })`
+   * renvoie le texte de la langue courante ; voir la section 15 pour ce que ce
+   * fichier fait au changement de langue.
+   */
+  const i18n = window.StreamWallI18n;
+  const t = i18n.t;
 
   /* ==========================================================================
    * 1. CONFIGURATION & ÉTAT GLOBAL
@@ -205,6 +217,8 @@
     btnResetLayout: document.getElementById("btn-reset-layout"),
     btnToggleChat: document.getElementById("btn-toggle-chat"),
     btnToggleTheme: document.getElementById("btn-toggle-theme"),
+    // Bouton de langue (« EN » / « FR »), voir la section 15.
+    btnLang: document.getElementById("btn-lang"),
     btnEmptyAdd: document.getElementById("btn-empty-add"),
     toast: document.getElementById("toast"),
     modalOverlay: document.getElementById("modal-overlay"),
@@ -278,7 +292,7 @@
   function validateChannelName(raw) {
     const trimmed = (raw || "").trim();
     if (!trimmed) {
-      return { ok: false, message: "Entrez un nom de chaîne." };
+      return { ok: false, message: t("error.channel.empty") };
     }
 
     // Accepte de coller une URL twitch.tv complète (même logique que
@@ -293,13 +307,13 @@
     if (!/^[a-z0-9_]+$/.test(value)) {
       return {
         ok: false,
-        message: "Nom invalide : uniquement lettres, chiffres et underscore.",
+        message: t("error.channel.chars"),
       };
     }
     if (value.length < 4 || value.length > 25) {
       return {
         ok: false,
-        message: "Nom invalide : les noms Twitch font entre 4 et 25 caractères.",
+        message: t("error.channel.length"),
       };
     }
 
@@ -2253,9 +2267,7 @@
     } else if (state.featuredChannels.length < MAX_FEATURED_CHANNELS) {
       state.featuredChannels = [...state.featuredChannels, channel];
     } else {
-      showToast(
-        `${MAX_FEATURED_CHANNELS} streams peuvent être mis en avant au maximum — désélectionnez-en un d'abord.`
-      );
+      showToast(t("toast.featuredMax", { max: MAX_FEATURED_CHANNELS }));
       return;
     }
     persistState();
@@ -2280,8 +2292,25 @@
     button.setAttribute("aria-pressed", String(isFeatured));
     button.setAttribute(
       "aria-label",
-      isFeatured ? `Ne plus mettre ${channel} en avant` : `Mettre ${channel} en avant`
+      t(isFeatured ? "card.feature.on" : "card.feature.off", { channel })
     );
+  }
+
+  /**
+   * Pose sur une carte de lecteur tous ses libellés accessibles (`aria-label`)
+   * dans la langue courante : barre d'en-tête, bouton de retrait, poignées de
+   * redimensionnement et bouton "mettre en avant". Appelée à la création de la
+   * carte, puis à chaque changement de langue (voir onLanguageChange()).
+   * @param {HTMLElement} card
+   * @param {string} channel
+   */
+  function localizePlayerCard(card, channel) {
+    card.querySelector(".player-card-header").setAttribute("aria-label", t("card.header", { channel }));
+    card.querySelector(".player-card-remove").setAttribute("aria-label", t("card.remove", { channel }));
+    card.querySelectorAll(".player-card-resize").forEach((grip) => {
+      grip.setAttribute("aria-label", t(`card.resize.${grip.dataset.corner}`, { channel }));
+    });
+    updateFeatureButtonUI(card, channel);
   }
 
   /**
@@ -2304,7 +2333,7 @@
         </span>
         <span class="player-card-actions">
           <button class="player-card-feature" type="button" aria-pressed="false">☆</button>
-          <button class="player-card-remove" type="button" aria-label="Retirer ${channel} de la grille">×</button>
+          <button class="player-card-remove" type="button">×</button>
         </span>
       </div>
       <!--
@@ -2328,15 +2357,14 @@
         centre de la zone est dans l'ordre de tabulation (tabindex 0, posé
         par applyGridLayout() via getKeyboardGripCorner()), les trois autres
         ont tabindex -1.
+        Les libellés accessibles (aria-label) de la carte ne sont PAS écrits
+        ici : ils dépendent de la langue et sont posés par
+        localizePlayerCard().
       -->
-      <div class="player-card-resize" role="button" tabindex="-1" data-corner="tl"
-        aria-label="Redimensionner ${channel} par son coin haut gauche : glisser, ou flèches du clavier"></div>
-      <div class="player-card-resize" role="button" tabindex="-1" data-corner="tr"
-        aria-label="Redimensionner ${channel} par son coin haut droit : glisser, ou flèches du clavier"></div>
-      <div class="player-card-resize" role="button" tabindex="-1" data-corner="bl"
-        aria-label="Redimensionner ${channel} par son coin bas gauche : glisser, ou flèches du clavier"></div>
-      <div class="player-card-resize" role="button" tabindex="-1" data-corner="br"
-        aria-label="Redimensionner ${channel} par son coin bas droit : glisser, ou flèches du clavier"></div>
+      <div class="player-card-resize" role="button" tabindex="-1" data-corner="tl"></div>
+      <div class="player-card-resize" role="button" tabindex="-1" data-corner="tr"></div>
+      <div class="player-card-resize" role="button" tabindex="-1" data-corner="bl"></div>
+      <div class="player-card-resize" role="button" tabindex="-1" data-corner="br"></div>
     `;
 
     const header = card.querySelector(".player-card-header");
@@ -2348,11 +2376,9 @@
     attachDragEvents(card, [header, dragZone]);
 
     // Alternative clavier au glisser-déposer : les 4 flèches, quand
-    // l'en-tête a le focus (voir moveChannelByKeyboard(), section 8).
-    header.setAttribute(
-      "aria-label",
-      `${channel} — glisser-déposer, ou flèches du clavier, pour réorganiser`
-    );
+    // l'en-tête a le focus (voir moveChannelByKeyboard(), section 8). Ses
+    // libellés (dont celui de l'en-tête, qui l'annonce) : localizePlayerCard().
+    localizePlayerCard(card, channel);
     header.addEventListener("keydown", (event) => {
       const direction = ARROW_KEY_DIRECTIONS[event.key];
       if (direction === undefined) return;
@@ -2726,7 +2752,7 @@
     el.chatEmbedContainer.innerHTML = "";
     const iframe = document.createElement("iframe");
     iframe.src = targetUrl;
-    iframe.title = `Chat Twitch de ${state.chatChannel}`;
+    iframe.title = t("chat.iframeTitle", { channel: state.chatChannel });
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("scrolling", "yes");
     el.chatEmbedContainer.appendChild(iframe);
@@ -2865,7 +2891,7 @@
     if (state.entries.length === 0) {
       const empty = document.createElement("li");
       empty.className = "modal-channels-empty";
-      empty.textContent = "Aucune chaîne pour le moment. Ajoutez-en une ci-dessus.";
+      empty.textContent = t("modal.channels.empty");
       el.modalChannelsList.appendChild(empty);
       return;
     }
@@ -2878,8 +2904,9 @@
       row.innerHTML = `
         <input type="checkbox" class="modal-channel-checkbox" id="${checkboxId}" ${entry.visible ? "checked" : ""} />
         <label for="${checkboxId}" class="modal-channel-label">${entry.name}</label>
-        <button type="button" class="modal-channel-forget" aria-label="Oublier ${entry.name}">×</button>
+        <button type="button" class="modal-channel-forget">×</button>
       `;
+      row.querySelector(".modal-channel-forget").setAttribute("aria-label", t("modal.channel.forget", { channel: entry.name }));
 
       row.querySelector(".modal-channel-checkbox").addEventListener("change", (event) => {
         setChannelVisibility(entry.name, event.target.checked);
@@ -3064,12 +3091,17 @@
    * + `location.pathname` plutôt que de `location.href`, précisément pour
    * NE PAS reprendre le hash courant. Le lien ne porte que les CHAÎNES : les
    * favoris et les tailles de la disposition restent dans ce navigateur (le
-   * hash d'URL ne connaît, comme toujours, que les chaînes visibles).
+   * hash d'URL ne connaît, comme toujours, que les chaînes visibles). En
+   * revanche, quand le site est dans une langue autre que le français, le lien
+   * porte `?lang=xx` : il s'ouvre dans la langue de celui qui le partage (le
+   * destinataire peut ensuite la changer avec le bouton de langue).
    * @param {string[]} channels
    * @returns {string}
    */
   function buildPresetShareUrl(channels) {
-    return `${window.location.origin}${window.location.pathname}#${channels.join("/")}`;
+    const language = i18n.getLanguage();
+    const query = language === i18n.DEFAULT_LANGUAGE ? "" : `?lang=${language}`;
+    return `${window.location.origin}${window.location.pathname}${query}#${channels.join("/")}`;
   }
 
   function renderPresetsList() {
@@ -3078,7 +3110,7 @@
     if (state.presets.length === 0) {
       const empty = document.createElement("li");
       empty.className = "modal-channels-empty";
-      empty.textContent = "Aucune disposition enregistrée.";
+      empty.textContent = t("preset.empty");
       el.modalPresetsList.appendChild(empty);
       return;
     }
@@ -3086,22 +3118,10 @@
     state.presets.forEach((preset) => {
       const row = document.createElement("li");
       row.className = "modal-preset-item";
-      // `preset.name` est du texte libre saisi par l'utilisateur
-      // (contrairement aux noms de chaînes, restreints à [a-z0-9_]) : on
-      // l'échappe avant insertion dans le gabarit HTML (voir escapeHtml()).
-      const safeName = escapeHtml(preset.name);
-      const count = preset.channels.length;
-      // Infobulle du nom : ce que rétablit un clic. Les dispositions
-      // enregistrées avant que les tailles ne soient retenues (sans `layout`)
-      // ne rétablissent que leurs chaînes.
-      const applyTitle = preset.layout
-        ? "Appliquer : streams, streams mis en avant et taille des tuiles"
-        : "Appliquer : streams seulement (taille des tuiles et mises en avant inchangées)";
       // Pastille discrète quand la disposition retient des tailles ajustées à
       // la main (icône : une grande tuile et deux petites).
       const sizesBadge = hasCustomSizes(preset)
-        ? `<span class="modal-preset-layout" role="img" aria-label="Taille des tuiles mémorisée"
-            title="Taille des tuiles mémorisée">
+        ? `<span class="modal-preset-layout" role="img">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
               stroke-linejoin="round">
               <rect x="3.5" y="4.5" width="10" height="15" rx="1.5" />
@@ -3110,11 +3130,17 @@
             </svg>
           </span>`
         : "";
+      // Le gabarit ne contient QUE de la structure fixe : le nom de la
+      // disposition (texte libre saisi par l'utilisateur, contrairement aux
+      // noms de chaînes restreints à [a-z0-9_]) et tous les libellés sont posés
+      // ensuite par `textContent` / `setAttribute`, qui n'interprètent jamais
+      // de HTML — aucune injection possible, même avec des guillemets dans le
+      // nom, et les textes suivent la langue courante.
       row.innerHTML = `
-        <button type="button" class="modal-preset-apply" title="${applyTitle}">${safeName}</button>
+        <button type="button" class="modal-preset-apply"></button>
         ${sizesBadge}
-        <span class="modal-preset-count">${count} stream${count > 1 ? "s" : ""}</span>
-        <button type="button" class="modal-preset-share" aria-label="Copier le lien de la disposition ${safeName}">
+        <span class="modal-preset-count"></span>
+        <button type="button" class="modal-preset-share">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M9 15l6-6M10.5 7.5l1-1a3.5 3.5 0 015 5l-1 1M13.5 16.5l-1 1a3.5 3.5 0 01-5-5l1-1"
@@ -3122,10 +3148,25 @@
             />
           </svg>
         </button>
-        <button type="button" class="modal-preset-delete" aria-label="Supprimer la disposition ${safeName}">×</button>
+        <button type="button" class="modal-preset-delete">×</button>
       `;
 
-      row.querySelector(".modal-preset-apply").addEventListener("click", () => {
+      const applyButton = row.querySelector(".modal-preset-apply");
+      applyButton.textContent = preset.name;
+      // Infobulle du nom : ce que rétablit un clic. Les dispositions
+      // enregistrées avant que les tailles ne soient retenues (sans `layout`)
+      // ne rétablissent que leurs chaînes.
+      applyButton.title = t(preset.layout ? "preset.apply.full" : "preset.apply.legacy");
+      row.querySelector(".modal-preset-count").textContent = t("preset.count", { count: preset.channels.length });
+      const sizesIcon = row.querySelector(".modal-preset-layout");
+      if (sizesIcon) {
+        sizesIcon.setAttribute("aria-label", t("preset.sizes"));
+        sizesIcon.title = t("preset.sizes");
+      }
+      row.querySelector(".modal-preset-share").setAttribute("aria-label", t("preset.share", { name: preset.name }));
+      row.querySelector(".modal-preset-delete").setAttribute("aria-label", t("preset.delete", { name: preset.name }));
+
+      applyButton.addEventListener("click", () => {
         applyPreset(preset);
       });
       row.querySelector(".modal-preset-share").addEventListener("click", () => {
@@ -3152,12 +3193,12 @@
   function savePresetFromCurrentState(rawName) {
     const name = (rawName || "").trim().slice(0, 40);
     if (!name) {
-      return { ok: false, message: "Entrez un nom pour cette disposition." };
+      return { ok: false, message: t("preset.error.name") };
     }
 
     const channels = getVisibleChannels();
     if (channels.length === 0) {
-      return { ok: false, message: "Aucun stream affiché à enregistrer." };
+      return { ok: false, message: t("preset.error.noStream") };
     }
 
     const layout = captureCurrentLayout();
@@ -3175,10 +3216,13 @@
     // Le message dit ce qui a été retenu en plus des chaînes (rien à en dire
     // pour une disposition par défaut sans favori).
     const extras = [];
-    if (layout.featured.length > 0) extras.push("les streams mis en avant");
-    if (Object.keys(layout.pins).length > 0) extras.push("la taille des tuiles");
-    const suffix = extras.length > 0 ? `, avec ${extras.join(" et ")}` : "";
-    return { ok: true, message: `Disposition « ${name} » enregistrée${suffix}.` };
+    if (layout.featured.length > 0) extras.push(t("preset.extra.featured"));
+    if (Object.keys(layout.pins).length > 0) extras.push(t("preset.extra.sizes"));
+    const message =
+      extras.length > 0
+        ? t("preset.saved.with", { name, extras: extras.join(t("preset.extra.and")) })
+        : t("preset.saved", { name });
+    return { ok: true, message };
   }
 
   /**
@@ -3324,14 +3368,14 @@
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(url)
-        .then(() => showToast("Lien copié dans le presse-papiers."))
+        .then(() => showToast(t("toast.linkCopied")))
         .catch(() => {
           fallbackCopyToClipboard(url);
-          showToast("Lien copié dans le presse-papiers.");
+          showToast(t("toast.linkCopied"));
         });
     } else {
       fallbackCopyToClipboard(url);
-      showToast("Lien copié dans le presse-papiers.");
+      showToast(t("toast.linkCopied"));
     }
   }
 
@@ -3342,7 +3386,9 @@
   /*
    * La fenêtre d'aide (#help-overlay dans index.html, ouverte par le bouton
    * « i » #btn-help de l'en-tête) est du HTML STATIQUE : texte et captures
-   * d'écran sont écrits directement dans la page, rien n'est construit ici.
+   * d'écran sont écrits directement dans la page (en deux versions, une par
+   * langue, dont le CSS n'affiche que celle de la langue courante), rien n'est
+   * construit ici.
    * Ce code ne gère que le confort d'usage d'une boîte de dialogue :
    *  - ouverture / fermeture (bouton « × », clic à côté, touche Échap) ;
    *  - le focus clavier : il entre dans la fenêtre à l'ouverture, y reste
@@ -3514,7 +3560,70 @@
   }
 
   /* ==========================================================================
-   * 15. INITIALISATION & ÉCOUTEURS D'ÉVÈNEMENTS GLOBAUX
+   * 15. LANGUE (FRANÇAIS / ANGLAIS)
+   * ========================================================================== */
+
+  /*
+   * Les textes de l'interface vivent dans i18n.js (dictionnaires fr/en et
+   * moteur de traduction, exposé par `window.StreamWallI18n`). Les textes
+   * STATIQUES (index.html) y sont appliqués par le moteur lui-même via les
+   * attributs `data-i18n` ; ici, app.js s'occupe de ce qu'il construit
+   * lui-même :
+   *  - chaque texte qu'il fabrique passe par `t("clé", { paramètres })` ;
+   *  - au CHANGEMENT de langue, il refait les textes déjà affichés qui ne
+   *    sont pas statiques (`onLanguageChange()`) : libellés des cartes de
+   *    streams, listes de la fenêtre "Changer les streams", titre du chat.
+   * Le bouton de langue (#btn-lang) montre l'AUTRE langue : « EN » quand le
+   * site est en français, « FR » quand il est en anglais.
+   */
+
+  /**
+   * Met à jour l'attribut `lang` du bouton de langue : son texte ("EN"/"FR")
+   * est dans l'AUTRE langue que celle de la page, et sans cet attribut un
+   * lecteur d'écran le prononcerait avec l'accent de la langue de la page.
+   */
+  function updateLanguageButton() {
+    el.btnLang.lang = i18n.getAlternateLanguage();
+  }
+
+  /**
+   * Refait les textes que app.js a construits (les textes statiques, eux, ont
+   * déjà été traduits par i18n.js quand cette fonction est appelée). Rappelée
+   * par i18n.js après chaque changement de langue.
+   */
+  function onLanguageChange() {
+    updateLanguageButton();
+
+    el.playersGrid.querySelectorAll(".player-card[data-channel]").forEach((card) => {
+      localizePlayerCard(card, card.dataset.channel);
+    });
+
+    // L'iframe de chat n'est PAS recréée (ce qui romprait sa session, voir
+    // renderChatOnly()) : on ne change que son titre accessible.
+    const chatIframe = el.chatEmbedContainer.querySelector("iframe");
+    if (chatIframe && state.chatChannel) {
+      chatIframe.title = t("chat.iframeTitle", { channel: state.chatChannel });
+    }
+
+    // Les listes de la fenêtre "Changer les streams" sont reconstruites dans la
+    // langue courante ; un message d'erreur ou de confirmation encore affiché
+    // (dans l'ancienne langue) est effacé plutôt que traduit.
+    renderModalChannelsList();
+    renderPresetsList();
+    hideModalAddError();
+    hidePresetFeedback();
+  }
+
+  /**
+   * Bouton de langue : bascule vers l'autre langue (voir i18n.js, qui met
+   * aussi à jour l'adresse `?lang=`, la mémoire et les textes statiques).
+   */
+  function toggleLanguage() {
+    i18n.setLanguage(i18n.getAlternateLanguage());
+  }
+
+  /* ==========================================================================
+   * 16. INITIALISATION & ÉCOUTEURS D'ÉVÈNEMENTS GLOBAUX
    * ========================================================================== */
 
   function bindGlobalEvents() {
@@ -3540,6 +3649,12 @@
     });
 
     el.btnToggleTheme.addEventListener("click", toggleTheme);
+
+    // Langue (section 15) : le bouton bascule français <-> anglais ; après
+    // chaque changement, i18n.js rappelle onLanguageChange(), qui refait les
+    // textes construits par ce fichier (les textes statiques sont déjà faits).
+    el.btnLang.addEventListener("click", toggleLanguage);
+    i18n.onChange(onLanguageChange);
 
     // Fenêtre d'aide (section 14) : ouverture par le bouton « i », fermeture
     // par « × » ou un clic sur le fond assombri (pas sur la boîte elle-même :
@@ -3646,6 +3761,9 @@
     // précédente doivent déjà être connues à ce moment-là.
     loadManualLayouts();
     bindGlobalEvents();
+    // Le texte statique a déjà été traduit par i18n.js ; reste l'attribut
+    // `lang` du bouton de langue (voir updateLanguageButton()).
+    updateLanguageButton();
     applyTheme();
     updateChatPanelVisibility();
     updateReorderModeUI(); // applique aussi renderPlayersGrid() + applyGridLayout()
