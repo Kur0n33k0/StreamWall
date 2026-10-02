@@ -1214,6 +1214,32 @@ html[lang="en"] .help-lang[lang="en"] {
   font-size: 13px;
 }
 
+/* Historique des versions (#help-versions) : une entrée par version, la plus
+   récente en haut, séparées par un filet. */
+.help-version + .help-version {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.help-version h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+/* Badge "version actuelle", sur une seule entrée : la plus récente. */
+.help-version-badge {
+  background: var(--twitch-purple);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* Petits éléments de code et touches du clavier. */
 .help-section code,
 .help-section kbd {
