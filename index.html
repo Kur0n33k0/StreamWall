@@ -612,6 +612,7 @@
             <li><button type="button" class="help-toc-link" data-help-target="help-theme" data-i18n="help.toc.theme">Thème clair / sombre</button></li>
             <li><button type="button" class="help-toc-link" data-help-target="help-keyboard" data-i18n="help.toc.keyboard">Clavier et écran tactile</button></li>
             <li><button type="button" class="help-toc-link" data-help-target="help-data" data-i18n="help.toc.data">Vos données</button></li>
+            <li><button type="button" class="help-toc-link" data-help-target="help-versions" data-i18n="help.toc.versions">Historique des versions</button></li>
           </ol>
         </nav>
 
@@ -1233,6 +1234,58 @@
                   opens the site in English.</li>
                 <li>To reset everything, clear the site's data in your browser settings.</li>
               </ul>
+            </section>
+          </div>
+
+          <!--
+            Historique des versions : une entrée `.help-version` par version,
+            la PLUS RÉCENTE EN HAUT. Pour publier une nouvelle version, ajoutez
+            son entrée au-dessus des autres dans les DEUX blocs de langue, et
+            déplacez-y le badge `.help-version-badge` ("version actuelle" /
+            "current version") : il ne doit figurer que sur une seule entrée.
+          -->
+          <div id="help-versions" class="help-section">
+            <section class="help-lang" lang="fr" aria-labelledby="help-versions-title">
+              <h3 id="help-versions-title">Historique des versions</h3>
+              <article class="help-version">
+                <h4>v1.0 <span class="help-version-badge">version actuelle</span></h4>
+                <p class="help-note">2 octobre 2026 · Version initiale</p>
+                <ul>
+                  <li>Mur de streams Twitch en nombre illimité, qui occupe toujours tout l'écran ; un seul stream
+                    démarre avec le son.</li>
+                  <li>Ajout de chaînes par leur nom ou leur adresse, avec auto-complétion, et cases à cocher pour en
+                    masquer une sans l'oublier.</li>
+                  <li>Mode Réorganiser : glisser-déposer, mise en avant de deux streams au maximum et
+                    redimensionnement des tuiles par les coins.</li>
+                  <li>Dispositions favorites, avec lien de partage.</li>
+                  <li>Chat Twitch intégré, avec la case « Garder chargé » pour garder certains chats connectés en
+                    arrière-plan.</li>
+                  <li>Site bilingue (français et anglais), thèmes clair et sombre, utilisable au clavier et sur
+                    écran tactile.</li>
+                  <li>Fenêtre d'aide avec captures d'écran.</li>
+                </ul>
+              </article>
+            </section>
+            <section class="help-lang" lang="en" aria-labelledby="help-versions-title-en">
+              <h3 id="help-versions-title-en">Version history</h3>
+              <article class="help-version">
+                <h4>v1.0 <span class="help-version-badge">current version</span></h4>
+                <p class="help-note">October 2, 2026 · Initial release</p>
+                <ul>
+                  <li>Wall of Twitch streams with no limit on their number, always filling the whole screen; only
+                    one stream starts with sound.</li>
+                  <li>Add channels by name or address, with auto-completion, and checkboxes to hide one without
+                    forgetting it.</li>
+                  <li>Rearrange mode: drag and drop, featuring up to two streams and resizing tiles by their
+                    corners.</li>
+                  <li>Favorite layouts, with a share link.</li>
+                  <li>Built-in Twitch chat, with the “Keep loaded” box to keep some chats connected in the
+                    background.</li>
+                  <li>Bilingual site (French and English), light and dark themes, usable with a keyboard and on
+                    touch screens.</li>
+                  <li>Help window with screenshots.</li>
+                </ul>
+              </article>
             </section>
           </div>
 

@@ -116,7 +116,8 @@ Python.
   comprises. Le choix est mémorisé, et `?lang=en` dans l'adresse ouvre le site en anglais.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
-- **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées.
+- **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées, ainsi
+  que l'historique des versions (version actuelle : **v1.0**).
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
 ## 🚀 Installation rapide

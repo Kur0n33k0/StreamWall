@@ -1342,8 +1342,9 @@ Le bouton **« i »** du menu (`#btn-help`, à gauche du bouton de langue)
 ouvre une fenêtre qui explique **toutes les options du site, avec des
 captures d'écran** : le menu, l'ajout de streams, le son, le mode
 Réorganiser, la mise en avant, le redimensionnement par les coins, le chat,
-les dispositions favorites, le thème, le clavier et l'écran tactile, et enfin
-ce qui est mémorisé. Un sommaire à gauche permet d'aller directement à une
+les dispositions favorites, le thème, le clavier et l'écran tactile, ce qui
+est mémorisé, et enfin l'historique des versions (rubrique `#help-versions`,
+la plus récente en haut, actuellement la v1.0). Un sommaire à gauche permet d'aller directement à une
 rubrique ; sur un écran étroit (≤ 720 px), il passe au-dessus du texte sous
 forme d'une rangée de boutons qui défile horizontalement.
 
@@ -1990,6 +1991,13 @@ Pour **ajouter une rubrique** :
 
 Aucun code JavaScript n'est à toucher : `app.js` repère les sections et les
 rubriques d'après leurs classes (`.help-section`, `.help-toc-link`).
+
+**Publier une nouvelle version** : dans la rubrique `#help-versions`, ajoutez
+une entrée `<article class="help-version">` (titre `<h4>vX.Y</h4>`, date en
+`<p class="help-note">`, liste des changements) **au-dessus** des autres, dans
+les deux blocs de langue, et déplacez-y le badge
+`<span class="help-version-badge">` (« version actuelle » / « current
+version ») : une seule entrée doit le porter.
 
 **Ajouter ou refaire une capture** : prenez-la dans l'état voulu (faux
 lecteurs, pastilles numérotées : voir section 16), **une fois par langue**

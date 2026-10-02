@@ -191,6 +191,7 @@
       "help.toc.theme": "Thème clair / sombre",
       "help.toc.keyboard": "Clavier et écran tactile",
       "help.toc.data": "Vos données",
+      "help.toc.versions": "Historique des versions",
     },
 
     en: {
@@ -307,6 +308,7 @@
       "help.toc.theme": "Light / dark theme",
       "help.toc.keyboard": "Keyboard and touch",
       "help.toc.data": "Your data",
+      "help.toc.versions": "Version history",
     },
   };
 
