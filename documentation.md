@@ -150,7 +150,8 @@ données ni processus serveur.
   partir d'une disposition favorite déjà enregistrée. **Appliqué**, il répartit les
   streams affichés sur ses vignettes (le stream principal dans la vignette
   principale) et **désactive les streams en trop** (décochés, pas oubliés) ;
-  ensuite, la couronne **« Mettre en principal »**, en haut à droite de chaque autre tuile,
+  ensuite, la couronne **« Mettre en principal »**, en haut à droite de chaque autre tuile
+  (visible au survol de la tuile),
   **échange** ce stream avec le principal, son compris, **sans changer la
   disposition** ni recharger les vidéos. Chaque modèle se **partage** par un
   lien qui porte sa forme (voir section 18).
@@ -197,6 +198,7 @@ streamwall/
 ├── i18n.js             Langues : dictionnaires français / anglais et moteur de traduction (section 17)
 ├── robots.txt          Consignes aux robots d'indexation (référencement)
 ├── sitemap.xml         Plan du site pour les moteurs de recherche
+├── CNAME               Domaine personnalisé de GitHub Pages : streamwall.fr (dépôt github.com/Kur0n33k0/Streamwall)
 ├── assets/
 │   ├── logo_mode_sombre.png   Icône du logo pour le thème sombre (contour clair)
 │   ├── logo_mode_clair0.png   Icône du logo pour le thème clair (contour foncé)
@@ -1414,7 +1416,7 @@ captures d'écran** : le menu, l'ajout de streams, le son, le mode
 Réorganiser, la mise en avant, le redimensionnement par les coins, le chat,
 les dispositions favorites, les modèles de disposition, le thème, le clavier
 et l'écran tactile, ce qui est mémorisé, et enfin l'historique des versions
-(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.1). Un sommaire à gauche permet d'aller directement à une
+(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.2). Un sommaire à gauche permet d'aller directement à une
 rubrique ; sur un écran étroit (≤ 720 px), il passe au-dessus du texte sous
 forme d'une rangée de boutons qui défile horizontalement.
 
@@ -1525,11 +1527,11 @@ langue anglaise mémorisée (`streamwall:lang` = `en`), et des libellés adapté
 
 Le script qui automatisait tout cela (`tools/generate-help-screenshots.js`,
 fondé sur `puppeteer-core`) **n'est plus dans le dépôt** : le site est resté
-sans aucun outil de développement. Il reste récupérable dans l'historique git
-(`git show 4350241^:tools/generate-help-screenshots.js`) pour refaire les
-captures après un changement d'interface — à adapter, il ne connaît pas
-forcément les derniers éléments de l'interface ; sinon, on les prend à la main,
-dans les mêmes états et avec les mêmes noms de chaînes fictifs. Dans les deux
+sans aucun outil de développement, et l'historique git a été repris à zéro
+(commit « V1.0 »), si bien que le script n'y figure plus non plus. Pour
+refaire les captures après un changement d'interface, on les prend à la main
+(ou avec un script à réécrire sur le même principe), dans les mêmes états et
+avec les mêmes noms de chaînes fictifs. Dans les deux
 cas, si la taille d'une capture change, mettez à jour les attributs
 `width`/`height` de son `<img>` dans `index.html`. (Les quatre captures liées
 aux modèles de disposition — `help-presets.png` refaite avec ses onglets,
@@ -1540,7 +1542,11 @@ l'onglet des modèles ouvert ; six streams en mode Réorganiser (1800 × 860), l
 panneau ouvert, « Principal + 5 » appliqué et le nom « Grand écran » /
 « Big screen » saisi ; pour le mur, le même modèle appliqué hors mode
 Réorganiser ; et `help-reorder.png`, refaite elle aussi, avec quatre streams en
-mode Réorganiser.)
+mode Réorganiser.) Sur `help-templates-wall.png`, toutes les couronnes sont
+visibles à la fois : elle date d'avant leur affichage au seul survol de la
+tuile, ce que dit l'aide sous la capture. Pour la refaire, forcer leur
+affichage (par exemple `opacity: 1` sur `.player-card-promote` et
+`.player-card-main-floating`) : un seul pointeur ne survole qu'une tuile.
 
 **Le menu sur téléphone.** Avec le bouton « + », le bouton « i », le bouton de
 langue et le lien GitHub, le menu compte sept éléments (six boutons — +,
@@ -1801,13 +1807,29 @@ son angle supérieur droit, loin des commandes du lecteur Twitch (en bas) :
 **pleine et violette** sur la principale (`.player-card-main-floating`, une
 simple icône), et sur les autres un bouton **« Mettre en principal »**
 (`.player-card-promote`), discret (opacité 0,7) jusqu'à ce qu'on survole la
-couronne elle-même ou qu'elle ait le focus clavier. Elles sont **toujours
-visibles**, pas cachées en attendant un survol de la tuile : quand le pointeur
-est au-dessus d'un lecteur Twitch — une iframe d'un autre site —, le navigateur
-ne signale pas à la page que la tuile est survolée (`:hover` ne s'y applique
-pas), si bien qu'une couronne attendant ce survol n'apparaissait jamais sur de
-vrais streams (avec de faux lecteurs du même site, en test, elle apparaissait).
-Seul le survol de la couronne elle-même est détecté.
+couronne elle-même ou qu'elle ait le focus clavier.
+
+Elles n'apparaissent **qu'au survol de leur tuile** (`.player-card:hover`),
+pour ne rien laisser par-dessus la vidéo le reste du temps ; au repos, elles
+sont invisibles (`opacity: 0`) et laissent passer les clics vers le lecteur
+(`pointer-events: none`). Le lecteur Twitch est une iframe d'un autre site,
+mais le navigateur considère quand même la tuile qui la contient comme
+survolée. Deux exceptions la gardent visible sans survol :
+
+- au **clavier**, « Mettre en principal » reste dans l'ordre de tabulation et
+  apparaît dès qu'il a le focus (`:focus-visible`) ;
+- sur un écran **sans survol** (tactile, `@media (hover: none)`), les deux
+  couronnes restent affichées : sinon, on ne pourrait jamais les atteindre.
+
+Tout est en CSS (`style.css`, section des couronnes) : aucun JavaScript ne
+suit la souris.
+
+> **Pour tester.** Chrome piloté par un outil d'automatisation (Puppeteer,
+> Playwright : protocole DevTools) envoie ses mouvements de souris
+> directement à l'iframe d'un autre site, sans passer par la page : la tuile
+> n'y paraît alors survolée que si le pointeur est d'abord passé sur un
+> élément de la page (bord de la tuile, écart entre deux tuiles). Une vraie
+> souris n'a pas ce défaut ; Firefox piloté non plus.
 
 Un clic appelle `promoteToMain()`, qui **échange** ce stream avec celui de la
 vignette principale (`swapChannels()`) : chacun prend exactement la place de
@@ -1994,7 +2016,7 @@ distincte (par exemple `/en/`), avec ses propres balises et des `hreflang`
 réciproques : voir "Ce qui n'est pas fait".
 
 **À adapter si le site est publié ailleurs** (un fork, un domaine à soi) :
-l'adresse `https://kur0n33k0.github.io/` est écrite dans `index.html`
+l'adresse `https://streamwall.fr/` est écrite dans `index.html`
 (`canonical`, `og:url`, `og:image`, `twitter:image`, JSON-LD : `url`, `image`),
 dans `robots.txt` (ligne `Sitemap:`) et dans `sitemap.xml` (`<loc>`). Mettez
 aussi à jour `<lastmod>` du sitemap quand le contenu change.
@@ -2005,7 +2027,7 @@ depuis le dépôt) :
 1. **Google Search Console** : ajoutez le site, validez-le (par une balise
    `<meta name="google-site-verification" content="…">` à placer dans `<head>`,
    ou par un fichier fourni par Google à la racine), puis envoyez
-   `https://kur0n33k0.github.io/sitemap.xml` et demandez l'indexation de la
+   `https://streamwall.fr/sitemap.xml` et demandez l'indexation de la
    page d'accueil (« Inspection de l'URL »). **Bing Webmaster Tools** propose
    d'importer le site depuis la Search Console.
 2. Vérifiez les données structurées avec le **Test des résultats enrichis** de
@@ -2200,7 +2222,7 @@ donnez alors un `alt="StreamWall"` aux images).
 ### Lien GitHub du menu
 
 Tout à droite du menu, le **logo GitHub** (`#github-link`, dans `index.html`)
-ouvre le dépôt du projet, `https://github.com/Kur0n33k0/kur0n33k0.github.io`,
+ouvre le dépôt du projet, `https://github.com/Kur0n33k0/Streamwall`,
 dans un nouvel onglet. C'est un simple lien HTML (`<a>`), sans aucun
 JavaScript :
 

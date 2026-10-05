@@ -22,9 +22,9 @@ Un mur de streams qui remplit toujours 100 % de l'écran, que vous réorganisez 
 ![Aucun build](https://img.shields.io/badge/build-aucun-2ea44f)
 ![Aucune dépendance npm](https://img.shields.io/badge/d%C3%A9pendances%20npm-aucune-2ea44f)
 ![Langues : français et anglais](https://img.shields.io/badge/langues-FR%20%7C%20EN-blue)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-en%20ligne-222222?logo=githubpages&logoColor=white)](https://kur0n33k0.github.io/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-en%20ligne-222222?logo=githubpages&logoColor=white)](https://streamwall.fr/)
 
-[**🌐 Voir le site en ligne**](https://kur0n33k0.github.io/) ·
+[**🌐 Voir le site en ligne**](https://streamwall.fr/) ·
 [**🚀 Installation rapide**](#-installation-rapide) ·
 [**📖 Documentation technique**](documentation.md)
 
@@ -44,7 +44,7 @@ une soirée entre amis ou plusieurs points de vue d'un même événement.
 - **Vos réglages vous suivent** : enregistrez une *disposition favorite* (streams, ordre, favoris et taille des
   tuiles) et retrouvez-la en un clic, ou partagez-la par un lien.
 - **Des modèles de disposition** : arrangez votre mur (ou partez d'une disposition conseillée comme « Principal + 5 ») et
-  enregistrez sa forme ; vos streams s'y répartissent ensuite, et un clic sur la couronne d'une tuile bascule son
+  enregistrez sa forme ; vos streams s'y répartissent ensuite, et un clic sur la couronne d'une tuile survolée bascule son
   stream en principal sans rien déranger.
 - **Rien à installer, rien à créer** : c'est un simple site statique. Aucun compte, aucun serveur — vos réglages
   restent dans votre navigateur.
@@ -133,8 +133,9 @@ Python.
   façon.
 - Appliqué, le modèle **répartit vos streams** sur ses vignettes — le principal dans la ★ — et **désactive ceux en
   trop** (sans les oublier).
-- La **couronne « Mettre en principal »** (en haut à droite des tuiles) **échange** ce stream avec le principal, son compris,
-  **sans changer la disposition** ni recharger les vidéos.
+- La **couronne « Mettre en principal »** (en haut à droite des tuiles, **au survol**) **échange** ce stream avec le
+  principal, son compris, **sans changer la disposition** ni recharger les vidéos. Les couronnes n'apparaissent qu'au
+  survol de leur tuile (au focus clavier aussi, et en permanence sur écran tactile) : rien ne reste sur la vidéo.
 - Chaque modèle se **partage** par un lien : le destinataire le retrouve dans ses modèles, appliqué à ses streams.
 
 **Confort**
@@ -145,7 +146,7 @@ Python.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées, ainsi
-  que l'historique des versions (version actuelle : **v1.1**).
+  que l'historique des versions (version actuelle : **v1.2**).
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
 ## 🚀 Installation rapide
@@ -153,8 +154,8 @@ Python.
 StreamWall est un site statique : il suffit de le servir avec n'importe quel serveur HTTP local.
 
 ```bash
-git clone https://github.com/Kur0n33k0/kur0n33k0.github.io.git
-cd kur0n33k0.github.io
+git clone https://github.com/Kur0n33k0/Streamwall.git
+cd Streamwall
 
 # Au choix :
 python -m http.server 8080      # Python (python3 sous macOS / Linux)
@@ -180,7 +181,7 @@ Ouvrez ensuite **http://localhost:8080**.
 | **Revenir aux tailles par défaut** | Mode **Réorganiser**, puis **Réinitialiser la vue** |
 | **Retrouver une composition** | Enregistrez une *disposition favorite* dans la fenêtre ＋, puis cliquez sur son nom |
 | **Réutiliser une forme de mur** | Mode **Réorganiser** → **Modèles de disposition** : une disposition conseillée ou vos réglages, un nom, **Enregistrer le modèle** |
-| **Passer un stream en principal** | Avec un modèle appliqué : la **couronne** en haut à droite de sa tuile |
+| **Passer un stream en principal** | Avec un modèle appliqué : survolez sa tuile, puis la **couronne** en haut à droite |
 | **Partager mes streams** | Copiez l'adresse de la page (`…#chaine1/chaine2`) ou le lien d'une disposition favorite (tailles et favoris compris) |
 | **Partager une forme de mur** | Le bouton de partage d'un *modèle de disposition* |
 | **Tout comprendre** | Bouton **ⓘ** du menu : l'aide intégrée |

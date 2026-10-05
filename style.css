@@ -546,16 +546,23 @@ html[data-theme="light"] .player-card-main-icon {
    stream avec le principal sans changer la disposition (promoteToMain()).
    Sans modèle appliqué, aucune n'apparaît.
 
-   Elles sont TOUJOURS visibles (discrètes, pas cachées en attendant un
-   survol) : quand le pointeur est au-dessus d'un lecteur Twitch — une iframe
-   d'un autre site —, le navigateur ne signale pas à la page que la tuile est
-   survolée (`:hover` ne s'y applique pas), donc une couronne qui
-   n'apparaîtrait qu'au survol de la tuile resterait invisible sur de vrais
-   streams. Seul le survol de la couronne elle-même est détecté.
+   Elles n'apparaissent qu'AU SURVOL DE LEUR TUILE, pour ne rien laisser par
+   dessus la vidéo le reste du temps : chaque tuile montre la sienne quand le
+   pointeur passe dessus, vidéo comprise. Le lecteur Twitch est une iframe
+   d'un autre site ; le navigateur considère néanmoins la tuile qui la
+   contient comme survolée (`:hover`). Deux exceptions la laissent visible
+   sans survol :
+    - au clavier, le bouton "Mettre en principal" reste dans l'ordre de
+      tabulation et apparaît quand il a le focus (`:focus-visible`) ;
+    - sur un écran sans survol (tactile : `@media (hover: none)`), les deux
+      couronnes restent affichées, sans quoi elles seraient inaccessibles.
    ========================================================================== */
 
 /* Pastille ronde commune aux deux couronnes ; `z-index: 2` : au-dessus de la
-   vidéo. Masquées par défaut. */
+   vidéo. Masquées par défaut (`display: none`) ; une fois affichées (modèle
+   appliqué, hors mode Réorganiser), encore invisibles et transparentes aux
+   clics (`pointer-events: none` : un clic à leur emplacement va au lecteur)
+   tant que la tuile n'est pas survolée. */
 .player-card-promote,
 .player-card-main-floating {
   position: absolute;
@@ -569,6 +576,35 @@ html[data-theme="light"] .player-card-main-icon {
   height: 32px;
   padding: 0;
   border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+/* Tuile survolée : sa couronne apparaît (la pleine en entier, "Mettre en
+   principal" discrète, voir plus bas). Au clavier, le focus suffit. */
+.player-card:hover .player-card-main-floating {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.player-card:hover .player-card-promote,
+.player-card .player-card-promote:focus-visible {
+  opacity: 0.7;
+  pointer-events: auto;
+}
+
+/* Écran sans survol (tactile) : toujours affichées. */
+@media (hover: none) {
+  .player-card-main-floating {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .player-card-promote {
+    opacity: 0.7;
+    pointer-events: auto;
+  }
 }
 
 .player-card-promote svg,
@@ -588,14 +624,15 @@ html[data-theme="light"] .player-card-main-icon {
   display: flex;
 }
 
-/* "Mettre en principal" sur les autres tuiles : discret au repos, plein au
-   survol de la couronne elle-même ou au focus clavier. */
+/* "Mettre en principal" sur les autres tuiles : discret (opacité 0,7) quand
+   la tuile est survolée, plein au survol de la couronne elle-même ou au
+   focus clavier. Sélecteurs à trois classes : ils doivent l'emporter sur
+   `.player-card:hover .player-card-promote` ci-dessus. */
 .player-card-promote {
   border: 1px solid var(--border-subtle);
   background: var(--bg-overlay);
   color: var(--text-primary);
   cursor: pointer;
-  opacity: 0.7;
   transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
@@ -603,8 +640,8 @@ html[data-theme="light"] .player-card-main-icon {
   display: flex;
 }
 
-.player-card-promote:hover,
-.player-card-promote:focus-visible {
+.player-card .player-card-promote:hover,
+.player-card .player-card-promote:focus-visible {
   opacity: 1;
 }
 

@@ -152,7 +152,7 @@
       "modal.presets.save": "Enregistrer",
       "modal.templates.title": "Modèles de disposition",
       "modal.templates.help":
-        "Un modèle ne retient que la forme des tuiles, avec une vignette principale. Appliqué, il répartit vos streams sur ses vignettes — le stream principal dans la principale — et désactive ceux en trop. La couronne en haut à droite d'une tuile la bascule ensuite en principal, sans changer la disposition.",
+        "Un modèle ne retient que la forme des tuiles, avec une vignette principale. Appliqué, il répartit vos streams sur ses vignettes — le stream principal dans la principale — et désactive ceux en trop. La couronne qui apparaît en haut à droite d'une tuile survolée la bascule ensuite en principal, sans changer la disposition.",
       "modal.templates.create": "Créer un modèle",
       "modal.templates.createHelp": "Passe en mode Réorganiser et ouvre le panneau des modèles : arrangez le mur, puis enregistrez-le.",
       "modal.tabs.aria": "Dispositions",
@@ -341,7 +341,7 @@
       "modal.presets.save": "Save",
       "modal.templates.title": "Layout templates",
       "modal.templates.help":
-        "A template only remembers the shape of the tiles, with one main tile. Applied, it spreads your streams over its tiles — the main stream in the main tile — and turns off the extra ones. The crown at the top right of a tile then makes it the main stream, without changing the layout.",
+        "A template only remembers the shape of the tiles, with one main tile. Applied, it spreads your streams over its tiles — the main stream in the main tile — and turns off the extra ones. The crown that appears at the top right of a hovered tile then makes it the main stream, without changing the layout.",
       "modal.templates.create": "Create a template",
       "modal.templates.createHelp": "Switches to Rearrange mode and opens the templates panel: arrange the wall, then save it.",
       "modal.tabs.aria": "Layouts",

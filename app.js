@@ -93,8 +93,9 @@
  *      sinon le premier stream —, signalée par une couronne.
  *      Appliqué, un modèle répartit les streams affichés sur ses vignettes (le
  *      principal dans la principale) et désactive ceux en trop ; la couronne
- *      "Mettre en principal" (en haut à droite des autres tuiles) échange alors
- *      ce stream avec le principal, son compris, sans changer la disposition.
+ *      "Mettre en principal" (en haut à droite des autres tuiles, au survol)
+ *      échange alors ce stream avec le principal, son compris, sans changer
+ *      la disposition.
  *      Chaque modèle se partage par un lien qui porte sa forme.
  *
  * Aucune dépendance externe autre que le SDK officiel Twitch.
@@ -2498,9 +2499,8 @@
            icône) ;
          - sur les autres, "Mettre en principal", un bouton qui échange ce
            stream avec le principal (promoteToMain()).
-        Toujours visibles, discrètement : le survol d'un lecteur Twitch (une
-        iframe d'un autre site) n'est pas signalé à la page, une couronne
-        attendant ce survol n'apparaîtrait jamais.
+        Visibles seulement au survol de la tuile (ou au focus clavier du
+        bouton), et en permanence sur un écran tactile : tout est en CSS.
       -->
       <span class="player-card-main-floating" role="img"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
         stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 15L3.5 7l5 4L12 5l3.5 6 5-4L19 15z" /></svg></span>
@@ -3648,7 +3648,8 @@
    *    mécanique existante, inchangée.
    *  - Tant que l'écran a la forme du modèle (même nombre de streams, aucune
    *    mise en avant : `getActiveTemplate()`), les tuiles portent une
-   *    couronne en haut à droite (hors mode Réorganiser) : pleine sur la
+   *    couronne en haut à droite (hors mode Réorganiser), visible au survol
+   *    de la tuile (en permanence sur écran tactile) : pleine sur la
    *    principale ; sur les autres, un bouton "Mettre en principal"
    *    (`promoteToMain()`) qui ÉCHANGE ce stream avec le principal
    *    (`swapChannels()`), son compris — la disposition, elle, ne bouge pas,

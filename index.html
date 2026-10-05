@@ -26,7 +26,7 @@
   <meta name="description" data-i18n-attr="content:meta.description"
     content="StreamWall affiche plusieurs streams Twitch en même temps sur une seule page : mur redimensionnable, chat intégré, thèmes clair et sombre, sans compte." />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <link rel="canonical" href="https://kur0n33k0.github.io/" />
+  <link rel="canonical" href="https://streamwall.fr/" />
 
   <!--
     Open Graph (Facebook, Discord, LinkedIn, Slack…) et Twitter Card : l'aperçu
@@ -42,8 +42,8 @@
     content="StreamWall — Regardez plusieurs streams Twitch en même temps" />
   <meta property="og:description" data-i18n-attr="content:meta.description"
     content="StreamWall affiche plusieurs streams Twitch en même temps sur une seule page : mur redimensionnable, chat intégré, thèmes clair et sombre, sans compte." />
-  <meta property="og:url" content="https://kur0n33k0.github.io/" />
-  <meta property="og:image" content="https://kur0n33k0.github.io/assets/og-image.jpg" />
+  <meta property="og:url" content="https://streamwall.fr/" />
+  <meta property="og:image" content="https://streamwall.fr/assets/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" data-i18n-attr="content:meta.imageAlt"
@@ -55,7 +55,7 @@
     content="StreamWall — Regardez plusieurs streams Twitch en même temps" />
   <meta name="twitter:description" data-i18n-attr="content:meta.description"
     content="StreamWall affiche plusieurs streams Twitch en même temps sur une seule page : mur redimensionnable, chat intégré, thèmes clair et sombre, sans compte." />
-  <meta name="twitter:image" content="https://kur0n33k0.github.io/assets/og-image.jpg" />
+  <meta name="twitter:image" content="https://streamwall.fr/assets/og-image.jpg" />
   <meta name="twitter:image:alt" data-i18n-attr="content:meta.imageAlt"
     content="Aperçu de StreamWall : plusieurs streams Twitch côte à côte" />
 
@@ -72,16 +72,16 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "StreamWall",
-    "url": "https://kur0n33k0.github.io/",
+    "url": "https://streamwall.fr/",
     "description": "StreamWall affiche plusieurs streams Twitch en même temps sur une seule page : mur redimensionnable, chat intégré, thèmes clair et sombre, sans compte.",
-    "image": "https://kur0n33k0.github.io/assets/og-image.jpg",
+    "image": "https://streamwall.fr/assets/og-image.jpg",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any",
     "browserRequirements": "Requires JavaScript",
     "inLanguage": ["fr", "en"],
     "isAccessibleForFree": true,
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-    "sameAs": ["https://github.com/Kur0n33k0/kur0n33k0.github.io"]
+    "sameAs": ["https://github.com/Kur0n33k0/Streamwall"]
   }
   </script>
 
@@ -376,7 +376,7 @@
         `href` — ou supprimer tout le lien : voir documentation.md.
       -->
       <a id="github-link" class="menu-btn menu-btn--icon"
-        href="https://github.com/Kur0n33k0/kur0n33k0.github.io"
+        href="https://github.com/Kur0n33k0/Streamwall"
         target="_blank" rel="noopener noreferrer"
         aria-label="Code source de StreamWall sur GitHub (s'ouvre dans un nouvel onglet)"
         title="Code source sur GitHub"
@@ -647,8 +647,9 @@
         dont une vignette est la PRINCIPALE. Appliquer un modèle (clic sur son
         nom) répartit les streams affichés sur ses vignettes — le principal dans
         la principale — et désactive ceux en trop ; tant qu'il s'applique, un
-        bouton "Mettre en principal" (couronne en haut à droite) sur chaque autre
-        tuile l'échange avec le principal sans changer la disposition. Voir la fin de la section 11
+        bouton "Mettre en principal" (couronne en haut à droite, visible au
+        survol de la tuile) sur chaque autre tuile l'échange avec le principal
+        sans changer la disposition. Voir la fin de la section 11
         d'app.js (dispatchOnTemplate(), promoteToMain()) et la section 18 de
         documentation.md. Sauvegardés en localStorage (STORAGE_KEY_TEMPLATES) ;
         chacun a un bouton "Modifier" (l'applique et passe en mode
@@ -660,7 +661,7 @@
         "Enregistrer le modèle" (voir startTemplateCreation()).
       -->
       <div id="modal-panel-templates" class="modal-tab-panel" role="tabpanel" aria-labelledby="modal-tab-templates" hidden>
-        <p class="modal-help" data-i18n="modal.templates.help">Un modèle ne retient que la forme des tuiles, avec une vignette principale. Appliqué, il répartit vos streams sur ses vignettes — le stream principal dans la principale — et désactive ceux en trop. La couronne en haut à droite d'une tuile la bascule ensuite en principal, sans changer la disposition.</p>
+        <p class="modal-help" data-i18n="modal.templates.help">Un modèle ne retient que la forme des tuiles, avec une vignette principale. Appliqué, il répartit vos streams sur ses vignettes — le stream principal dans la principale — et désactive ceux en trop. La couronne qui apparaît en haut à droite d'une tuile survolée la bascule ensuite en principal, sans changer la disposition.</p>
         <ul id="modal-templates-list" class="modal-presets-list modal-templates-list">
           <!-- Rempli dynamiquement par app.js (renderTemplatesList()) : chaque
                ligne a la vignette du modèle (la principale en violet), son nom
@@ -1313,15 +1314,20 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Capture d'un mur de six streams disposé selon le modèle Principal + 5 : la couronne pleine de la grande tuile principale et la couronne Mettre en principal d'une petite tuile, numérotées 1 et 2." />
+                  alt="Capture d'un mur de six streams disposé selon le modèle Principal + 5 : la couronne pleine de la grande tuile principale et la couronne Mettre en principal d'une petite tuile, numérotées 1 et 2 (montrées ensemble ici : chacune n'apparaît qu'au survol de sa tuile)." />
               </figure>
               <ol class="help-legend">
                 <li><strong>La couronne pleine</strong> : la vignette principale, avec le son.</li>
                 <li><strong>Mettre en principal</strong> (la couronne en haut à droite des autres tuiles) : ce stream et le
                   principal <strong>échangent leurs places</strong>, et le son passe avec. La disposition ne change pas, les
-                  autres streams non plus. Ces couronnes n'apparaissent que hors mode Réorganiser, quand un modèle est
-                  appliqué.</li>
+                  autres streams non plus.</li>
               </ol>
+              <p>
+                Ces couronnes n'apparaissent que quand un modèle est appliqué, hors mode Réorganiser, et seulement
+                <strong>au survol de leur tuile</strong> : passez la souris sur un stream pour voir la sienne (la capture
+                les montre toutes les deux). Au clavier, « Mettre en principal » apparaît quand il reçoit le focus
+                (<kbd>Tab</kbd>) ; sur un écran tactile, elles restent affichées.
+              </p>
               <ul>
                 <li>Ajouter ou retirer un stream, ou en mettre un en avant (★), suspend le modèle ; il revient quand l'écran
                   retrouve sa forme. « Réinitialiser la vue » l'arrête pour de bon (le modèle reste enregistré).</li>
@@ -1378,14 +1384,20 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/en/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Screenshot of a wall of six streams laid out with the Main + 5 template: the solid crown of the big main tile and the Make main crown of a small tile, numbered 1 and 2." />
+                  alt="Screenshot of a wall of six streams laid out with the Main + 5 template: the solid crown of the big main tile and the Make main crown of a small tile, numbered 1 and 2 (shown together here: each one only appears when its tile is hovered)." />
               </figure>
               <ol class="help-legend">
                 <li><strong>The solid crown</strong>: the main tile, with the sound.</li>
                 <li><strong>Make main</strong> (the crown at the top right of the other tiles): this stream and the main one
                   <strong>swap places</strong>, and the sound goes with it. The layout does not change, nor do the other
-                  streams. These crowns only appear outside Rearrange mode, when a template is applied.</li>
+                  streams.</li>
               </ol>
+              <p>
+                These crowns only appear when a template is applied, outside Rearrange mode, and only <strong>when their
+                tile is hovered</strong>: move the mouse over a stream to see its crown (the screenshot shows both). With
+                the keyboard, “Make main” appears when it gets the focus (<kbd>Tab</kbd>); on a touch screen, they stay
+                visible.
+              </p>
               <ul>
                 <li>Adding or removing a stream, or featuring one (★), suspends the template; it comes back when the screen
                   gets its shape back. “Reset view” stops it for good (the template stays saved).</li>
@@ -1584,7 +1596,16 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-versions-title">
               <h3 id="help-versions-title">Historique des versions</h3>
               <article class="help-version">
-                <h4>v1.1 <span class="help-version-badge">version actuelle</span></h4>
+                <h4>v1.2 <span class="help-version-badge">version actuelle</span></h4>
+                <p class="help-note">5 octobre 2026 · Couronnes au survol</p>
+                <ul>
+                  <li>Les couronnes des tuiles (stream principal et « Mettre en principal ») n'apparaissent plus qu'au
+                    survol de leur tuile : plus rien ne reste par-dessus la vidéo. Au clavier, « Mettre en principal »
+                    apparaît avec le focus ; sur écran tactile, elles restent affichées.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.1</h4>
                 <p class="help-note">4 octobre 2026 · Modèles de disposition</p>
                 <ul>
                   <li>Modèles de disposition, dans un onglet à côté des dispositions favorites : une forme de tuiles avec
@@ -1619,7 +1640,17 @@
             <section class="help-lang" lang="en" aria-labelledby="help-versions-title-en">
               <h3 id="help-versions-title-en">Version history</h3>
               <article class="help-version">
-                <h4>v1.1 <span class="help-version-badge">current version</span></h4>
+                <h4>v1.2 <span class="help-version-badge">current version</span></h4>
+                <p class="help-note">October 5, 2026 · Crowns on hover</p>
+                <ul>
+                  <li>The tiles' crowns (main stream and “Make main”) now only appear when their tile is hovered:
+                    nothing stays over the video anymore. With the keyboard, “Make main” appears with the focus; on a
+                    touch screen, they stay visible.</li>
+                  <li>The menu's GitHub logo leads to the project's new repository, github.com/Kur0n33k0/Streamwall.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.1</h4>
                 <p class="help-note">October 4, 2026 · Layout templates</p>
                 <ul>
                   <li>Layout templates, in a tab next to the favorite layouts: a shape of tiles with a main tile, created
