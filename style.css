@@ -1,0 +1,1988 @@
+/* ==========================================================================
+   StreamWall — Feuille de style
+   --------------------------------------------------------------------------
+   Palette calquée sur l'interface officielle de Twitch.tv, déclinée en
+   thème sombre (par défaut) et thème clair. Le thème actif est déterminé
+   par l'attribut `data-theme` sur <html> ("dark" ou "light"), positionné
+   au plus tôt par le petit script inline dans <head> de index.html, puis
+   maintenu par app.js (voir applyTheme()).
+   ========================================================================== */
+
+:root,
+html[data-theme="dark"] {
+  /* ---- Couleurs de marque Twitch (identiques dans les deux thèmes) ---- */
+  --twitch-purple: #9147ff;
+  --twitch-purple-hover: #772ce8;
+  --twitch-purple-light: #bf94ff;
+
+  /* ---- Fonds (du plus sombre au plus clair) ---- */
+  --bg-app: #0e0e10;        /* fond général de la page */
+  --bg-panel: #18181b;      /* cartes, header, panneau de chat */
+  --bg-panel-alt: #1f1f23;  /* éléments légèrement surélevés (inputs, select) */
+  --bg-hover: #26262c;      /* survol d'un élément interactif */
+  /* Fond semi-transparent utilisé pour l'en-tête en overlay sur la vidéo */
+  --bg-overlay: rgba(24, 24, 27, 0.85);
+
+  /* ---- Bordures ---- */
+  --border-subtle: #2d2d35;
+
+  /* ---- Textes ---- */
+  --text-primary: #efeff1;
+  --text-secondary: #adadb8;
+
+  /* ---- Divers ---- */
+  --radius: 6px;
+  --shadow-modal: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --font-ui: "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+
+/*
+ * Thème clair : mêmes variables, valeurs inversées vers des fonds clairs et
+ * un texte sombre. Le violet Twitch reste identique pour garder l'identité
+ * de marque dans les deux thèmes.
+ */
+html[data-theme="light"] {
+  --bg-app: #f7f7f8;
+  --bg-panel: #ffffff;
+  --bg-panel-alt: #efeff1;
+  --bg-hover: #e4e4e8;
+  --bg-overlay: rgba(255, 255, 255, 0.9);
+
+  --border-subtle: #d6d6db;
+
+  --text-primary: #0e0e10;
+  --text-secondary: #53535f;
+
+  --shadow-modal: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Reset minimal */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  /* Le corps de page ne doit jamais scroller : voir aussi .players-grid,
+     dont le dimensionnement dynamique (app.js) garantit que le contenu
+     tient toujours exactement dans l'espace disponible. */
+  overflow: hidden;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+button, textarea, select, input {
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   EN-TÊTE
+   ========================================================================== */
+
+.app-header {
+  /* Ancre le panneau déroulant des modèles (#template-panel, voir plus bas). */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* La marque est le <h1> de la page (voir index.html) : on annule la taille,
+     la graisse et les marges par défaut d'un titre, pour qu'elle garde
+     exactement l'aspect de l'ancien <div>. */
+  margin: 0;
+  font: inherit;
+}
+
+/* Texte masqué VISUELLEMENT mais lu par les lecteurs d'écran et par les moteurs
+   de recherche (motif classique "sr-only") : la phrase de mots-clés du <h1>.
+   Ce n'est ni `display: none` ni `visibility: hidden`, qui le cacheraient aussi
+   aux lecteurs d'écran. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Icône du logo (voir les deux <img> de .brand dans index.html), suivie du
+ * nom "StreamWall" en texte (.brand-name plus bas) : les fichiers de assets/
+ * ne contiennent que l'icône, déjà recadrée au plus juste (aucune marge
+ * transparente autour du dessin).
+ *
+ * On ne fixe que la HAUTEUR (`--brand-logo-height`, 40px dans un en-tête de
+ * 56px : 8px de marge en haut et en bas) ; la largeur en découle, selon les
+ * proportions du fichier.
+ *
+ * Deux variantes, une par thème (le contour de l'icône est clair pour le
+ * thème sombre, foncé pour le clair) : une seule est affichée à la fois,
+ * selon l'attribut data-theme posé sur <html> — le même mécanisme que les
+ * icônes soleil/lune de la bascule de thème (voir .theme-icon plus bas). La
+ * variante sombre est celle par défaut, comme le thème : sans JavaScript
+ * (donc sans data-theme), c'est elle qui s'affiche.
+ *
+ * `max-width: none` : évite qu'une règle globale de réduction des images ne
+ * comprime le logo dans le flux flex de l'en-tête.
+ */
+.brand-logo {
+  --brand-logo-height: 40px;
+  display: block;
+  height: var(--brand-logo-height);
+  width: auto;
+  max-width: none;
+}
+
+/* Le nom, à côté de l'icône : texte réel (lisible à toute taille, aux couleurs
+   du thème, sélectionnable), masqué sur très petit écran (voir plus bas). */
+.brand-name {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.brand-logo--light {
+  display: none;
+}
+
+html[data-theme="light"] .brand-logo--dark {
+  display: none;
+}
+
+html[data-theme="light"] .brand-logo--light {
+  display: block;
+}
+
+/* Menu déplacé en haut à droite de la page (demande explicite) */
+.app-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-btn {
+  background: var(--bg-panel-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.menu-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--twitch-purple);
+}
+
+.menu-btn:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: 2px;
+}
+
+.menu-btn--accent {
+  background: var(--twitch-purple);
+  border-color: var(--twitch-purple);
+}
+
+.menu-btn--accent:hover {
+  background: var(--twitch-purple-hover);
+  border-color: var(--twitch-purple-hover);
+}
+
+/* Bouton désactivé ("Réinitialiser la vue" sans rien à réinitialiser) :
+   estompé, sans effet de survol. */
+.menu-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.menu-btn:disabled:hover {
+  background: var(--bg-panel-alt);
+  border-color: var(--border-subtle);
+}
+
+.menu-btn--accent:disabled:hover {
+  background: var(--twitch-purple);
+  border-color: var(--twitch-purple);
+}
+
+/* Bouton "actif" (ex. chat visible, mode Réorganiser actif) */
+.menu-btn[aria-pressed="true"] {
+  border-color: var(--twitch-purple);
+}
+
+/* Bouton icône seule (ajout « + », bascule de thème, aide, lien GitHub) :
+   carré, icône centrée */
+.menu-btn--icon {
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bouton de langue « EN » / « FR » (#btn-lang) : un bouton carré comme les
+   autres boutons d'icône, mais avec deux lettres à la place d'un pictogramme. */
+.menu-btn--text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.theme-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* Icône « + » du bouton d'ajout de stream (#btn-add) : même taille et même
+   couleur que celles de la bascule de thème et du bouton d'aide. */
+.add-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* Lien GitHub (#github-link, tout à droite du menu) : c'est un <a> habillé
+   comme les boutons du menu (.menu-btn). Un lien est souligné par défaut et
+   prend la couleur des liens : on retire le soulignement (le texte est absent
+   de toute façon, seule l'icône est affichée) ; la couleur, elle, vient déjà
+   de .menu-btn. Son icône suit la couleur du thème comme les autres. */
+a.menu-btn {
+  text-decoration: none;
+}
+
+.github-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* Seule l'icône pertinente pour le thème courant est affichée : en thème
+   sombre on montre un soleil (cliquer pour passer au thème clair), en
+   thème clair une lune (cliquer pour revenir au thème sombre). */
+html[data-theme="dark"] .theme-icon--moon,
+html[data-theme="light"] .theme-icon--sun {
+  display: none;
+}
+
+/* ==========================================================================
+   CONTENU PRINCIPAL
+   ========================================================================== */
+
+.app-main {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* nécessaire pour que les enfants en overflow scrollent bien */
+}
+
+/*
+ * Zone des lecteurs vidéo. Ce n'est PLUS une grille CSS : app.js (voir
+ * `applyGridLayout()` et l'en-tête de sa section 5) découpe la zone en
+ * rectangles et pose sur chaque carte `left`/`top`/`width`/`height` en
+ * pixels, en `position: absolute` — d'où le `position: relative` ci-dessous,
+ * qui fait de ce conteneur le repère de ces positions. C'est ce découpage
+ * en JS, et non des pistes CSS, qui garantit que les tuiles remplissent
+ * TOUJOURS 100% de la largeur et de la hauteur de ce conteneur, quel que
+ * soit leur nombre (aucune case vide, aucune marge sur les côtés), et qui
+ * permet de redimensionner une tuile sans déformer le reste. Les écarts
+ * entre tuiles sont gérés par ce même calcul (constante `GRID_GAP` dans
+ * app.js), pas par une propriété `gap`. `padding` est le seul espace
+ * conservé autour de l'ensemble (app.js le lit et le retire de la zone à
+ * paver, voir `getInnerSize()`). `overflow: hidden` reste volontaire et
+ * définitif : si un jour le calcul JS échoue, on préfère des tuiles
+ * imparfaitement calées plutôt qu'une barre de défilement.
+ */
+.players-grid {
+  flex: 1;
+  position: relative;
+  display: block;
+  padding: 4px;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Une carte de lecteur. Sa position et sa taille (left/top/width/height en
+ * pixels) sont posées en ligne par app.js (voir applyGridLayout) d'après le
+ * rectangle que lui attribue le découpage de la zone : `position: absolute`
+ * est donc indispensable ici, et on ne met pas d'aspect-ratio — le
+ * rectangle remplit exactement son emplacement, et c'est le lecteur Twitch
+ * lui-même qui affiche d'éventuelles bandes noires en interne si
+ * l'emplacement n'est pas en 16:9.
+ *
+ * L'en-tête (.player-card-header) et la zone de glisser-déposer
+ * (.player-card-dragzone) sont tous deux positionnés en overlay ABSOLU
+ * par-dessus la vidéo (plutôt que de pousser la vidéo vers le bas) :
+ * ainsi, afficher ou masquer le menu du lecteur (mode Réorganiser) ne
+ * change jamais la taille de la tuile, qui reste celle de son emplacement.
+ */
+.player-card {
+  position: absolute;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Retour visuel pendant le glisser-déposer */
+.player-card.dragging {
+  opacity: 0.35;
+  outline: 2px dashed var(--twitch-purple);
+}
+
+.player-card.drag-over {
+  outline: 2px solid var(--twitch-purple-light);
+}
+
+/* En-tête en overlay : masqué par défaut, affiché uniquement en mode
+   Réorganiser (voir .players-grid.reorder-mode plus bas). */
+.player-card-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: var(--bg-overlay);
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: grab;
+  user-select: none;
+}
+
+.player-card-header:active {
+  cursor: grabbing;
+}
+
+/* Focus clavier visible sur l'en-tête : c'est aussi la cible des 4
+   flèches de réorganisation au clavier (voir moveChannelByKeyboard()
+   dans app.js), donc son indicateur de focus doit être net. */
+.player-card-header:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: -2px;
+}
+
+/*
+ * Zone de glisser-déposer : overlay transparent posé par-dessus TOUTE la
+ * tuile (vidéo comprise), sous l'en-tête (z-index 1 < 2). Masquée par
+ * défaut, affichée uniquement en mode Réorganiser (voir
+ * .players-grid.reorder-mode plus bas), comme l'en-tête.
+ *
+ * Pourquoi : la vidéo (.player-card-video) contient une iframe Twitch,
+ * c'est-à-dire un autre contexte de navigation qui capte lui-même les
+ * évènements souris. Sans cet overlay, seul l'en-tête (petite bande du
+ * haut) pouvait servir de point de départ au glisser-déposer natif HTML5,
+ * puisque c'était le seul élément avec `draggable="true"` : cliquer-
+ * glisser directement sur la vidéo ne déclenchait jamais `dragstart`. Cet
+ * overlay, lui, est un simple `<div>` transparent dans le document
+ * principal : il reçoit normalement les évènements souris sur toute la
+ * surface de la tuile et peut donc, une fois `draggable="true"` (posé par
+ * `attachDragEvents()` dans app.js), démarrer le glisser-déposer depuis
+ * n'importe quel point du lecteur, pas seulement la barre supérieure.
+ */
+.player-card-dragzone {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  cursor: grab;
+}
+
+.player-card-dragzone:active {
+  cursor: grabbing;
+}
+
+.player-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Icône "poignée" de glisser-déposer : caractère Unicode ✥ (pas d'image
+   à héberger), centré dans un carré de la même taille que l'ancienne
+   version en dégradé de points. */
+.drag-handle {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* Regroupe le bouton "mettre en avant" et le bouton "×" à droite de
+   l'en-tête, avec un petit espacement entre eux (voir index.html /
+   createPlayerCard() dans app.js : ce groupe remplace l'ancien enfant
+   unique de .player-card-header, pour garder exactement 2 enfants et le
+   `justify-content: space-between` du header inchangé). */
+.player-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Bouton "mettre en avant" (étoile ☆/★, voir toggleFeaturedChannel() et
+   updateFeatureButtonUI() dans app.js). Neutre au repos, violet une fois
+   actif (`aria-pressed="true"`) — pas de rouge : ce n'est pas une action
+   destructive comme le bouton « × » juste à côté. */
+.player-card-feature {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.player-card-feature:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.player-card-feature[aria-pressed="true"] {
+  color: var(--twitch-purple-light);
+}
+
+.player-card-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.player-card-remove:hover {
+  color: #fff;
+  background: #e91916; /* rouge Twitch pour les actions destructives */
+}
+
+/*
+ * Couronne à côté de l'étoile : simple ICÔNE (pas un bouton) qui signale le
+ * stream PRINCIPAL — celui qui a le son et occupe l'emplacement 0 : le premier
+ * mis en avant, sinon le premier stream. Seule sa tuile la montre (classe
+ * `is-main`, posée par applyGridLayout()), en mode Réorganiser (l'en-tête n'est
+ * affiché que là). C'est la tuile qui devient la vignette principale d'un
+ * modèle enregistré depuis le mur.
+ */
+.player-card-main-icon {
+  display: none;
+  align-items: center;
+  padding: 2px 4px;
+  color: var(--twitch-purple-light);
+}
+
+html[data-theme="light"] .player-card-main-icon {
+  color: var(--twitch-purple);
+}
+
+.player-card.is-main .player-card-main-icon {
+  display: flex;
+}
+
+.player-card-main-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ==========================================================================
+   MODÈLE DE DISPOSITION APPLIQUÉ : COURONNES SUR LES TUILES
+   --------------------------------------------------------------------------
+   Quand un modèle de disposition s'applique à l'écran (voir
+   getActiveTemplate() dans app.js), la zone porte la classe `has-template`
+   et la tuile de la vignette principale la classe `is-main` (posées par
+   applyGridLayout()). HORS mode Réorganiser, chaque tuile porte alors une
+   couronne dans son angle supérieur droit — loin des commandes du lecteur
+   Twitch, en bas — : pleine et violette sur la principale
+   (.player-card-main-floating, une simple icône), et, sur les AUTRES, un
+   bouton "Mettre en principal" (.player-card-promote) qui échange leur
+   stream avec le principal sans changer la disposition (promoteToMain()).
+   Sans modèle appliqué, aucune n'apparaît.
+
+   Elles sont TOUJOURS visibles (discrètes, pas cachées en attendant un
+   survol) : quand le pointeur est au-dessus d'un lecteur Twitch — une iframe
+   d'un autre site —, le navigateur ne signale pas à la page que la tuile est
+   survolée (`:hover` ne s'y applique pas), donc une couronne qui
+   n'apparaîtrait qu'au survol de la tuile resterait invisible sur de vrais
+   streams. Seul le survol de la couronne elle-même est détecté.
+   ========================================================================== */
+
+/* Pastille ronde commune aux deux couronnes ; `z-index: 2` : au-dessus de la
+   vidéo. Masquées par défaut. */
+.player-card-promote,
+.player-card-main-floating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.player-card-promote svg,
+.player-card-main-floating svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* La couronne du principal : pleine, violette (icône, pas un bouton). */
+.player-card-main-floating {
+  background: var(--twitch-purple);
+  border: 1px solid var(--twitch-purple);
+  color: #fff;
+}
+
+.players-grid.has-template:not(.reorder-mode) .player-card.is-main .player-card-main-floating {
+  display: flex;
+}
+
+/* "Mettre en principal" sur les autres tuiles : discret au repos, plein au
+   survol de la couronne elle-même ou au focus clavier. */
+.player-card-promote {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.players-grid.has-template:not(.reorder-mode) .player-card:not(.is-main) .player-card-promote {
+  display: flex;
+}
+
+.player-card-promote:hover,
+.player-card-promote:focus-visible {
+  opacity: 1;
+}
+
+.player-card-promote:hover {
+  background: var(--twitch-purple);
+  border-color: var(--twitch-purple);
+  color: #fff;
+}
+
+.player-card-promote:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: 1px;
+}
+
+/* La vidéo remplit systématiquement toute la tuile (l'en-tête n'est qu'un
+   overlay par dessus, il ne réserve plus d'espace en layout). */
+.player-card-video {
+  position: absolute;
+  inset: 0;
+}
+
+.player-card-video iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/*
+ * Mode "Réorganiser" (activé via le bouton du menu, cf. app.js) :
+ *  - affiche l'en-tête de chaque lecteur (poignée de glisser-déposer, nom
+ *    de la chaîne, boutons d'étoile et de suppression "×") ;
+ *  - affiche l'overlay de glisser-déposer et les poignées de
+ *    redimensionnement (règles plus bas).
+ * En dehors de ce mode, seule la vidéo est visible, pour une expérience de
+ * visionnage sans distraction. Ce mode ne concerne pas l'ajout d'un stream :
+ * le bouton "+" du menu (#btn-add) est toujours affiché, et la zone ne
+ * contient plus de tuile "+".
+ */
+/* Padding latéral élargi (22px au lieu de 8px) : les poignées de
+   redimensionnement (.player-card-resize) occupent les angles de la tuile, y
+   compris les angles supérieurs qui recouvrent l'en-tête ; ce retrait
+   garde le titre et les boutons ★/× à l'écart de leur zone de saisie. */
+.players-grid.reorder-mode .player-card-header {
+  display: flex;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.players-grid.reorder-mode .player-card-dragzone {
+  display: block;
+}
+
+/* ==========================================================================
+   REDIMENSIONNEMENT DES TUILES PAR L'ANGLE (mode Réorganiser uniquement)
+   ========================================================================== */
+
+/*
+ * Poignées de redimensionnement : un petit triangle dans CHACUN des quatre
+ * angles de la tuile, créés avec la carte (voir createPlayerCard dans
+ * app.js). Tirer un coin agrandit ou réduit la tuile en largeur ET en
+ * hauteur d'un seul geste, pendant que le coin opposé reste fixe ; toutes
+ * les autres tuiles se réorganisent alors autour d'elle (voir la section 5
+ * d'app.js).
+ *
+ * Masquée par défaut et affichée uniquement en mode Réorganiser (règle
+ * .players-grid.reorder-mode plus bas) : hors de ce mode, seules les vidéos
+ * sont visibles — et surtout, la poignée recouvrirait les commandes du
+ * lecteur Twitch (le plein écran est dans l'angle inférieur droit). En mode
+ * Réorganiser, l'overlay de glisser-déposer recouvre de toute façon la vidéo.
+ *
+ * `data-corner` (tl/tr/bl/br) est fixé dans le balisage de la carte : c'est
+ * l'angle où se trouve la poignée, et donc le coin qu'elle tire. Il y a
+ * toujours les quatre, y compris dans les angles de la zone (là, on ne peut
+ * que rétrécir la tuile en tirant vers l'intérieur : elle ne peut pas sortir
+ * de la zone). `z-index: 3` : au-dessus de l'en-tête (2) et de la zone de
+ * glisser-déposer (1). `touch-action: none` empêche un navigateur tactile de
+ * prendre le geste pour un défilement.
+ */
+.player-card-resize {
+  position: absolute;
+  z-index: 3;
+  display: none;
+  width: 20px;
+  height: 20px;
+  touch-action: none;
+  opacity: 0.55;
+  transition: opacity 0.12s ease;
+}
+
+.players-grid.reorder-mode .player-card-resize {
+  display: block;
+}
+
+/* Le triangle : un dégradé dont la moitié colorée est tournée vers l'angle. */
+.player-card-resize[data-corner="br"] {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--twitch-purple-light) 50%);
+}
+
+.player-card-resize[data-corner="bl"] {
+  left: 0;
+  bottom: 0;
+  cursor: nesw-resize;
+  background: linear-gradient(225deg, transparent 50%, var(--twitch-purple-light) 50%);
+}
+
+.player-card-resize[data-corner="tr"] {
+  right: 0;
+  top: 0;
+  cursor: nesw-resize;
+  background: linear-gradient(45deg, transparent 50%, var(--twitch-purple-light) 50%);
+}
+
+.player-card-resize[data-corner="tl"] {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(315deg, transparent 50%, var(--twitch-purple-light) 50%);
+}
+
+.player-card-resize:hover,
+.player-card-resize:focus-visible,
+.player-card-resize.is-active {
+  opacity: 1;
+  outline: none;
+}
+
+/*
+ * Pendant un glissement (classes posées sur #players-grid par app.js) :
+ *  - les vidéos (donc leurs iframes Twitch) et la zone de glisser-déposer
+ *    ne captent plus aucun évènement souris : une iframe est un autre
+ *    contexte de navigation qui avalerait les évènements dès que le curseur
+ *    la survole, et le glissement se figerait. (La capture du pointeur
+ *    posée par app.js couvre déjà l'essentiel ; ceci est la ceinture qui va
+ *    avec les bretelles, et fiabilise aussi les navigateurs qui gèrent mal
+ *    la capture au-dessus d'une iframe.) ;
+ *  - le curseur de redimensionnement reste affiché partout, même quand le
+ *    pointeur dépasse la poignée ;
+ *  - aucun texte ne se sélectionne.
+ */
+.players-grid.is-resizing {
+  user-select: none;
+}
+
+.players-grid.is-resizing .player-card-video,
+.players-grid.is-resizing .player-card-dragzone {
+  pointer-events: none;
+}
+
+.players-grid.is-resizing--nwse,
+.players-grid.is-resizing--nwse * {
+  cursor: nwse-resize !important;
+}
+
+.players-grid.is-resizing--nesw,
+.players-grid.is-resizing--nesw * {
+  cursor: nesw-resize !important;
+}
+
+/* ==========================================================================
+   PANNEAU DE CHAT
+   ========================================================================== */
+
+.chat-panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-panel[hidden] {
+  display: none;
+}
+
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.chat-panel-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Case "Garder chargé" : petite, à droite du menu, sans retour à la ligne. */
+.chat-keep {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chat-keep-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--twitch-purple);
+  cursor: pointer;
+}
+
+.chat-keep-checkbox:disabled,
+.chat-keep-checkbox:disabled + span {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.chat-select {
+  flex: 1;
+  background: var(--bg-panel-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.chat-embed-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.chat-embed-container iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ==========================================================================
+   ÉTAT VIDE
+   ========================================================================== */
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+/* IMPORTANT : l'attribut HTML `hidden` applique nativement `display:none`,
+   mais cette règle native est écrasée dès qu'une règle de la feuille de
+   style ci-dessus (`.empty-state{display:flex}`) s'applique aussi à
+   l'élément, car elle est déclarée plus bas et a la même spécificité.
+   Sans cette règle explicite, le message "aucun stream" restait visible
+   même après l'ajout de chaînes. */
+.empty-state[hidden] {
+  display: none;
+}
+
+.empty-state h2 {
+  font-size: 22px;
+  margin: 0;
+}
+
+/* Liste des atouts de l'accueil (voir #empty-state dans index.html) : alignée à
+   gauche même si le reste est centré, avec une largeur limitée pour rester
+   lisible. */
+.empty-features {
+  margin: 4px 0;
+  padding-left: 20px;
+  max-width: 420px;
+  text-align: left;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 360px;
+}
+
+/* ==========================================================================
+   MODALE "CHANGER LES STREAMS"
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow-modal);
+  padding: 20px;
+  /* Sur un écran de faible hauteur (téléphone en paysage), la modale défile
+     plutôt que de sortir de l'écran, ses boutons devenant inatteignables : elle
+     est assez haute (liste des chaînes, dispositions favorites et leur
+     explication). `dvh` (hauteur visible, sans la barre d'adresse mobile)
+     écrase `vh` là où il est compris. La fenêtre d'aide (.help-modal, plus
+     bas) a sa propre hauteur et son propre défilement. */
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.modal h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.modal-help {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.modal-help code {
+  background: var(--bg-panel-alt);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.modal-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-add-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-panel-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.modal-add-input:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+}
+
+/* Message inline sous un champ de saisie de la modale : erreur de
+   validation (nom de chaîne invalide) ou confirmation (disposition
+   enregistrée). La couleur dépend du modificateur appliqué en JS. */
+.modal-message {
+  font-size: 12px;
+  margin: -6px 0 12px;
+}
+
+.modal-message--error {
+  color: #e91916;
+}
+
+.modal-message--success {
+  color: var(--twitch-purple-light);
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+.modal-preset-save-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Liste des chaînes connues (chacune avec sa case à cocher) ET liste des
+   dispositions favorites : même habillage (bordure arrondie + scroll). */
+.modal-channels-list,
+.modal-presets-list {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+/* Une ligne de la liste des chaînes ET une ligne de la liste des
+   dispositions favorites partagent la même mise en page (flex + bordure
+   de séparation). */
+.modal-channel-row,
+.modal-preset-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-channel-row:last-child,
+.modal-preset-item:last-child {
+  border-bottom: none;
+}
+
+.modal-channel-row:hover,
+.modal-preset-item:hover {
+  background: var(--bg-hover);
+}
+
+.modal-channel-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--twitch-purple);
+  flex-shrink: 0;
+}
+
+/* Nom de la chaîne (simple texte) / nom de la disposition (bouton qui
+   l'applique au clic) : même habillage typographique. */
+.modal-channel-label,
+.modal-preset-apply {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.modal-preset-apply {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: inherit;
+  text-align: left;
+  padding: 0;
+}
+
+.modal-preset-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Petite icône (une grande tuile et deux petites) qui signale qu'une
+   disposition favorite retient des tailles de tuiles ajustées à la main (voir
+   hasCustomSizes() et renderPresetsList() dans app.js). Même discrétion que le
+   nombre de streams à côté d'elle. */
+.modal-preset-layout {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.modal-preset-layout svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Bouton de partage d'une disposition favorite ou d'un modèle (copie son lien
+   dans le presse-papiers, voir buildPresetShareUrl()/buildTemplateShareUrl()
+   et copyShareLink() dans app.js) et bouton "Créer un modèle" d'une
+   disposition favorite (startTemplateSessionFromPreset()) : actions neutres,
+   pas destructives, donc pas de rouge au survol contrairement au bouton « × »
+   juste après. */
+.modal-preset-share,
+.modal-preset-template,
+.modal-template-edit {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-preset-share svg {
+  width: 14px;
+  height: 14px;
+}
+
+.modal-preset-template svg,
+.modal-template-edit svg {
+  width: 15px;
+  height: 15px;
+}
+
+.modal-preset-share:hover,
+.modal-preset-template:hover,
+.modal-template-edit:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ---- Onglets "Dispositions favorites" / "Modèles de disposition" ---- */
+
+/* Rangée d'onglets (motif ARIA tablist, voir selectModalTab() dans app.js) :
+   l'onglet choisi est souligné de violet, comme un onglet de Twitch. */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; /* le soulignement recouvre la bordure de la rangée */
+  padding: 8px 10px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-tab:hover {
+  color: var(--text-primary);
+}
+
+.modal-tab[aria-selected="true"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--twitch-purple);
+}
+
+.modal-tab:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: -2px;
+  border-radius: 4px 4px 0 0;
+}
+
+/* ---- Onglet "Modèles de disposition" ---- */
+
+/* Message SOUS une liste (et non sous un champ de saisie, d'où la marge
+   négative de .modal-message) : résultat de l'application ou de
+   l'enregistrement d'un modèle. */
+.modal-message--below {
+  margin: 8px 0 0;
+}
+
+/* "Créer un modèle" et sa courte explication, sous la liste. */
+.modal-template-create-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.modal-template-create-help {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Petite image d'une forme (SVG construit par createLayoutThumbnail() dans
+   app.js) : une vignette par rectangle, la principale en violet Twitch. */
+.layout-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.layout-thumb-cell {
+  fill: var(--bg-hover);
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+.layout-thumb-cell.is-main {
+  fill: var(--twitch-purple);
+  stroke: var(--twitch-purple);
+}
+
+/* Vignette du modèle au début de sa ligne dans la liste. */
+.modal-template-thumb {
+  width: 44px;
+  flex-shrink: 0;
+}
+
+/* Le modèle qui s'applique à l'écran : son nom en violet (violet plein en
+   thème clair, où le violet pâle manque de contraste sur fond blanc). */
+.modal-template-item.is-active .modal-preset-apply {
+  color: var(--twitch-purple-light);
+  font-weight: 600;
+}
+
+html[data-theme="light"] .modal-template-item.is-active .modal-preset-apply {
+  color: var(--twitch-purple);
+}
+
+/* ==========================================================================
+   PANNEAU DES MODÈLES (MODE RÉORGANISER)
+   --------------------------------------------------------------------------
+   Voir openTemplatePanel() dans app.js. En mode Réorganiser, le bouton
+   "Modèles de disposition" du menu (#btn-templates) ouvre ce panneau
+   DÉROULANT (#template-panel), posé par-dessus le mur, sous l'en-tête et
+   aligné sur la gauche du bouton — le mur ne change pas de taille. Il propose les
+   dispositions conseillées et "Enregistrer le modèle", qui fait de la
+   disposition affichée un modèle.
+   ========================================================================== */
+
+/* Bouton du menu : icône de tuiles, libellé, chevron qui se retourne quand le
+   panneau est ouvert. */
+.menu-btn--dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Le `display` ci-dessus primerait sur l'attribut `hidden` (posé hors mode
+   Réorganiser par updateTemplateButton()) : on le rétablit explicitement. */
+.menu-btn--dropdown[hidden] {
+  display: none;
+}
+
+.menu-btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.menu-btn-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.menu-btn--dropdown[aria-expanded="true"] {
+  border-color: var(--twitch-purple);
+}
+
+.menu-btn--dropdown[aria-expanded="true"] .menu-btn-chevron {
+  transform: rotate(180deg);
+}
+
+/* Le libellé "Modèles de disposition" est long : sous 1200 px, seuls l'icône
+   et le chevron restent (aria-label et title gardent le nom complet). */
+@media (max-width: 1200px) {
+  .menu-btn-wide-label {
+    display: none;
+  }
+}
+
+/* Le panneau s'ancre à l'en-tête (position: relative, voir .app-header).
+   `left` est calculé par positionTemplatePanel() (app.js) pour aligner son bord
+   gauche sur celui du bouton, sans sortir de la fenêtre ; 16 px n'est que la
+   valeur de départ. */
+.template-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 16px;
+  z-index: 60; /* au-dessus des tuiles et de leurs poignées, sous la modale (100) */
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow-modal);
+}
+
+.template-panel[hidden] {
+  display: none;
+}
+
+.template-panel-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.template-panel-help {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.template-panel-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* « Modification de « … » » : le modèle que l'enregistrement mettra à jour. */
+.template-panel-editing {
+  display: block;
+  margin-top: 10px;
+  color: var(--twitch-purple-light);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.template-panel-editing[hidden] {
+  display: none;
+}
+
+html[data-theme="light"] .template-panel-editing {
+  color: var(--twitch-purple);
+}
+
+.template-panel-save-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* La ligne du message est toujours réservée (masquée par `visibility`, pas
+   retirée) : le panneau ne change pas de hauteur à chaque message. */
+.template-panel-feedback {
+  margin: 8px 0 0;
+  min-height: 1.3em;
+}
+
+.template-panel-feedback[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+/* Galerie des dispositions conseillées : une grille de vignettes (4 par
+   rangée dans la largeur du panneau), chacune avec son libellé. */
+.template-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 6px;
+}
+
+.template-gallery-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 10.5px;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.template-gallery-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* La disposition conseillée appliquée au mur : contour violet. */
+.template-gallery-item[aria-pressed="true"] {
+  border-color: var(--twitch-purple);
+  box-shadow: 0 0 0 1px var(--twitch-purple);
+  color: var(--text-primary);
+}
+
+.template-gallery-item:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: 1px;
+}
+
+/* Libellé sur deux lignes au plus ("Principal + 3 à droite"). */
+.template-gallery-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Bouton « × » pour oublier une chaîne / supprimer une disposition :
+   même style (rouge Twitch au survol pour une action destructive). */
+.modal-channel-forget,
+.modal-preset-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.modal-channel-forget:hover,
+.modal-preset-delete:hover {
+  color: #fff;
+  background: #e91916;
+}
+
+.modal-channels-empty {
+  padding: 16px 10px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ==========================================================================
+   FENÊTRE D'AIDE
+   --------------------------------------------------------------------------
+   Ouverte par le bouton « i » de l'en-tête (#btn-help), décrite dans
+   index.html (#help-overlay) et pilotée par app.js (section 14). Elle réutilise
+   le fond assombri (.modal-overlay) et la boîte (.modal) de la modale
+   "Changer les streams", mais en beaucoup plus large : un sommaire à gauche,
+   le texte et les captures qui défilent à droite. Toutes les couleurs sont
+   les variables de thème, donc l'aide suit automatiquement le thème.
+   ========================================================================== */
+
+/* Icône « i » du bouton d'aide (même taille et même couleur que l'icône de la
+   bascule de thème, juste à côté). */
+.help-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/*
+ * La boîte : une colonne (titre fixe en haut, puis sommaire + contenu) dont la
+ * hauteur est bornée à celle de la fenêtre. C'est le CONTENU (.help-body) qui
+ * défile, pas la boîte : le titre et le bouton « × » restent toujours visibles.
+ * `padding: 0` annule celui de .modal (repris par les zones internes) ;
+ * `overflow: hidden` garde les coins arrondis. La deuxième déclaration de
+ * `height` (unité `dvh`, qui exclut la barre d'adresse mobile) écrase la
+ * première dans les navigateurs qui la comprennent ; les autres gardent `vh`.
+ */
+.help-modal {
+  width: 980px;
+  max-width: calc(100vw - 32px);
+  height: min(820px, calc(100vh - 32px));
+  height: min(820px, calc(100dvh - 32px));
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.help-modal:focus {
+  outline: none; /* le focus initial est posé par app.js sur la boîte : pas d'anneau à cet endroit */
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.help-modal .help-header h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.help-close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.help-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.help-close:focus-visible,
+.help-toc-link:focus-visible,
+.help-link:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: 2px;
+}
+
+/* Sommaire à gauche + contenu à droite. `min-height: 0` : nécessaire pour que
+   le contenu (enfant flex) puisse rétrécir et défiler au lieu d'agrandir la boîte. */
+.help-layout {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.help-toc {
+  width: 210px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 12px 8px;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.help-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.help-toc-link {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.help-toc-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* Section actuellement affichée (posé par app.js pendant le défilement). */
+.help-toc-link[aria-current="true"] {
+  color: var(--text-primary);
+  background: var(--bg-panel-alt);
+  box-shadow: inset 3px 0 0 var(--twitch-purple);
+  font-weight: 600;
+}
+
+/* Le contenu qui défile. `scroll-behavior: smooth` anime les sauts du sommaire
+   (désactivé pour qui a demandé moins d'animations, voir plus bas). */
+.help-body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 18px 24px 8px;
+  scroll-behavior: smooth;
+  line-height: 1.55;
+}
+
+.help-body:focus-visible {
+  outline: 2px solid var(--twitch-purple-light);
+  outline-offset: -2px;
+}
+
+.help-section {
+  margin: 0 0 34px;
+}
+
+/*
+ * L'aide existe en deux versions (français et anglais) dans index.html : chaque
+ * section contient deux blocs `.help-lang` (`lang="fr"` et `lang="en"`), et
+ * seul celui de la langue de la page (`<html lang>`, posé par i18n.js) est
+ * affiché. Masqués par défaut, ils n'apparaissent QUE s'ils correspondent : sans
+ * JavaScript, `<html lang="fr">` du HTML statique affiche le français. Un bloc
+ * en `display: none` n'est pas lu par les lecteurs d'écran et ses images
+ * `loading="lazy"` ne sont pas téléchargées.
+ */
+.help-lang {
+  display: none;
+}
+
+html[lang="fr"] .help-lang[lang="fr"],
+html[lang="en"] .help-lang[lang="en"] {
+  display: block;
+}
+
+/* Une section reçoit le focus quand on la choisit dans le sommaire (voir
+   scrollToHelpSection() dans app.js) : pas d'anneau autour de toute la
+   section, ce n'est pas un contrôle. */
+.help-section:focus {
+  outline: none;
+}
+
+.help-section h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.help-section p {
+  margin: 0 0 10px;
+}
+
+.help-section ul,
+.help-section ol:not(.help-legend) {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
+.help-section li {
+  margin-bottom: 6px;
+}
+
+.help-note {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Historique des versions (#help-versions) : une entrée par version, la plus
+   récente en haut, séparées par un filet. */
+.help-version + .help-version {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.help-version h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+/* Badge "version actuelle", sur une seule entrée : la plus récente. */
+.help-version-badge {
+  background: var(--twitch-purple);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Petits éléments de code et touches du clavier. */
+.help-section code,
+.help-section kbd {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12.5px;
+}
+
+.help-section code {
+  font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+}
+
+/* Renvoi vers une autre section de l'aide : un BOUTON habillé en lien (pas un
+   lien "#ancre", qui écraserait la liste des streams stockée dans l'adresse ;
+   voir le commentaire de #help-overlay dans index.html). */
+.help-link {
+  display: inline;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--twitch-purple-light);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.help-link:hover {
+  color: var(--text-primary);
+}
+
+/* Le violet clair, lisible sur fond sombre, manquerait de contraste sur fond blanc. */
+html[data-theme="light"] .help-link {
+  color: var(--twitch-purple-hover);
+}
+
+/* Une capture d'écran. La taille réelle du fichier (attributs width/height de
+   l'<img>) ne sert qu'à réserver la place : l'image occupe la largeur
+   disponible et garde ses proportions (`height: auto`). */
+.help-figure {
+  margin: 12px 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.help-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * Légende numérotée d'une capture : le numéro de chaque ligne est une pastille
+ * violette, IDENTIQUE à celles dessinées sur l'image (voir documentation.md,
+ * section 16), pour qu'on associe d'un coup d'œil « 3 » sur la capture à
+ * « 3 » dans la liste. Les numéros viennent d'un compteur CSS : pas de nombre à
+ * saisir à la main dans le HTML, l'ordre des <li> fait foi.
+ */
+.help-legend {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  counter-reset: help-legend;
+}
+
+.help-legend li {
+  position: relative;
+  margin: 0 0 8px;
+  padding-left: 34px;
+  counter-increment: help-legend;
+}
+
+.help-legend li::before {
+  content: counter(help-legend);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--twitch-purple);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* Tableau des raccourcis clavier : il défile horizontalement sur petit écran
+   plutôt que de faire déborder la fenêtre. */
+.help-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 12px;
+}
+
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.help-table th,
+.help-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: top;
+}
+
+.help-table th {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Colonne des touches : sans retour à la ligne, pour ne pas séparer les flèches. */
+.help-table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+/* Fenêtre étroite (téléphone, ou fenêtre de navigateur réduite) : le sommaire
+   passe AU-DESSUS du contenu, en une rangée de boutons qui défile
+   horizontalement, et la boîte prend presque tout l'écran. */
+@media (max-width: 720px) {
+  .help-modal {
+    max-width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px);
+  }
+
+  .help-layout {
+    flex-direction: column;
+  }
+
+  .help-toc {
+    width: auto;
+    padding: 8px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+  }
+
+  .help-toc ol {
+    display: flex;
+    gap: 6px;
+  }
+
+  .help-toc-link {
+    width: auto;
+    white-space: nowrap;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+
+  .help-toc-link[aria-current="true"] {
+    box-shadow: none;
+    border-color: var(--twitch-purple);
+  }
+
+  .help-body {
+    padding: 14px 14px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-body {
+    scroll-behavior: auto;
+  }
+}
+
+/* ==========================================================================
+   TOAST DE CONFIRMATION
+   --------------------------------------------------------------------------
+   Petit message temporaire (ex. "Lien copié dans le presse-papiers"),
+   affiché/masqué par showToast() dans app.js. `display` n'est pas fixé
+   ici : l'attribut HTML `hidden` suffit à le masquer complètement (pas
+   de conflit avec une règle `display` plus spécifique, contrairement à
+   .empty-state/.chat-panel/.modal-overlay qui en ont besoin).
+   ========================================================================== */
+
+.toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 150; /* au-dessus de la modale (100), pour rester visible même
+                   si une action dans la modale déclenche un toast */
+  max-width: calc(100vw - 32px);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: var(--shadow-modal);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 800px) {
+  .app-main {
+    flex-direction: column;
+  }
+
+  .chat-panel {
+    width: 100%;
+    height: 280px;
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  /* Sur petit écran, l'en-tête a moins de place : l'icône et le nom sont un
+     peu plus petits. */
+  .brand-logo {
+    --brand-logo-height: 32px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  /*
+   * En-tête sur petit écran : le menu (jusqu'à 9 éléments en mode
+   * Réorganiser : +, Réorganiser, Réinitialiser la vue, Modèles de
+   * disposition, chat, aide, langue, thème et lien GitHub) plus le logo ne
+   * tiennent pas toujours sur une ligne. Plutôt
+   * que de faire déborder la page, le logo garde sa taille (`flex-shrink:
+   * 0`) et c'est le MENU qui rétrécit et défile horizontalement au doigt
+   * (`min-width: 0` l'autorise à devenir plus étroit que son contenu ;
+   * `overflow-x: auto` fait apparaître le défilement seulement quand il est
+   * nécessaire, sans barre visible). Le padding de 4px, compensé par la
+   * marge négative, laisse la place au halo de focus des boutons (2px +
+   * décalage de 2px) que `overflow` rognerait sinon.
+   */
+  .app-header {
+    gap: 8px;
+  }
+
+  .brand {
+    flex-shrink: 0;
+  }
+
+  .app-menu {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px;
+    margin: -4px;
+  }
+
+  .app-menu::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * Écran étroit (téléphone, petite fenêtre) : le menu devient COMPACT pour que
+ * ses sept éléments (+, Réorganiser, chat, aide, langue, thème et lien GitHub)
+ * tiennent tous sans avoir à faire défiler le menu.
+ *  - « Afficher/Masquer le chat » se réduit à « Chat » (voir #btn-toggle-chat
+ *    dans index.html) ; `capitalize` remet la majuscule au mot restant ("chat"
+ *    est écrit en minuscule dans le HTML, pour la version longue) ;
+ *  - l'écart entre deux éléments passe de 8 à 3px, les boutons d'icône de 36 à
+ *    32px (largement au-dessus des 24px minimum recommandés pour une cible
+ *    tactile, WCAG 2.2) et les boutons à texte sont plus serrés.
+ * Le seuil (600px) est un peu plus large que celui du bloc suivant, pour garder
+ * le nom "StreamWall" visible entre 521 et 600px : sans compaction, le menu
+ * débordait de la largeur des écrans de moins de ~600px.
+ */
+@media (max-width: 600px) {
+  .menu-btn-extra {
+    display: none;
+  }
+
+  #btn-toggle-chat {
+    text-transform: capitalize;
+  }
+
+  .app-menu {
+    gap: 3px;
+  }
+
+  .menu-btn--icon {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .menu-btn:not(.menu-btn--icon) {
+    padding: 8px 7px;
+    font-size: 12px;
+  }
+}
+
+/*
+ * Très petit écran (téléphone en portrait) : le nom "StreamWall" est masqué
+ * (il ne reste que l'icône du logo, comme avant l'ajout du logo, où le nom
+ * était déjà masqué ici pour gagner de la place) et l'en-tête est resserré.
+ * Avec le menu compact du bloc précédent, l'icône et les sept éléments du menu
+ * tiennent à partir de 360px de large, la largeur de téléphone la plus
+ * courante ; en dessous, le menu défile (règle du bloc 800px). En dessous de
+ * 520px, le nom et le menu ne tiendraient de toute façon pas ensemble.
+ */
+@media (max-width: 520px) {
+  .brand-name {
+    display: none;
+  }
+
+  .app-header {
+    padding: 0 6px;
+  }
+}
