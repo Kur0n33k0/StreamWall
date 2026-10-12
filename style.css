@@ -452,8 +452,10 @@ html[data-theme="light"] .theme-icon--sun {
   opacity: 0.8;
 }
 
-/* Regroupe le bouton "mettre en avant" et le bouton "×" à droite de
-   l'en-tête, avec un petit espacement entre eux (voir index.html /
+/* Regroupe les commandes de la tuile à droite de l'en-tête — "Recharger",
+   la couronne (icône du principal, ou bouton "Mettre en principal"), le
+   bouton "mettre en avant" et le bouton "×" —, avec un petit espacement
+   entre eux (voir
    createPlayerCard() dans app.js : ce groupe remplace l'ancien enfant
    unique de .player-card-header, pour garder exactement 2 enfants et le
    `justify-content: space-between` du header inchangé). */
@@ -532,43 +534,97 @@ html[data-theme="light"] .player-card-main-icon {
   height: 16px;
 }
 
-/* ==========================================================================
-   MODÈLE DE DISPOSITION APPLIQUÉ : COURONNES SUR LES TUILES
-   --------------------------------------------------------------------------
-   Quand un modèle de disposition s'applique à l'écran (voir
-   getActiveTemplate() dans app.js), la zone porte la classe `has-template`
-   et la tuile de la vignette principale la classe `is-main` (posées par
-   applyGridLayout()). HORS mode Réorganiser, chaque tuile porte alors une
-   couronne dans son angle supérieur droit — loin des commandes du lecteur
-   Twitch, en bas — : pleine et violette sur la principale
-   (.player-card-main-floating, une simple icône), et, sur les AUTRES, un
-   bouton "Mettre en principal" (.player-card-promote) qui échange leur
-   stream avec le principal sans changer la disposition (promoteToMain()).
-   Sans modèle appliqué, aucune n'apparaît.
+/*
+ * Boutons d'icône de la barre d'en-tête (mode Réorganiser) : "Recharger"
+ * (flèche circulaire, reloadPlayer() dans app.js) et, sur les tuiles autres
+ * que la principale, "Mettre en principal" (couronne au trait,
+ * promoteToMain()), à la place exacte où la principale montre sa couronne
+ * pleine. Même allure discrète que l'étoile. Hors mode Réorganiser, ces deux
+ * commandes sont dans le coin de la tuile (.player-card-tools, plus bas).
+ */
+.player-card-header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
 
-   Elles n'apparaissent qu'AU SURVOL DE LEUR TUILE, pour ne rien laisser par
-   dessus la vidéo le reste du temps : chaque tuile montre la sienne quand le
-   pointeur passe dessus, vidéo comprise. Le lecteur Twitch est une iframe
-   d'un autre site ; le navigateur considère néanmoins la tuile qui la
-   contient comme survolée (`:hover`). Deux exceptions la laissent visible
-   sans survol :
-    - au clavier, le bouton "Mettre en principal" reste dans l'ordre de
-      tabulation et apparaît quand il a le focus (`:focus-visible`) ;
-    - sur un écran sans survol (tactile : `@media (hover: none)`), les deux
-      couronnes restent affichées, sans quoi elles seraient inaccessibles.
+.player-card-header-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.player-card-header-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* La tuile principale a sa couronne pleine (icône) : pas de bouton. */
+.player-card.is-main .player-card-header-promote {
+  display: none;
+}
+
+/* ==========================================================================
+   BOUTONS DU COIN DES TUILES : RECHARGER ET COURONNES
+   --------------------------------------------------------------------------
+   HORS mode Réorganiser, chaque tuile porte dans son angle supérieur droit —
+   loin des commandes du lecteur Twitch, en bas — une petite rangée de
+   pastilles rondes (.player-card-tools, construite par createPlayerCard()
+   dans app.js), qu'un modèle de disposition soit appliqué ou non :
+    - "Recharger" (.player-card-reload), sur toutes les tuiles : relance le
+      lecteur de ce seul stream (reloadPlayer()) ;
+    - à sa droite, dans l'angle, une couronne, à partir de deux streams
+      (classe `has-several` de la zone, posée par applyGridLayout()) : pleine
+      et violette sur la tuile principale (.player-card-main-floating, une
+      simple icône ; classe `is-main` de la tuile), et, sur les AUTRES, un
+      bouton "Mettre en principal" (.player-card-promote) qui échange leur
+      stream avec le principal sans changer la disposition (promoteToMain()).
+   En mode Réorganiser, la rangée est masquée : les mêmes commandes sont dans
+   la barre d'en-tête de la tuile (.player-card-header-btn, plus haut).
+
+   Ces pastilles n'apparaissent qu'AU SURVOL DE LEUR TUILE, pour ne rien
+   laisser par-dessus la vidéo le reste du temps : chaque tuile montre les
+   siennes quand le pointeur passe dessus, vidéo comprise. Le lecteur Twitch
+   est une iframe d'un autre site ; le navigateur considère néanmoins la
+   tuile qui la contient comme survolée (`:hover`). Deux exceptions les
+   laissent visibles sans survol :
+    - au clavier, les boutons restent dans l'ordre de tabulation, et toute la
+      rangée apparaît dès que l'un d'eux a le focus (`:focus-within` sur la
+      RANGÉE, pas sur la tuile : la tuile "contient le focus" aussi quand on
+      a cliqué dans la vidéo, et la rangée resterait alors affichée) ;
+    - sur un écran sans survol (tactile : `@media (hover: none)`), elles
+      restent affichées, sans quoi elles seraient inaccessibles.
    ========================================================================== */
 
-/* Pastille ronde commune aux deux couronnes ; `z-index: 2` : au-dessus de la
-   vidéo. Masquées par défaut (`display: none`) ; une fois affichées (modèle
-   appliqué, hors mode Réorganiser), encore invisibles et transparentes aux
-   clics (`pointer-events: none` : un clic à leur emplacement va au lecteur)
-   tant que la tuile n'est pas survolée. */
-.player-card-promote,
-.player-card-main-floating {
+/* La rangée : `z-index: 2`, au-dessus de la vidéo. Elle-même ne capte aucun
+   clic (`pointer-events: none`) : l'écart entre deux pastilles laisse passer
+   les clics vers le lecteur. */
+.player-card-tools {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 2;
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.players-grid.reorder-mode .player-card-tools {
+  display: none;
+}
+
+/* Pastille ronde commune. Masquée par défaut (`display: none`, voir plus bas
+   qui s'affiche où) ; une fois affichée, encore invisible et transparente aux
+   clics (`pointer-events: none` : un clic à son emplacement va au lecteur)
+   tant que la tuile n'est pas survolée. */
+.player-card-tool,
+.player-card-main-floating {
   display: none;
   align-items: center;
   justify-content: center;
@@ -581,15 +637,29 @@ html[data-theme="light"] .player-card-main-icon {
   transition: opacity 0.15s ease;
 }
 
-/* Tuile survolée : sa couronne apparaît (la pleine en entier, "Mettre en
-   principal" discrète, voir plus bas). Au clavier, le focus suffit. */
-.player-card:hover .player-card-main-floating {
+/* Qui s'affiche où : "Recharger" partout ; la couronne pleine sur la
+   principale et "Mettre en principal" sur les autres, à partir de deux
+   streams. */
+.player-card-reload {
+  display: flex;
+}
+
+.players-grid.has-several .player-card.is-main .player-card-main-floating,
+.players-grid.has-several .player-card:not(.is-main) .player-card-promote {
+  display: flex;
+}
+
+/* Tuile survolée, ou un bouton de la rangée au focus clavier : les pastilles
+   apparaissent (la couronne pleine en entier, les boutons discrets, voir plus
+   bas). */
+.player-card:hover .player-card-main-floating,
+.player-card-tools:focus-within .player-card-main-floating {
   opacity: 1;
   pointer-events: auto;
 }
 
-.player-card:hover .player-card-promote,
-.player-card .player-card-promote:focus-visible {
+.player-card:hover .player-card-tool,
+.player-card-tools:focus-within .player-card-tool {
   opacity: 0.7;
   pointer-events: auto;
 }
@@ -601,13 +671,13 @@ html[data-theme="light"] .player-card-main-icon {
     pointer-events: auto;
   }
 
-  .player-card-promote {
+  .player-card-tool {
     opacity: 0.7;
     pointer-events: auto;
   }
 }
 
-.player-card-promote svg,
+.player-card-tool svg,
 .player-card-main-floating svg {
   width: 17px;
   height: 17px;
@@ -620,15 +690,11 @@ html[data-theme="light"] .player-card-main-icon {
   color: #fff;
 }
 
-.players-grid.has-template:not(.reorder-mode) .player-card.is-main .player-card-main-floating {
-  display: flex;
-}
-
-/* "Mettre en principal" sur les autres tuiles : discret (opacité 0,7) quand
-   la tuile est survolée, plein au survol de la couronne elle-même ou au
-   focus clavier. Sélecteurs à trois classes : ils doivent l'emporter sur
-   `.player-card:hover .player-card-promote` ci-dessus. */
-.player-card-promote {
+/* Les boutons ("Recharger", "Mettre en principal") : discrets (opacité 0,7)
+   quand la tuile est survolée, pleins au survol du bouton lui-même ou au
+   focus clavier. Sélecteurs à trois classes, placés après : ils doivent
+   l'emporter sur `.player-card:hover .player-card-tool` ci-dessus. */
+.player-card-tool {
   border: 1px solid var(--border-subtle);
   background: var(--bg-overlay);
   color: var(--text-primary);
@@ -636,22 +702,18 @@ html[data-theme="light"] .player-card-main-icon {
   transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
-.players-grid.has-template:not(.reorder-mode) .player-card:not(.is-main) .player-card-promote {
-  display: flex;
-}
-
-.player-card .player-card-promote:hover,
-.player-card .player-card-promote:focus-visible {
+.player-card .player-card-tool:hover,
+.player-card .player-card-tool:focus-visible {
   opacity: 1;
 }
 
-.player-card-promote:hover {
+.player-card-tool:hover {
   background: var(--twitch-purple);
   border-color: var(--twitch-purple);
   color: #fff;
 }
 
-.player-card-promote:focus-visible {
+.player-card-tool:focus-visible {
   outline: 2px solid var(--twitch-purple-light);
   outline-offset: 1px;
 }
@@ -672,18 +734,21 @@ html[data-theme="light"] .player-card-main-icon {
 /*
  * Mode "Réorganiser" (activé via le bouton du menu, cf. app.js) :
  *  - affiche l'en-tête de chaque lecteur (poignée de glisser-déposer, nom
- *    de la chaîne, boutons d'étoile et de suppression "×") ;
+ *    de la chaîne, boutons "Recharger", couronne, étoile et suppression
+ *    "×") ;
  *  - affiche l'overlay de glisser-déposer et les poignées de
  *    redimensionnement (règles plus bas).
  * En dehors de ce mode, seule la vidéo est visible, pour une expérience de
- * visionnage sans distraction. Ce mode ne concerne pas l'ajout d'un stream :
+ * visionnage sans distraction (les boutons du coin de la tuile n'apparaissent
+ * qu'au survol, voir plus haut). Ce mode ne concerne pas l'ajout d'un stream :
  * le bouton "+" du menu (#btn-add) est toujours affiché, et la zone ne
  * contient plus de tuile "+".
  */
 /* Padding latéral élargi (22px au lieu de 8px) : les poignées de
    redimensionnement (.player-card-resize) occupent les angles de la tuile, y
    compris les angles supérieurs qui recouvrent l'en-tête ; ce retrait
-   garde le titre et les boutons ★/× à l'écart de leur zone de saisie. */
+   garde le titre et les boutons de la barre à l'écart de leur zone de
+   saisie. */
 .players-grid.reorder-mode .player-card-header {
   display: flex;
   padding-left: 22px;

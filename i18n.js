@@ -134,8 +134,10 @@
       "card.resize.bl": "Redimensionner {channel} par son coin bas gauche : glisser, ou flèches du clavier",
       "card.resize.br": "Redimensionner {channel} par son coin bas droit : glisser, ou flèches du clavier",
       "card.main": "Stream principal",
-      "card.promote": "Mettre {channel} en principal (l'échanger avec le stream de la vignette principale)",
+      "card.promote": "Mettre {channel} en principal (l'échanger de place avec le stream principal, son compris)",
       "card.promote.title": "Mettre en principal",
+      "card.reload": "Recharger le lecteur de {channel}",
+      "card.reload.title": "Recharger",
 
       /* ---- Fenêtre « Changer les streams » ---- */
       "modal.title": "Changer les streams",
@@ -323,8 +325,10 @@
       "card.resize.bl": "Resize {channel} from its bottom-left corner: drag, or use the arrow keys",
       "card.resize.br": "Resize {channel} from its bottom-right corner: drag, or use the arrow keys",
       "card.main": "Main stream",
-      "card.promote": "Make {channel} the main stream (swap it with the stream in the main tile)",
+      "card.promote": "Make {channel} the main stream (swap places with the main stream, sound included)",
       "card.promote.title": "Make main",
+      "card.reload": "Reload {channel}'s player",
+      "card.reload.title": "Reload",
 
       /* ---- "Change streams" window ---- */
       "modal.title": "Change streams",

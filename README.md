@@ -44,8 +44,9 @@ une soirée entre amis ou plusieurs points de vue d'un même événement.
 - **Vos réglages vous suivent** : enregistrez une *disposition favorite* (streams, ordre, favoris et taille des
   tuiles) et retrouvez-la en un clic, ou partagez-la par un lien.
 - **Des modèles de disposition** : arrangez votre mur (ou partez d'une disposition conseillée comme « Principal + 5 ») et
-  enregistrez sa forme ; vos streams s'y répartissent ensuite, et un clic sur la couronne d'une tuile survolée bascule son
-  stream en principal sans rien déranger.
+  enregistrez sa forme ; vos streams s'y répartissent ensuite.
+- **Des boutons sur chaque tuile, au survol** : ⟳ recharge ce seul stream s'il est figé, et un clic sur la couronne bascule
+  son stream en principal (son compris) sans rien déranger — avec ou sans modèle.
 - **Rien à installer, rien à créer** : c'est un simple site statique. Aucun compte, aucun serveur — vos réglages
   restent dans votre navigateur.
 
@@ -63,7 +64,7 @@ Python.
     </td>
     <td align="center" width="50%">
       <img src="assets/help/help-reorder.png" alt="Le mode Réorganiser : barre d'outils et poignées sur chaque tuile">
-      <br><sub><b>Mode Réorganiser</b> : déplacer, mettre en avant, retirer, agrandir</sub>
+      <br><sub><b>Mode Réorganiser</b> : déplacer, mettre en avant, retirer, agrandir, recharger</sub>
     </td>
   </tr>
   <tr>
@@ -88,8 +89,8 @@ Python.
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/help/help-templates-wall.png" alt="Six streams disposés selon le modèle Principal + 5, avec le bouton d'échange d'une tuile">
-      <br><sub><b>Modèle de disposition</b> : la couronne bascule un stream en principal</sub>
+      <img src="assets/help/help-templates-wall.png" alt="Six streams disposés selon le modèle Principal + 5, chaque tuile montrant ses boutons Recharger et couronne">
+      <br><sub><b>Boutons des tuiles</b> (au survol) : ⟳ recharge, la couronne bascule un stream en principal</sub>
     </td>
     <td align="center">
       <img src="assets/help/help-templates-panel.png" alt="Le panneau des modèles ouvert en mode Réorganiser : dispositions conseillées et enregistrement">
@@ -106,6 +107,14 @@ Python.
   fenêtre (ordinateur comme téléphone).
 - Un seul stream démarre avec le son (le premier stream mis en avant, sinon le premier affiché) : pas de cacophonie.
 - Lecteurs officiels Twitch : pause, volume, qualité et plein écran comme d'habitude.
+- **Au survol d'une tuile**, deux boutons en haut à droite, sans rien à activer (modèle de disposition ou non) :
+  - **⟳ Recharger** relance le lecteur de ce seul stream (figé, en retard sur le direct…) ; les autres continuent, et il
+    garde son son ;
+  - **la couronne** : pleine sur le stream principal ; sur les autres tuiles, **« Mettre en principal »** échange ce
+    stream avec le principal, son compris, **sans changer la disposition** ni recharger les vidéos (avec une mise en
+    avant, l'étoile du principal passe au stream promu).
+- Rien ne reste sur la vidéo : ces boutons n'apparaissent qu'au survol de leur tuile (au focus clavier aussi, et en
+  permanence sur écran tactile).
 
 **Ajouter et gérer ses streams**
 - Bouton **＋** toujours visible dans le menu : saisissez un nom de chaîne ou collez son adresse `twitch.tv/…`.
@@ -117,6 +126,7 @@ Python.
 - **Mise en avant** (★) de deux streams au maximum, qui occupent chacun un quart de l'écran, en haut.
 - **Redimensionnement par les quatre coins** de chaque tuile, avec aimantation aux bords et bouton
   « Réinitialiser la vue ». Les tailles sont mémorisées.
+- **⟳ Recharger** et la **couronne « Mettre en principal »** sont dans la barre de chaque tuile.
 
 **Dispositions favorites**
 - Enregistrez la combinaison de streams affichée **avec son ordre, ses favoris et la taille de chaque tuile**.
@@ -133,9 +143,8 @@ Python.
   façon.
 - Appliqué, le modèle **répartit vos streams** sur ses vignettes — le principal dans la ★ — et **désactive ceux en
   trop** (sans les oublier).
-- La **couronne « Mettre en principal »** (en haut à droite des tuiles, **au survol**) **échange** ce stream avec le
-  principal, son compris, **sans changer la disposition** ni recharger les vidéos. Les couronnes n'apparaissent qu'au
-  survol de leur tuile (au focus clavier aussi, et en permanence sur écran tactile) : rien ne reste sur la vidéo.
+- Un modèle n'est qu'une **organisation enregistrée** : une fois appliqué, le mur s'utilise exactement comme d'habitude
+  (la couronne « Mettre en principal » et ⟳ Recharger marchent avec ou sans modèle).
 - Chaque modèle se **partage** par un lien : le destinataire le retrouve dans ses modèles, appliqué à ses streams.
 
 **Confort**
@@ -146,7 +155,7 @@ Python.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées, ainsi
-  que l'historique des versions (version actuelle : **v1.2**).
+  que l'historique des versions (version actuelle : **v1.3**).
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
 ## 🚀 Installation rapide
@@ -181,7 +190,8 @@ Ouvrez ensuite **http://localhost:8080**.
 | **Revenir aux tailles par défaut** | Mode **Réorganiser**, puis **Réinitialiser la vue** |
 | **Retrouver une composition** | Enregistrez une *disposition favorite* dans la fenêtre ＋, puis cliquez sur son nom |
 | **Réutiliser une forme de mur** | Mode **Réorganiser** → **Modèles de disposition** : une disposition conseillée ou vos réglages, un nom, **Enregistrer le modèle** |
-| **Passer un stream en principal** | Avec un modèle appliqué : survolez sa tuile, puis la **couronne** en haut à droite |
+| **Passer un stream en principal** | Survolez sa tuile, puis la **couronne** en haut à droite (avec ou sans modèle) |
+| **Relancer un stream figé** | Survolez sa tuile, puis **⟳** en haut à droite : seul ce lecteur est rechargé |
 | **Partager mes streams** | Copiez l'adresse de la page (`…#chaine1/chaine2`) ou le lien d'une disposition favorite (tailles et favoris compris) |
 | **Partager une forme de mur** | Le bouton de partage d'un *modèle de disposition* |
 | **Tout comprendre** | Bouton **ⓘ** du menu : l'aide intégrée |
@@ -240,14 +250,15 @@ règles.
 
 ## 📖 Documentation
 
-La **[documentation technique](documentation.md)** détaille le fonctionnement interne (18 sections : affichage des
+La **[documentation technique](documentation.md)** détaille le fonctionnement interne (19 sections : affichage des
 streams, modèle de données, disposition dynamique, mise en avant, redimensionnement manuel, dispositions favorites,
-fenêtre d'aide, modèles de disposition…), ainsi que :
+fenêtre d'aide, modèles de disposition, boutons des tuiles…), ainsi que :
 
 - [Lancer le projet en local](documentation.md#lancer-le-projet-en-local)
 - [Déploiement](documentation.md#déploiement)
 - [Langues (français / anglais)](documentation.md#17-langues-français--anglais)
-- [Modèles de disposition](documentation.md#18-modèles-de-disposition-vignette-principale-échange-partage)
+- [Modèles de disposition](documentation.md#18-modèles-de-disposition-vignette-principale-application-partage)
+- [Boutons des tuiles (Recharger, Mettre en principal)](documentation.md#19-boutons-des-tuiles-recharger-mettre-en-principal)
 - [Référencement (SEO)](documentation.md#référencement-seo)
 - [Personnalisation](documentation.md#personnalisation) (couleurs, logo, réglages de la disposition, fenêtre d'aide, traductions)
 - [Limitations connues](documentation.md#limitations-connues)

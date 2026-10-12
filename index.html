@@ -646,12 +646,11 @@
         Onglet "Modèles de disposition" : une FORME de tuiles sans chaînes,
         dont une vignette est la PRINCIPALE. Appliquer un modèle (clic sur son
         nom) répartit les streams affichés sur ses vignettes — le principal dans
-        la principale — et désactive ceux en trop ; tant qu'il s'applique, un
-        bouton "Mettre en principal" (couronne en haut à droite, visible au
-        survol de la tuile) sur chaque autre tuile l'échange avec le principal
-        sans changer la disposition. Voir la fin de la section 11
-        d'app.js (dispatchOnTemplate(), promoteToMain()) et la section 18 de
-        documentation.md. Sauvegardés en localStorage (STORAGE_KEY_TEMPLATES) ;
+        la principale — et désactive ceux en trop. Rien de plus : le bouton
+        "Mettre en principal" (couronne en haut à droite d'une tuile, au survol)
+        existe avec ou sans modèle (section 6 d'app.js, promoteToMain()). Voir la
+        fin de la section 11 d'app.js (dispatchOnTemplate()) et les sections 18
+        et 19 de documentation.md. Sauvegardés en localStorage (STORAGE_KEY_TEMPLATES) ;
         chacun a un bouton "Modifier" (l'applique et passe en mode
         Réorganiser) et un bouton de partage dont le lien porte sa forme
         (paramètre `template`). "Créer un modèle" ferme cette fenêtre et passe
@@ -933,9 +932,28 @@
                 <li>Les tuiles <strong>se répartissent automatiquement</strong> selon leur nombre et la taille
                   de la fenêtre, sans laisser de vide.</li>
                 <li><strong>Un seul stream a le son au chargement</strong> : le premier stream mis en avant s'il y en a,
-                  sinon le premier affiché — c'est le <strong>stream principal</strong>, signalé en mode Réorganiser par une
-                  couronne à côté de son étoile. Les autres démarrent muets ; utilisez le volume de leur lecteur pour en écouter un autre.</li>
+                  sinon le premier affiché — c'est le <strong>stream principal</strong>, signalé par une
+                  couronne. Les autres démarrent muets ; utilisez le volume de leur lecteur pour en écouter un autre.</li>
               </ul>
+              <p>
+                <strong>Au survol d'une tuile</strong>, deux boutons ronds apparaissent dans son coin en haut à droite —
+                avec ou sans modèle de disposition, il n'y a rien à activer :
+              </p>
+              <ul>
+                <li><strong>Recharger</strong> (flèche circulaire) : relance le lecteur de <strong>ce seul stream</strong>,
+                  par exemple s'il est figé ou en retard sur le direct. Les autres continuent sans coupure, et il garde
+                  son son (ou son silence).</li>
+                <li><strong>La couronne</strong>, à partir de deux streams : pleine et violette sur le stream principal ;
+                  sur les autres, c'est le bouton <strong>« Mettre en principal »</strong> : ce stream et le principal
+                  <strong>échangent leurs places</strong>, et le son passe avec. La disposition ne change pas, les
+                  autres streams non plus, et aucune vidéo n'est rechargée. Si le principal est mis en avant (★), son
+                  étoile passe au stream promu.</li>
+              </ul>
+              <p>
+                Rien ne reste par-dessus la vidéo : les boutons disparaissent quand la souris quitte la tuile. Au clavier,
+                ils apparaissent quand l'un d'eux reçoit le focus (<kbd>Tab</kbd>) ; sur un écran tactile, ils restent
+                affichés. En mode Réorganiser, les mêmes boutons sont dans la barre de la tuile.
+              </p>
             </section>
             <section class="help-lang" lang="en" aria-labelledby="help-wall-title-en">
               <h3 id="help-wall-title-en">The wall and sound</h3>
@@ -949,9 +967,27 @@
                 <li>Tiles <strong>arrange themselves automatically</strong> according to their number and the
                   window size, leaving no empty space.</li>
                 <li><strong>Only one stream has sound on load</strong>: the first featured stream if there is one,
-                  otherwise the first one displayed — it is the <strong>main stream</strong>, marked in Rearrange mode by a crown
-                  next to its star. The others start muted; use their player's volume control to listen to another one.</li>
+                  otherwise the first one displayed — it is the <strong>main stream</strong>, marked by a crown.
+                  The others start muted; use their player's volume control to listen to another one.</li>
               </ul>
+              <p>
+                <strong>When you hover a tile</strong>, two round buttons appear in its top-right corner — with or
+                without a layout template, there is nothing to turn on:
+              </p>
+              <ul>
+                <li><strong>Reload</strong> (circular arrow): restarts the player of <strong>this stream only</strong>,
+                  for instance if it is frozen or lagging behind the live. The others keep playing without a break, and
+                  it keeps its sound (or its silence).</li>
+                <li><strong>The crown</strong>, from two streams on: solid and purple on the main stream; on the others,
+                  it is the <strong>“Make main”</strong> button: this stream and the main one <strong>swap
+                  places</strong>, and the sound goes with it. The layout does not change, nor do the other streams, and
+                  no video is reloaded. If the main stream is featured (★), its star goes to the promoted stream.</li>
+              </ul>
+              <p>
+                Nothing stays over the video: the buttons disappear when the mouse leaves the tile. With the keyboard,
+                they appear when one of them gets the focus (<kbd>Tab</kbd>); on a touch screen, they stay visible. In
+                Rearrange mode, the same buttons are in the tile's bar.
+              </p>
             </section>
           </div>
 
@@ -965,7 +1001,7 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/help-reorder.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Capture du mode Réorganiser : chaque tuile porte une barre avec une poignée, une étoile et une croix, des poignées triangulaires dans les coins ; la tuile principale porte une couronne, et le menu les boutons Réinitialiser la vue et Modèles de disposition ; six éléments sont numérotés." />
+                  alt="Capture du mode Réorganiser : chaque tuile porte une barre avec une poignée, les boutons Recharger, couronne, étoile et croix, et des poignées triangulaires dans les coins ; la couronne est violette sur la tuile principale, grise (Mettre en principal) sur les autres, et le menu porte les boutons Réinitialiser la vue et Modèles de disposition ; sept éléments sont numérotés." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Poignée ✥ / toute la tuile</strong> : glissez-la sur une autre tuile pour changer de place.
@@ -977,11 +1013,14 @@
                 <li><strong>Poignée de coin</strong> : agrandit ou réduit la tuile
                   (voir <button type="button" class="help-link" data-help-target="help-resize">Redimensionner</button>).</li>
                 <li><strong>Couronne</strong> : signale le <strong>stream principal</strong>, celui qui a le son — le premier
-                  mis en avant, sinon le premier stream. Ce n'est pas un bouton : pour en changer, mettez un autre stream en
-                  avant (★) ou placez-le en premier.</li>
+                  mis en avant, sinon le premier stream. Sur les autres tuiles, une couronne grise est à la même place :
+                  c'est le bouton <strong>« Mettre en principal »</strong>, qui échange ce stream avec le principal (voir
+                  <button type="button" class="help-link" data-help-target="help-wall">Le mur et le son</button>).</li>
                 <li><strong>Modèles de disposition</strong> (menu) : ouvre le panneau des
                   <button type="button" class="help-link" data-help-target="help-templates">modèles de disposition</button>
                   — dispositions conseillées et « Enregistrer le modèle ».</li>
+                <li><strong>Recharger</strong> (flèche circulaire, à gauche de la couronne) : relance le lecteur de ce seul
+                  stream. Hors de ce mode, « Recharger » et la couronne sont dans le coin de la tuile, au survol.</li>
               </ol>
             </section>
             <section class="help-lang" lang="en" aria-labelledby="help-reorder-title-en">
@@ -993,7 +1032,7 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/en/help-reorder.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Screenshot of Rearrange mode: each tile has a bar with a handle, a star and a cross, and triangular handles in the corners; the main tile has a crown, and the menu the Reset view and Layout templates buttons; six elements are numbered." />
+                  alt="Screenshot of Rearrange mode: each tile has a bar with a handle, the Reload, crown, star and cross buttons, and triangular handles in the corners; the crown is purple on the main tile, grey (Make main) on the others, and the menu has the Reset view and Layout templates buttons; seven elements are numbered." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Handle ✥ / whole tile</strong>: drag it onto another tile to swap places.
@@ -1005,11 +1044,14 @@
                 <li><strong>Corner handle</strong>: enlarges or shrinks the tile
                   (see <button type="button" class="help-link" data-help-target="help-resize">Resizing</button>).</li>
                 <li><strong>Crown</strong>: marks the <strong>main stream</strong>, the one with the sound — the first featured
-                  one, otherwise the first stream. It is not a button: to change it, feature another stream (★) or move it
-                  first.</li>
+                  one, otherwise the first stream. On the other tiles, a grey crown sits in the same place: it is the
+                  <strong>“Make main”</strong> button, which swaps that stream with the main one (see
+                  <button type="button" class="help-link" data-help-target="help-wall">The wall and sound</button>).</li>
                 <li><strong>Layout templates</strong> (menu): opens the
                   <button type="button" class="help-link" data-help-target="help-templates">layout templates</button> panel
                   — suggested layouts and “Save template”.</li>
+                <li><strong>Reload</strong> (circular arrow, left of the crown): restarts the player of that stream only.
+                  Outside this mode, “Reload” and the crown are in the tile's corner, on hover.</li>
               </ol>
             </section>
           </div>
@@ -1034,10 +1076,11 @@
                   les autres tuiles se répartissent en dessous.</li>
                 <li><strong>Un favori</strong> : il occupe le quart supérieur gauche ; s'il n'y a qu'un autre stream, il prend
                   60 % de la largeur sur toute la hauteur.</li>
-                <li>Le premier favori est le <strong>stream principal</strong> : il garde le son au chargement, porte la couronne
-                  en mode Réorganiser, et sa tuile devient la vignette principale d'un
+                <li>Le premier favori est le <strong>stream principal</strong> : il garde le son au chargement, porte la couronne,
+                  et sa tuile devient la vignette principale d'un
                   <button type="button" class="help-link" data-help-target="help-templates">modèle de disposition</button>
-                  enregistré. La mise en avant n'a d'effet que s'il reste au moins un autre stream affiché.</li>
+                  enregistré. « Mettre en principal » sur une autre tuile donne à son stream cette étoile (et cette place). La mise en
+                  avant n'a d'effet que s'il reste au moins un autre stream affiché.</li>
                 <li>Une <button type="button" class="help-link" data-help-target="help-presets">disposition favorite</button>
                   retient quels streams sont mis en avant, et les rétablit quand vous l'appliquez.</li>
                 <li>Les favoris peuvent eux aussi être agrandis à la main
@@ -1064,10 +1107,11 @@
                   the other tiles arrange themselves below.</li>
                 <li><strong>One featured stream</strong>: it takes the top-left quarter; if there is only one other
                   stream, it takes 60% of the width over the full height.</li>
-                <li>The first featured stream is the <strong>main stream</strong>: it keeps the sound on load, wears the crown in
-                  Rearrange mode, and its tile becomes the main tile of a saved
+                <li>The first featured stream is the <strong>main stream</strong>: it keeps the sound on load, wears the crown,
+                  and its tile becomes the main tile of a saved
                   <button type="button" class="help-link" data-help-target="help-templates">layout template</button>.
-                  Featuring only has an effect if at least one other stream remains displayed.</li>
+                  “Make main” on another tile gives its stream this star (and this place). Featuring only has an effect if
+                  at least one other stream remains displayed.</li>
                 <li>A <button type="button" class="help-link" data-help-target="help-presets">favorite layout</button>
                   remembers which streams are featured, and restores them when you apply it.</li>
                 <li>Featured streams can also be enlarged by hand
@@ -1314,7 +1358,7 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Capture d'un mur de six streams disposé selon le modèle Principal + 5 : la couronne pleine de la grande tuile principale et la couronne Mettre en principal d'une petite tuile, numérotées 1 et 2 (montrées ensemble ici : chacune n'apparaît qu'au survol de sa tuile)." />
+                  alt="Capture d'un mur de six streams disposé selon le modèle Principal + 5 : la couronne pleine de la grande tuile principale et la couronne Mettre en principal d'une petite tuile, numérotées 1 et 2, chaque tuile montrant aussi son bouton Recharger (tous montrés ensemble ici : ils n'apparaissent qu'au survol de leur tuile)." />
               </figure>
               <ol class="help-legend">
                 <li><strong>La couronne pleine</strong> : la vignette principale, avec le son.</li>
@@ -1323,14 +1367,16 @@
                   autres streams non plus.</li>
               </ol>
               <p>
-                Ces couronnes n'apparaissent que quand un modèle est appliqué, hors mode Réorganiser, et seulement
-                <strong>au survol de leur tuile</strong> : passez la souris sur un stream pour voir la sienne (la capture
-                les montre toutes les deux). Au clavier, « Mettre en principal » apparaît quand il reçoit le focus
-                (<kbd>Tab</kbd>) ; sur un écran tactile, elles restent affichées.
+                Ces couronnes ne sont <strong>pas réservées aux modèles</strong> : un modèle n'est qu'une organisation
+                enregistrée, et le mur s'utilise ensuite exactement comme d'habitude. Elles sont sur toutes les tuiles dès
+                qu'il y a deux streams, avec le bouton « Recharger », et n'apparaissent qu'<strong>au survol de leur
+                tuile</strong> (la capture les montre toutes à la fois) — voir
+                <button type="button" class="help-link" data-help-target="help-wall">Le mur et le son</button>.
               </p>
               <ul>
-                <li>Ajouter ou retirer un stream, ou en mettre un en avant (★), suspend le modèle ; il revient quand l'écran
-                  retrouve sa forme. « Réinitialiser la vue » l'arrête pour de bon (le modèle reste enregistré).</li>
+                <li>Ajouter ou retirer un stream, ou en mettre un en avant (★), suspend le modèle (son nom n'est plus en
+                  violet) ; il revient quand l'écran retrouve sa forme. « Réinitialiser la vue » l'arrête pour de bon (le
+                  modèle reste enregistré).</li>
                 <li>Enregistré avec une étoile, un modèle garde la tuile du favori comme vignette principale, et le mur garde
                   son étoile.</li>
               </ul>
@@ -1384,7 +1430,7 @@
               </p>
               <figure class="help-figure">
                 <img src="assets/help/en/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
-                  alt="Screenshot of a wall of six streams laid out with the Main + 5 template: the solid crown of the big main tile and the Make main crown of a small tile, numbered 1 and 2 (shown together here: each one only appears when its tile is hovered)." />
+                  alt="Screenshot of a wall of six streams laid out with the Main + 5 template: the solid crown of the big main tile and the Make main crown of a small tile, numbered 1 and 2, each tile also showing its Reload button (all shown together here: they only appear when their tile is hovered)." />
               </figure>
               <ol class="help-legend">
                 <li><strong>The solid crown</strong>: the main tile, with the sound.</li>
@@ -1393,14 +1439,15 @@
                   streams.</li>
               </ol>
               <p>
-                These crowns only appear when a template is applied, outside Rearrange mode, and only <strong>when their
-                tile is hovered</strong>: move the mouse over a stream to see its crown (the screenshot shows both). With
-                the keyboard, “Make main” appears when it gets the focus (<kbd>Tab</kbd>); on a touch screen, they stay
-                visible.
+                These crowns are <strong>not reserved for templates</strong>: a template is just a saved arrangement, and
+                the wall is then used exactly as usual. They are on every tile as soon as there are two streams, along with
+                the “Reload” button, and only appear <strong>when their tile is hovered</strong> (the screenshot shows
+                them all at once) — see <button type="button" class="help-link" data-help-target="help-wall">The wall and sound</button>.
               </p>
               <ul>
-                <li>Adding or removing a stream, or featuring one (★), suspends the template; it comes back when the screen
-                  gets its shape back. “Reset view” stops it for good (the template stays saved).</li>
+                <li>Adding or removing a stream, or featuring one (★), suspends the template (its name is no longer
+                  purple); it comes back when the screen gets its shape back. “Reset view” stops it for good (the template
+                  stays saved).</li>
                 <li>Saved with a star, a template keeps the featured tile as its main tile, and the wall keeps its star.</li>
               </ul>
             </section>
@@ -1487,7 +1534,13 @@
                 </table>
               </div>
               <p>
-                Sur <strong>écran tactile</strong>, les poignées de coin se tirent au doigt. Le glisser-déposer des
+                Les boutons du coin d'une tuile (« Recharger », « Mettre en principal ») sont dans l'ordre de
+                tabulation : ils apparaissent dès que l'un d'eux reçoit le focus, et <kbd>Entrée</kbd> ou
+                <kbd>Espace</kbd> les active.
+              </p>
+              <p>
+                Sur <strong>écran tactile</strong>, les boutons du coin des tuiles restent affichés (il n'y a pas de
+                survol), et les poignées de coin se tirent au doigt. Le glisser-déposer des
                 tuiles dépend du navigateur : sinon, utilisez les flèches sur la barre de la tuile, ou la fenêtre
                 « Changer les streams » pour recomposer le mur.
               </p>
@@ -1545,7 +1598,12 @@
                 </table>
               </div>
               <p>
-                On a <strong>touch screen</strong>, the corner handles are dragged with a finger. Drag and drop of
+                The buttons in a tile's corner (“Reload”, “Make main”) are in the tab order: they appear as soon as one
+                of them gets the focus, and <kbd>Enter</kbd> or <kbd>Space</kbd> activates them.
+              </p>
+              <p>
+                On a <strong>touch screen</strong>, the buttons in the tiles' corner stay visible (there is no hover), and
+                the corner handles are dragged with a finger. Drag and drop of
                 tiles depends on the browser: otherwise, use the arrow keys on the tile's bar, or the
                 “Change streams” window to rebuild the wall.
               </p>
@@ -1596,7 +1654,18 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-versions-title">
               <h3 id="help-versions-title">Historique des versions</h3>
               <article class="help-version">
-                <h4>v1.2 <span class="help-version-badge">version actuelle</span></h4>
+                <h4>v1.3 <span class="help-version-badge">version actuelle</span></h4>
+                <p class="help-note">12 octobre 2026 · Recharger une tuile, couronne partout</p>
+                <ul>
+                  <li>Nouveau bouton « Recharger » sur chaque tuile : il relance le lecteur du stream associé (figé, en
+                    retard…), sans toucher aux autres ni au son.</li>
+                  <li>La couronne « Mettre en principal » n'est plus réservée aux modèles de disposition : elle est sur
+                    toutes les tuiles dès deux streams affichés. Un modèle n'est plus qu'une organisation enregistrée.</li>
+                  <li>En mode Réorganiser, « Recharger » et « Mettre en principal » sont dans la barre de chaque tuile.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.2</h4>
                 <p class="help-note">5 octobre 2026 · Couronnes au survol</p>
                 <ul>
                   <li>Les couronnes des tuiles (stream principal et « Mettre en principal ») n'apparaissent plus qu'au
@@ -1640,7 +1709,19 @@
             <section class="help-lang" lang="en" aria-labelledby="help-versions-title-en">
               <h3 id="help-versions-title-en">Version history</h3>
               <article class="help-version">
-                <h4>v1.2 <span class="help-version-badge">current version</span></h4>
+                <h4>v1.3 <span class="help-version-badge">current version</span></h4>
+                <p class="help-note">October 12, 2026 · Reload a tile, crown everywhere</p>
+                <ul>
+                  <li>New “Reload” button on each tile: it restarts the player of that stream only (frozen, lagging…),
+                    without touching the others or the sound.</li>
+                  <li>The “Make main” crown is no longer reserved for layout templates: it is on every tile from two
+                    streams on, featuring included (the main stream's star goes to the promoted stream). A template is
+                    now just a saved arrangement.</li>
+                  <li>In Rearrange mode, “Reload” and “Make main” are in each tile's bar.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.2</h4>
                 <p class="help-note">October 5, 2026 · Crowns on hover</p>
                 <ul>
                   <li>The tiles' crowns (main stream and “Make main”) now only appear when their tile is hovered:

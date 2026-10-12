@@ -48,7 +48,7 @@ données ni processus serveur.
   la zone des lecteurs.
 - **Mode "Réorganiser"** (bouton dédié dans le menu) : affiche/masque
   l'en-tête de chaque lecteur (poignée de glisser-déposer, nom de la
-  chaîne, boutons ★ et « × » de retrait rapide) et les poignées de
+  chaîne, boutons « Recharger », couronne, ★ et « × » de retrait rapide) et les poignées de
   redimensionnement des tuiles. En dehors de ce mode, seules les vidéos sont
   visibles, pour un visionnage sans distraction. Ce mode ne change ni la
   place ni la taille des tuiles : la zone ne contient que les streams, sans
@@ -149,12 +149,22 @@ données ni processus serveur.
   principal**, signalé par une **couronne** à côté de son étoile. On peut aussi
   partir d'une disposition favorite déjà enregistrée. **Appliqué**, il répartit les
   streams affichés sur ses vignettes (le stream principal dans la vignette
-  principale) et **désactive les streams en trop** (décochés, pas oubliés) ;
-  ensuite, la couronne **« Mettre en principal »**, en haut à droite de chaque autre tuile
-  (visible au survol de la tuile),
+  principale) et **désactive les streams en trop** (décochés, pas oubliés).
+  Un modèle n'est qu'une **organisation enregistrée** : il n'ouvre aucun
+  "mode" à part, le mur s'utilise ensuite exactement comme d'habitude (point
+  suivant). Chaque modèle se **partage** par un lien qui porte sa forme (voir
+  section 18).
+- **Boutons de chaque tuile, au survol** (en haut à droite, hors mode
+  Réorganiser), **modèle appliqué ou non** : **« Recharger »** relance le
+  lecteur de ce seul stream (figé, en retard sur le direct…) en gardant son
+  son ; à partir de deux streams, une **couronne** pleine signale le stream
+  principal, et sur les autres tuiles la couronne **« Mettre en principal »**
   **échange** ce stream avec le principal, son compris, **sans changer la
-  disposition** ni recharger les vidéos. Chaque modèle se **partage** par un
-  lien qui porte sa forme (voir section 18).
+  disposition** ni recharger les vidéos — avec une mise en avant, l'étoile du
+  principal passe au stream promu. Rien ne reste sur la vidéo : les boutons
+  n'apparaissent qu'au survol de leur tuile (au focus clavier aussi, et en
+  permanence sur écran tactile). En mode Réorganiser, les mêmes boutons sont
+  dans la barre de la tuile (voir section 19).
 - Menu **« + » / "Réorganiser" / "Afficher-Masquer le chat" / aide « i » /
   langue « EN » / thème / logo GitHub**, positionné en haut à droite de la page (pas de
   bouton "Changer les streams" séparé dans le menu : voir le point sur le
@@ -295,8 +305,9 @@ toute l'interface après chaque modification.
 
 Chaque carte de lecteur contient toujours, dans le DOM, un en-tête avec sa
 poignée de glisser-déposer, le nom de la chaîne et un groupe d'actions
-(`.player-card-actions`) réunissant la couronne du stream principal (une simple
-icône, sur sa seule tuile : section 18), le bouton "mettre en avant" (☆/★, voir
+(`.player-card-actions`) réunissant le bouton « Recharger », la couronne (une
+simple icône sur la tuile du stream principal, le bouton « Mettre en principal »
+sur les autres : section 19), le bouton "mettre en avant" (☆/★, voir
 section 5) et le bouton « × », ainsi qu'un overlay `.player-card-dragzone`
 couvrant toute la tuile (voir section 7 ci-dessous pour son rôle). Ces
 deux éléments sont positionnés en **overlay absolu par-dessus la vidéo**
@@ -304,7 +315,10 @@ deux éléments sont positionnés en **overlay absolu par-dessus la vidéo**
 pour une expérience de visionnage sans distraction et sans jamais changer
 la taille de la tuile (voir aussi la section sur la disposition dynamique
 ci-dessous : les afficher ne doit jamais faire "pousser" la vidéo ni
-casser le calcul de mise en page).
+casser le calcul de mise en page). Hors de ce mode, « Recharger » et la
+couronne sont dans le coin de la tuile, au survol (`.player-card-tools`,
+section 19), et ce coin est masqué en mode Réorganiser : chaque commande
+n'est visible qu'à un seul endroit à la fois.
 
 Le bouton **"Réorganiser"** du menu bascule un booléen
 `state.reorderMode`, qui ajoute/retire la classe CSS `reorder-mode` sur la
@@ -1483,7 +1497,7 @@ seule peut donc être atteinte à la fois. Échap ferme l'une comme l'autre
 `<img loading="lazy">` : la fenêtre étant masquée tant qu'elle n'est pas
 ouverte, **aucune capture n'est téléchargée avant que l'utilisateur ne fasse
 défiler l'aide jusque-là**, et seul le jeu de la langue affichée l'est (elles
-pèsent de 31 à 530 Ko chacune, environ 2,5 Mo par langue). Les attributs
+pèsent de 31 à 550 Ko chacune, environ 2,5 Mo par langue). Les attributs
 `width`/`height` de chaque `<img>` sont les dimensions réelles du fichier :
 ils réservent la place, pour que le texte ne "saute" pas quand une capture
 arrive, et pour que les sauts du sommaire tombent au bon endroit.
@@ -1493,14 +1507,14 @@ arrive, et pour que les sauts du sommaire tombent au bon endroit.
 | `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, langue, thème, logo GitHub (2× pour rester net) | 7 |
 | `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste (2×) | 3 |
 | `help-wall.png` | le mur de streams, sans rien d'autre | — |
-| `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles, couronne du stream principal, bouton « Modèles de disposition » du menu | 6 |
+| `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles, couronne du stream principal, bouton « Modèles de disposition » du menu, bouton « Recharger » d'une tuile | 7 |
 | `help-favorites.png` | deux streams mis en avant | 2 |
 | `help-resize.png` | un stream agrandi par un coin, les autres réorganisés | 3 |
 | `help-chat.png` | le panneau de chat ouvert, avec la case « Garder chargé » | 3 |
 | `help-presets.png` | l'onglet « Dispositions favorites » de la fenêtre "Changer les streams" : enregistrement, nom, icône des tailles mémorisées, « Créer un modèle », partage (2×) | 5 |
 | `help-templates.png` | l'onglet « Modèles de disposition » : un modèle enregistré, « Modifier », partage, « Créer un modèle » (2×) | 5 |
 | `help-templates-panel.png` | le mode Réorganiser, panneau des modèles ouvert : bouton du menu, dispositions conseillées, enregistrement, couronne du stream principal | 4 |
-| `help-templates-wall.png` | un mur disposé selon le modèle « Principal + 5 » : couronne pleine du principal, couronnes « Mettre en principal » des autres tuiles | 2 |
+| `help-templates-wall.png` | un mur disposé selon le modèle « Principal + 5 », hors mode Réorganiser, les boutons du coin de toutes les tuiles affichés : couronne pleine du principal, couronnes « Mettre en principal » des autres tuiles (« Recharger » visible, sans pastille) | 2 |
 | `help-light-theme.png` | le thème clair | 2 |
 
 Les **pastilles violettes numérotées** dessinées sur les captures
@@ -1533,20 +1547,37 @@ refaire les captures après un changement d'interface, on les prend à la main
 (ou avec un script à réécrire sur le même principe), dans les mêmes états et
 avec les mêmes noms de chaînes fictifs. Dans les deux
 cas, si la taille d'une capture change, mettez à jour les attributs
-`width`/`height` de son `<img>` dans `index.html`. (Les quatre captures liées
-aux modèles de disposition — `help-presets.png` refaite avec ses onglets,
-`help-templates.png`, `help-templates-panel.png` et `help-templates-wall.png` —
-ont été prises de cette façon avec une version adaptée du script, dans les états
-suivants : un modèle « Principal + 5 » / « Main + 5 » appliqué à six streams et
-l'onglet des modèles ouvert ; six streams en mode Réorganiser (1800 × 860), le
-panneau ouvert, « Principal + 5 » appliqué et le nom « Grand écran » /
-« Big screen » saisi ; pour le mur, le même modèle appliqué hors mode
-Réorganiser ; et `help-reorder.png`, refaite elle aussi, avec quatre streams en
-mode Réorganiser.) Sur `help-templates-wall.png`, toutes les couronnes sont
-visibles à la fois : elle date d'avant leur affichage au seul survol de la
-tuile, ce que dit l'aide sous la capture. Pour la refaire, forcer leur
-affichage (par exemple `opacity: 1` sur `.player-card-promote` et
-`.player-card-main-floating`) : un seul pointeur ne survole qu'une tuile.
+`width`/`height` de son `<img>` dans `index.html`.
+
+Les trois captures touchées par la v1.3 (bouton « Recharger », couronne
+« Mettre en principal » sur toutes les tuiles) — `help-reorder.png`,
+`help-templates-panel.png` et `help-templates-wall.png`, dans les deux langues —
+ont été refaites le 12 octobre 2026 par un script réécrit sur ce principe (gardé
+hors du dépôt), aux mêmes dimensions. Ses réglages, pour rester cohérent avec les
+autres captures :
+
+- **états** : quatre streams en mode Réorganiser (1100 × 620) pour
+  `help-reorder.png` ; six streams en mode Réorganiser (1800 × 860), panneau des
+  modèles ouvert, « Principal + 5 » / « Main + 5 » appliqué par un clic dans la
+  galerie et le nom « Grand écran » / « Big screen » saisi (message du panneau
+  masqué) pour `help-templates-panel.png` ; le même modèle appliqué puis le mode
+  Réorganiser quitté (1100 × 620) pour `help-templates-wall.png`. Thème sombre,
+  aucune étoile, `streamwall:lang` = `fr` ou `en` ;
+- **faux lecteurs** (le SDK Twitch est remplacé avant le chargement de la page) :
+  dégradé à 135° de `hsl(T 50% 30%)` à `hsl(T+45 55% 15%)`, avec la teinte T =
+  210, 285, 150, 20, 330, 60 pour les six chaînes dans l'ordre ; deux disques
+  blancs translucides (en bas à gauche et en haut à droite) ; nom de la chaîne
+  centré en Segoe UI gras 25 px ; étiquette rouge « EN DIRECT » / « LIVE » à
+  10 px du coin inférieur gauche ;
+- **pastilles** : disques de 26 px, violet `#9147ff`, bord blanc de 2 px, chiffre
+  blanc en Segoe UI gras 14 px, placés d'après la position réelle de l'élément
+  (sous un bouton, sur l'angle d'une vignette de la galerie, en retrait d'une
+  poignée de coin) ;
+- **`help-templates-wall.png`** montre les boutons du coin de TOUTES les tuiles à
+  la fois, ce que dit l'aide sous la capture : ils n'apparaissent qu'au survol,
+  et un seul pointeur ne survole qu'une tuile. Le script force donc leur
+  affichage (`opacity: 0.7` sur `.player-card-tool`, `1` sur
+  `.player-card-main-floating`, sans transition).
 
 **Le menu sur téléphone.** Avec le bouton « + », le bouton « i », le bouton de
 langue et le lien GitHub, le menu compte sept éléments (six boutons — +,
@@ -1624,7 +1655,8 @@ exactement les mêmes clés et les mêmes paramètres.
 `onLanguageChange()` (`app.js`, section « Langue »), qui refait ce que le code a
 construit lui-même : les libellés accessibles de chaque carte de stream
 (`localizePlayerCard()` : barre d'en-tête, bouton de retrait, quatre poignées,
-étoile, couronne du stream principal et bouton « Mettre en principal »), le titre de
+étoile, couronne du stream principal, et les deux exemplaires — barre et coin
+de la tuile — des boutons « Mettre en principal » et « Recharger »), le titre de
 l'iframe de chat (l'iframe elle-même n'est pas recréée), et les listes de la
 fenêtre « Changer les streams » (reconstruites), y compris la liste des modèles,
 et la galerie du panneau des modèles (le nom tapé est gardé). Un message
@@ -1651,7 +1683,7 @@ fixe, et le nom comme tous les libellés sont posés par `textContent` et
 **Le menu.** Avec le bouton de langue, le menu compte sept éléments ; les
 règles de compaction sous 600 px sont décrites en section 16.
 
-### 18. Modèles de disposition (vignette principale, échange, partage)
+### 18. Modèles de disposition (vignette principale, application, partage)
 
 Une disposition favorite (section 13) retient des **chaînes précises** avec la
 disposition de leurs tuiles. Un **modèle de disposition** ne retient qu'une
@@ -1757,8 +1789,9 @@ l'étoile garde son fonctionnement), sinon le premier stream. `applyGridLayout()
 pose la classe `is-main` sur sa tuile, et, en mode Réorganiser, une **couronne**
 (`.player-card-main-icon`, une simple icône, pas un bouton, nommée « Stream
 principal ») s'affiche à côté de son étoile. C'est cette tuile qui devient la
-vignette principale d'un modèle enregistré : pour en choisir une autre, on met
-son stream en avant, ou on le place en premier.
+vignette principale d'un modèle enregistré : pour en choisir une autre, on clique
+la couronne « Mettre en principal » de sa tuile (section 19), on met son stream
+en avant, ou on le place en premier.
 
 **Appliquer un modèle** (clic sur son nom, ou sur une disposition conseillée du
 panneau : `applyTemplate()`, qui appelle `dispatchOnTemplate()`) :
@@ -1795,53 +1828,18 @@ vignettes, et qu'aucune mise en avant n'est active. Ajouter ou retirer un
 stream, ou en mettre un en avant, le **suspend** ; revenir à sa forme le
 retrouve, puisque ses épingles restent mémorisées sous `0:N`. Appliquer une
 disposition favorite, « Réinitialiser la vue » (qui oublie la forme) ou
-supprimer le modèle l'arrêtent. Tant qu'il s'applique, `applyGridLayout()` pose
-la classe `has-template` sur `#players-grid` et `is-main` sur la tuile de
-l'emplacement 0 ; le nom du modèle est en violet dans la liste
-(`aria-current`). Redimensionner les tuiles ensuite reste possible, et ne
-modifie pas le modèle enregistré (ses épingles sont copiées).
+supprimer le modèle l'arrêtent. Tant qu'il s'applique, le nom du modèle est en
+violet dans la liste (`aria-current`) et sa vignette est mise en valeur dans la
+galerie du panneau (`updateTemplateGallerySelection()`) — c'est le SEUL effet
+d'un modèle "appliqué" : il n'ouvre aucun mode à part, et toutes les commandes
+du mur (couronnes et « Recharger » des tuiles comprises, section 19) marchent
+de la même façon avec ou sans modèle. Redimensionner les tuiles ensuite reste
+possible, et ne modifie pas le modèle enregistré (ses épingles sont copiées).
 
-**Les couronnes sur les tuiles, et « Mettre en principal ».** Quand un modèle
-s'applique, HORS mode Réorganiser, chaque tuile porte une pastille ronde dans
-son angle supérieur droit, loin des commandes du lecteur Twitch (en bas) :
-**pleine et violette** sur la principale (`.player-card-main-floating`, une
-simple icône), et sur les autres un bouton **« Mettre en principal »**
-(`.player-card-promote`), discret (opacité 0,7) jusqu'à ce qu'on survole la
-couronne elle-même ou qu'elle ait le focus clavier.
-
-Elles n'apparaissent **qu'au survol de leur tuile** (`.player-card:hover`),
-pour ne rien laisser par-dessus la vidéo le reste du temps ; au repos, elles
-sont invisibles (`opacity: 0`) et laissent passer les clics vers le lecteur
-(`pointer-events: none`). Le lecteur Twitch est une iframe d'un autre site,
-mais le navigateur considère quand même la tuile qui la contient comme
-survolée. Deux exceptions la gardent visible sans survol :
-
-- au **clavier**, « Mettre en principal » reste dans l'ordre de tabulation et
-  apparaît dès qu'il a le focus (`:focus-visible`) ;
-- sur un écran **sans survol** (tactile, `@media (hover: none)`), les deux
-  couronnes restent affichées : sinon, on ne pourrait jamais les atteindre.
-
-Tout est en CSS (`style.css`, section des couronnes) : aucun JavaScript ne
-suit la souris.
-
-> **Pour tester.** Chrome piloté par un outil d'automatisation (Puppeteer,
-> Playwright : protocole DevTools) envoie ses mouvements de souris
-> directement à l'iframe d'un autre site, sans passer par la page : la tuile
-> n'y paraît alors survolée que si le pointeur est d'abord passé sur un
-> élément de la page (bord de la tuile, écart entre deux tuiles). Une vraie
-> souris n'a pas ce défaut ; Firefox piloté non plus.
-
-Un clic appelle `promoteToMain()`, qui **échange** ce stream avec celui de la
-vignette principale (`swapChannels()`) : chacun prend exactement la place de
-l'autre dans l'ordre d'affichage et dans le DOM — contrairement à
-`reorderChannels()` (section 7), qui insère et décale les streams entre les
-deux. Les tailles appartenant aux emplacements, **la disposition ne bouge
-pas** : seules les deux vidéos changent de tuile, les autres restent en place.
-Les cartes sont déplacées par `moveCardBefore()` (section 7) : avec
-`moveBefore()`, **aucune vidéo n'est rechargée**. Le **son suit la vignette** :
-`swapPlayersAudio()` échange l'état coupé/non coupé des deux lecteurs
-(`getMuted()` / `setMuted()` du SDK Twitch), donc le stream basculé en principal
-prend le son et l'ancien principal est coupé.
+**Les couronnes des tuiles ne dépendent pas du modèle.** « Mettre en
+principal » (et « Recharger ») sont sur toutes les tuiles, modèle appliqué ou
+non : voir section 19. Appliquer un modèle ne fait que répartir les streams et
+retenir sa forme ; le mur s'utilise ensuite exactement comme d'habitude.
 
 **Partager un modèle.** Le bouton de partage de sa ligne copie un lien
 (`buildTemplateShareUrl()`, via `buildShareUrl()`, section 13) :
@@ -1867,6 +1865,108 @@ est ignoré avec un message.
 **Sécurité.** Comme pour les dispositions favorites, le nom d'un modèle (texte
 libre, y compris reçu par un lien) n'est jamais inséré comme HTML : il est posé
 par `textContent` / `setAttribute`, et `URLSearchParams` l'encode dans le lien.
+
+### 19. Boutons des tuiles (Recharger, Mettre en principal)
+
+Chaque tuile a deux commandes à elle, **qu'un modèle de disposition soit
+appliqué ou non** — un modèle n'est qu'une organisation enregistrée
+(section 18), il n'ouvre aucun mode à part :
+
+- **« Recharger »** (flèche circulaire) relance le lecteur de **ce seul
+  stream**, par exemple s'il est figé ou très en retard sur le direct ;
+- **la couronne** : pleine et violette sur la tuile du **stream principal**
+  (une simple icône, nommée « Stream principal »), et, sur les autres tuiles, le
+  bouton **« Mettre en principal »**, qui échange ce stream avec le principal.
+
+**Deux exemplaires, un seul visible.** `createPlayerCard()` construit chaque
+commande deux fois, repérées par leur attribut `data-action` (`reload`,
+`promote`) : c'est lui que lisent les écouteurs de clic et
+`localizePlayerCard()` (libellés `card.reload`, `card.reload.title`,
+`card.promote` et `card.promote.title` d'`i18n.js`). Les deux icônes SVG sont
+communes (`CROWN_ICON_SVG`, `RELOAD_ICON_SVG`).
+
+- Dans la **barre d'en-tête** (`.player-card-header-btn`), affichée en mode
+  Réorganiser seulement (section 3), où elle porte toutes les commandes de la
+  tuile : « Recharger », puis, à la place exacte de la couronne-icône du
+  principal (`.player-card-main-icon`), un bouton couronne au trait sur les
+  autres tuiles (`.player-card-header-promote`, masqué sur `.is-main`).
+- Dans le **coin supérieur droit** de la tuile (`.player-card-tools`), hors
+  mode Réorganiser (la rangée est masquée dans ce mode), loin des commandes du
+  lecteur Twitch qui sont en bas : une rangée de pastilles rondes de 32 px —
+  « Recharger » (`.player-card-reload`), puis, dans l'angle, la couronne pleine
+  (`.player-card-main-floating`) ou « Mettre en principal »
+  (`.player-card-promote`). Les deux boutons partagent la classe
+  `.player-card-tool` : discrets (opacité 0,7) quand la tuile est survolée,
+  pleins au survol du bouton lui-même ou au focus clavier.
+
+**Qui s'affiche où.** « Recharger » est sur toutes les tuiles. Les couronnes
+n'apparaissent qu'à partir de **deux streams** : `applyGridLayout()` pose la
+classe `has-several` sur `#players-grid` (avec un seul stream, il n'y a rien à
+échanger), et `is-main` sur la tuile de l'emplacement 0. Jusqu'à la v1.2, les
+couronnes du coin dépendaient d'une classe `has-template`, posée seulement
+quand un modèle s'appliquait : elle n'existe plus.
+
+**Au survol seulement.** Les pastilles du coin n'apparaissent **qu'au survol de
+leur tuile** (`.player-card:hover`), pour ne rien laisser par-dessus la vidéo le
+reste du temps ; au repos, elles sont invisibles (`opacity: 0`) et laissent
+passer les clics vers le lecteur (`pointer-events: none`, sur la rangée
+elle-même aussi : l'écart entre deux pastilles ne bloque rien). Le lecteur
+Twitch est une iframe d'un autre site, mais le navigateur considère quand même
+la tuile qui la contient comme survolée. Deux exceptions les gardent visibles
+sans survol :
+
+- au **clavier**, les boutons restent dans l'ordre de tabulation, et toute la
+  rangée apparaît dès que l'un d'eux a le focus (`:focus-within` sur la
+  RANGÉE : sur la tuile, il resterait vrai après un clic dans la vidéo, dont
+  l'iframe garde alors le focus, et la rangée resterait affichée) ;
+- sur un écran **sans survol** (tactile, `@media (hover: none)`), elles restent
+  affichées : sinon, on ne pourrait jamais les atteindre.
+
+Tout est en CSS (`style.css`, section « Boutons du coin des tuiles ») : aucun
+JavaScript ne suit la souris.
+
+> **Pour tester.** Chrome piloté par un outil d'automatisation (Puppeteer,
+> Playwright : protocole DevTools) envoie ses mouvements de souris
+> directement à l'iframe d'un autre site, sans passer par la page : la tuile
+> n'y paraît alors survolée que si le pointeur est d'abord passé sur un
+> élément de la page (bord de la tuile, écart entre deux tuiles). Une vraie
+> souris n'a pas ce défaut ; Firefox piloté non plus.
+
+**« Recharger » : `reloadPlayer()`.** Le lecteur de la chaîne est détruit
+(`unmountPlayer()`), son conteneur vidéo est remplacé par une copie **vide**
+portant le même `id`, puis un nouveau lecteur y est créé (`mountPlayer()`).
+Remplacer le conteneur plutôt que le vider garantit que l'ancienne iframe
+disparaît : toutes les versions du SDK n'exposent pas `destroy()`, et le nouveau
+lecteur s'ajouterait sinon à côté de l'ancien. Le **son est conservé** : l'état
+coupé ou non du lecteur (`getMuted()`) est repris par le nouveau ; s'il est
+illisible (lecteur pas encore prêt), la règle du premier affichage s'applique —
+seul le stream principal a le son. Rien d'autre ne bouge : ni la tuile, ni
+l'ordre des streams, ni les autres lecteurs, et le bouton cliqué garde le focus
+(il n'est pas recréé).
+
+**« Mettre en principal » : `promoteToMain()`.** Le stream principal est celui
+de l'emplacement 0 : le premier mis en avant, sinon le premier affiché. Un clic
+**échange** le stream de la tuile avec lui (`swapChannels()`) : chacun prend
+exactement la place de l'autre dans l'ordre d'affichage et dans le DOM —
+contrairement à `reorderChannels()` (section 7), qui insère et décale les
+streams entre les deux. Les tailles appartenant aux emplacements (section 15),
+**la disposition ne bouge pas** : seules les deux vidéos changent de tuile, les
+autres restent en place. Les cartes sont déplacées par `moveCardBefore()`
+(section 7) : avec `moveBefore()`, **aucune vidéo n'est rechargée**. Le **son
+suit la tuile** : `swapPlayersAudio()` échange l'état coupé/non coupé des deux
+lecteurs (`getMuted()` / `setMuted()` du SDK Twitch), donc le stream basculé en
+principal prend le son et l'ancien principal est coupé.
+
+**Avec une mise en avant.** Quand une étoile est active (section 5), ce sont les
+étoiles qui donnent les premiers emplacements, dans l'ordre de
+`state.featuredChannels` : l'étoile du principal **passe donc au stream
+promu**. Deux favoris échangent leur rang ; un stream sans étoile prend celle du
+principal, qui la perd et va dans la tuile que le stream promu vient de quitter
+(l'échange dans l'ordre d'affichage le place exactement là, parmi les streams
+sans étoile). Le nombre de favoris ne change pas, donc la disposition — et ses
+tailles ajustées à la main, mémorisées par nombre de favoris (section 15) — non
+plus. Les icônes ★/☆ des deux tuiles sont mises à jour aussitôt
+(`updateFeatureButtonUI()`).
 
 
 ## Lancer le projet en local
@@ -2378,7 +2478,7 @@ réels du fichier.
   ses derniers boutons étant hors de vue jusqu'à ce qu'on le fasse défiler. Le
   panneau des modèles, lui, tient dans l'écran.
 - **Échanger deux streams sans recharger leurs vidéos** (couronne « Mettre en
-  principal », section 18, et aussi le glisser-déposer, section 7) repose sur
+  principal », section 19, et aussi le glisser-déposer, section 7) repose sur
   `moveBefore()`, qui déplace un élément du document en conservant l'état de
   son `<iframe>` (Chrome et Edge 133+, et les navigateurs qui l'ont adopté
   depuis). Ailleurs, le déplacement retombe sur `insertBefore()` et la vidéo
@@ -2402,9 +2502,9 @@ réels du fichier.
   avant s'il y en a un (voir section 5 — jamais le second si deux sont
   mis en avant), sinon le premier stream visible ; il n'y a pas de
   contrôle individuel du son/volume dans l'interface pour l'ajuster
-  ensuite sans passer par les commandes du lecteur Twitch lui-même. Seule
-  exception : quand un modèle de disposition s'applique, « Mettre en
-  principal » échange aussi le son des deux streams (section 18).
+  ensuite sans passer par les commandes du lecteur Twitch lui-même. Seules
+  exceptions : « Mettre en principal » échange aussi le son des deux streams,
+  et « Recharger » garde celui du lecteur rechargé (section 19).
 - La mise en avant (section 5) est, comme les presets, un état local à ce
   navigateur (`localStorage`), non incluse dans le hash d'URL : copier
   l'adresse de la page ne la partage pas. Seul le lien de partage d'une

@@ -92,11 +92,17 @@
  *      la tuile du stream principal — le premier mis en avant (étoile),
  *      sinon le premier stream —, signalée par une couronne.
  *      Appliqué, un modèle répartit les streams affichés sur ses vignettes (le
- *      principal dans la principale) et désactive ceux en trop ; la couronne
- *      "Mettre en principal" (en haut à droite des autres tuiles, au survol)
- *      échange alors ce stream avec le principal, son compris, sans changer
- *      la disposition.
+ *      principal dans la principale) et désactive ceux en trop. Un modèle
+ *      n'est qu'une organisation enregistrée : il n'ouvre aucun "mode" à
+ *      part, le mur s'utilise ensuite exactement comme d'habitude (point 15).
  *      Chaque modèle se partage par un lien qui porte sa forme.
+ *  15. Boutons de chaque tuile (section 6), modèle appliqué ou non : au
+ *      survol d'une tuile (hors mode Réorganiser), "Recharger" relance son
+ *      seul lecteur (`reloadPlayer()`) et la couronne "Mettre en principal"
+ *      échange ce stream avec le principal, son compris, sans changer la
+ *      disposition (`promoteToMain()`) ; la tuile principale porte une
+ *      couronne pleine. En mode Réorganiser, les mêmes boutons sont dans la
+ *      barre de la tuile.
  *
  * Aucune dépendance externe autre que le SDK officiel Twitch.
  * ============================================================================
@@ -224,8 +230,10 @@
    * - activeTemplateId : identifiant du modèle appliqué en dernier, ou `null`.
    *                 Il ne s'applique que tant que l'écran a sa forme (même
    *                 nombre de streams, aucune mise en avant : voir
-   *                 `getActiveTemplate()`) ; c'est ce qui fait apparaître
-   *                 le bouton "Mettre en principal" sur les autres tuiles.
+   *                 `getActiveTemplate()`) ; il ne sert qu'à signaler ce
+   *                 modèle dans la liste et la galerie des modèles (le bouton
+   *                 "Mettre en principal" des tuiles, lui, ne dépend pas d'un
+   *                 modèle : voir `promoteToMain()`).
    */
   const state = {
     entries: [],
@@ -1800,8 +1808,9 @@
    *     chaînes : favoris d'abord, autres ensuite ;
    *  3. la poignée de chaque tuile atteignable au clavier, et l'état du
    *     bouton "Réinitialiser la vue" ;
-   *  4. la tuile du stream principal (`is-main`), et si un modèle de
-   *     disposition s'applique (`has-template`, voir `getActiveTemplate()`).
+   *  4. la tuile du stream principal (`is-main`), s'il y a plusieurs streams
+   *     (`has-several`, qui fait apparaître les couronnes des tuiles), et le
+   *     modèle de disposition qui s'applique (voir `getActiveTemplate()`).
    *
    * Le mode Réorganiser ne change RIEN à ce calcul : la zone ne contient que
    * les tuiles des streams (le bouton "+" qui ajoute un stream est dans le
@@ -1832,7 +1841,7 @@
       // stream" (voir renderPlayersGrid()), il n'y a rien à disposer — ni
       // à réinitialiser.
       currentLayout = null;
-      el.playersGrid.classList.remove("has-template");
+      el.playersGrid.classList.remove("has-several");
       if (el.btnResetLayout) {
         el.btnResetLayout.hidden = !state.reorderMode;
         el.btnResetLayout.disabled = true;
@@ -1865,18 +1874,19 @@
 
     // 4. Le stream PRINCIPAL (celui qui a le son : le premier mis en avant,
     // sinon le premier affiché) occupe toujours l'emplacement 0 : sa tuile
-    // porte `is-main` (icône couronne à côté de l'étoile, en mode
-    // Réorganiser) — c'est la vignette principale d'un modèle enregistré
-    // depuis le mur. La classe `has-template` de la zone signale qu'un modèle
-    // de disposition s'applique (fin de la section 11) : hors mode
-    // Réorganiser, les tuiles portent alors une couronne en haut à droite —
-    // pleine sur la principale, "Mettre en principal" sur les autres. Recalculé à
+    // porte `is-main` (couronne pleine), les autres un bouton "Mettre en
+    // principal" (voir createPlayerCard()) — c'est aussi la vignette
+    // principale d'un modèle enregistré depuis le mur. La classe
+    // `has-several` de la zone fait apparaître ces couronnes dès qu'il y a
+    // au moins deux streams, modèle de disposition appliqué ou non : avec un
+    // seul stream, il n'y a rien à échanger.
+    el.playersGrid.classList.toggle("has-several", slotCount > 1);
+    // Le modèle de disposition qui s'applique (fin de la section 11) n'est
+    // plus que signalé dans la galerie du panneau des modèles. Recalculé à
     // chaque fois : ajouter un stream ou en mettre un en avant change la
     // forme de l'écran, et le modèle cesse alors de s'appliquer
     // (getActiveTemplate()).
-    const template = getActiveTemplate(visible);
-    el.playersGrid.classList.toggle("has-template", Boolean(template));
-    updateTemplateGallerySelection(template);
+    updateTemplateGallerySelection(getActiveTemplate(visible));
 
     const slotByChannel = new Map();
     const cardsByChannel = new Map(
@@ -2365,8 +2375,8 @@
    * favoris) et revient à la disposition par défaut. Les dispositions
    * mémorisées pour d'AUTRES configurations ne sont pas touchées.
    * Si un modèle de disposition était appliqué à l'écran, sa forme vient
-   * d'être oubliée avec ces tailles : il cesse donc de s'appliquer (plus de
-   * bouton "Mettre en principal") — le modèle
+   * d'être oubliée avec ces tailles : il cesse donc de s'appliquer (il n'est
+   * plus signalé comme appliqué dans la liste des modèles) — le modèle
    * lui-même reste enregistré, prêt à être réappliqué.
    */
   function resetManualLayout() {
@@ -2435,8 +2445,9 @@
    * Pose sur une carte de lecteur tous ses libellés accessibles (`aria-label`)
    * dans la langue courante : barre d'en-tête, bouton de retrait, poignées de
    * redimensionnement, bouton "mettre en avant" (étoile), icônes du stream
-   * principal (couronne de l'en-tête et couronne flottante) et bouton flottant
-   * "Mettre en principal" des modèles de disposition (fin de la section 11).
+   * principal (couronne de l'en-tête et couronne flottante), et les deux
+   * exemplaires (barre d'en-tête et coin de la tuile) des boutons "Mettre en
+   * principal" et "Recharger" (voir createPlayerCard()).
    * Appelée à la création de la
    * carte, puis à chaque changement de langue (voir onLanguageChange()).
    * @param {HTMLElement} card
@@ -2445,9 +2456,14 @@
   function localizePlayerCard(card, channel) {
     card.querySelector(".player-card-header").setAttribute("aria-label", t("card.header", { channel }));
     card.querySelector(".player-card-remove").setAttribute("aria-label", t("card.remove", { channel }));
-    const promote = card.querySelector(".player-card-promote");
-    promote.setAttribute("aria-label", t("card.promote", { channel }));
-    promote.title = t("card.promote.title");
+    card.querySelectorAll('[data-action="promote"]').forEach((button) => {
+      button.setAttribute("aria-label", t("card.promote", { channel }));
+      button.title = t("card.promote.title");
+    });
+    card.querySelectorAll('[data-action="reload"]').forEach((button) => {
+      button.setAttribute("aria-label", t("card.reload", { channel }));
+      button.title = t("card.reload.title");
+    });
     card.querySelectorAll(".player-card-main-icon, .player-card-main-floating").forEach((icon) => {
       icon.setAttribute("aria-label", t("card.main"));
       icon.title = t("card.main");
@@ -2459,10 +2475,28 @@
   }
 
   /**
-   * Construit la carte DOM d'un lecteur (en-tête, zone de glisser-déposer,
-   * bouton flottant "Mettre en principal", conteneur vidéo, poignées de
+   * Icônes SVG des commandes d'une tuile, partagées par la barre d'en-tête
+   * (mode Réorganiser) et le coin de la tuile (hors de ce mode) : la couronne
+   * du stream principal et la flèche circulaire de "Recharger". Dessinées au
+   * trait (`currentColor`) pour prendre la couleur du bouton qui les porte.
+   */
+  const CROWN_ICON_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 15L3.5 7l5 4L12 5l3.5 6 5-4L19 15z" /></svg>`;
+  const RELOAD_ICON_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.5" /><path d="M20 3.5v5h-5" /></svg>`;
+
+  /**
+   * Construit la carte DOM d'un lecteur (en-tête, boutons du coin de la
+   * tuile, zone de glisser-déposer, conteneur vidéo, poignées de
    * redimensionnement) et branche tous ses évènements. Ne crée PAS encore le
    * lecteur Twitch lui-même (voir `mountPlayer`), qui dépend du SDK externe.
+   *
+   * Les deux commandes "Recharger" (`reloadPlayer()`) et "Mettre en
+   * principal" (`promoteToMain()`) existent en DEUX exemplaires, repérés par
+   * leur attribut `data-action` : dans la barre d'en-tête (mode Réorganiser,
+   * où cette barre porte toutes les commandes de la tuile) et dans le coin
+   * supérieur droit de la tuile (hors de ce mode, au survol). Le CSS n'en
+   * montre jamais qu'un à la fois.
    * @param {string} channel
    * @returns {HTMLElement}
    */
@@ -2478,34 +2512,41 @@
           <span>${channel}</span>
         </span>
         <span class="player-card-actions">
+          <!-- Recharger : relance le lecteur de ce seul stream (reloadPlayer()). -->
+          <button class="player-card-header-btn" type="button" data-action="reload">${RELOAD_ICON_SVG}</button>
           <!-- Couronne : simple ICÔNE (pas un bouton) qui signale le stream
                PRINCIPAL — celui qui a le son et occupe l'emplacement 0 : le
                premier mis en avant, sinon le premier stream. Affichée sur sa
                seule tuile (classe is-main posée par applyGridLayout()), en
                mode Réorganiser ; c'est la vignette principale d'un modèle
-               enregistré depuis le mur. -->
-          <span class="player-card-main-icon" role="img"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 15L3.5 7l5 4L12 5l3.5 6 5-4L19 15z" /></svg></span>
+               enregistré depuis le mur. Sur les AUTRES tuiles, à la même
+               place, le bouton "Mettre en principal" (promoteToMain()). -->
+          <span class="player-card-main-icon" role="img">${CROWN_ICON_SVG}</span>
+          <button class="player-card-header-btn player-card-header-promote" type="button" data-action="promote">${CROWN_ICON_SVG}</button>
           <!-- Étoile : met le stream en avant (voir toggleFeaturedChannel()). -->
           <button class="player-card-feature" type="button" aria-pressed="false">☆</button>
           <button class="player-card-remove" type="button">×</button>
         </span>
       </div>
       <!--
-        Couronnes flottantes, HORS mode Réorganiser, dans l'angle supérieur
-        droit de la tuile, seulement si un modèle de disposition est appliqué
-        (voir style.css) :
+        Boutons du coin supérieur droit de la tuile, HORS mode Réorganiser
+        (voir style.css), qu'un modèle de disposition soit appliqué ou non :
+         - "Recharger", sur toutes les tuiles : relance le lecteur de ce seul
+           stream (reloadPlayer()) ;
          - sur la tuile principale, une couronne pleine qui la signale (simple
            icône) ;
          - sur les autres, "Mettre en principal", un bouton qui échange ce
            stream avec le principal (promoteToMain()).
-        Visibles seulement au survol de la tuile (ou au focus clavier du
-        bouton), et en permanence sur un écran tactile : tout est en CSS.
+        Les couronnes n'apparaissent qu'à partir de deux streams (classe
+        has-several de la zone). Le tout n'est visible qu'au survol de la
+        tuile (ou au focus clavier d'un bouton), et en permanence sur un écran
+        tactile : tout est en CSS.
       -->
-      <span class="player-card-main-floating" role="img"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 15L3.5 7l5 4L12 5l3.5 6 5-4L19 15z" /></svg></span>
-      <button class="player-card-promote" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 15L3.5 7l5 4L12 5l3.5 6 5-4L19 15z" /></svg></button>
+      <div class="player-card-tools">
+        <button class="player-card-tool player-card-reload" type="button" data-action="reload">${RELOAD_ICON_SVG}</button>
+        <span class="player-card-main-floating" role="img">${CROWN_ICON_SVG}</span>
+        <button class="player-card-tool player-card-promote" type="button" data-action="promote">${CROWN_ICON_SVG}</button>
+      </div>
       <!--
         Overlay transparent posé sur toute la tuile (voir
         .player-card-dragzone dans style.css) : permet de démarrer le
@@ -2561,11 +2602,21 @@
       toggleFeaturedChannel(channel);
     });
 
-    // "Mettre en principal" (couronne flottante) : bascule ce stream en
-    // principal (échange avec celui de la vignette principale, disposition
-    // inchangée).
-    card.querySelector(".player-card-promote").addEventListener("click", () => {
-      promoteToMain(channel);
+    // "Mettre en principal" (couronne, dans la barre ou dans le coin de la
+    // tuile) : bascule ce stream en principal (échange avec le stream
+    // principal, disposition inchangée).
+    card.querySelectorAll('[data-action="promote"]').forEach((button) => {
+      button.addEventListener("click", () => {
+        promoteToMain(channel);
+      });
+    });
+
+    // "Recharger" (flèche circulaire, dans la barre ou dans le coin de la
+    // tuile) : relance le lecteur de ce seul stream.
+    card.querySelectorAll('[data-action="reload"]').forEach((button) => {
+      button.addEventListener("click", () => {
+        reloadPlayer(channel);
+      });
     });
 
     card.querySelector(".player-card-remove").addEventListener("click", () => {
@@ -2615,6 +2666,117 @@
       }
     }
     state.players.delete(channel);
+  }
+
+  /**
+   * Bouton "Recharger" d'une tuile : détruit puis recrée le lecteur Twitch de
+   * CE SEUL stream — utile quand une vidéo est figée, en erreur ou très en
+   * retard sur le direct —, sans toucher aux autres lecteurs, à la disposition
+   * ni à l'ordre des streams.
+   *
+   * Le conteneur vidéo est remplacé par une copie VIDE (même `id`) plutôt que
+   * réutilisé : toutes les versions du SDK n'exposent pas `destroy()` (voir
+   * `unmountPlayer()`), et le nouveau lecteur s'ajouterait alors à côté de
+   * l'ancienne iframe. Retirer l'ancien conteneur du document décharge cette
+   * iframe à coup sûr.
+   *
+   * Le son est conservé : un lecteur qui avait le son le retrouve, un lecteur
+   * coupé reste coupé. Si l'état du lecteur est illisible (lecteur pas encore
+   * prêt, SDK jamais chargé), on applique la règle du premier affichage : seul
+   * le stream principal (emplacement 0, voir `applyGridLayout()`) a le son.
+   * @param {string} channel
+   */
+  function reloadPlayer(channel) {
+    const card = el.playersGrid.querySelector(`.player-card[data-channel="${CSS.escape(channel)}"]`);
+    const video = card && card.querySelector(".player-card-video");
+    if (!video) return;
+
+    let startsUnmuted = Boolean(currentLayout && currentLayout.slotByChannel.get(channel) === 0);
+    const player = state.players.get(channel);
+    if (player) {
+      try {
+        const muted = player.getMuted();
+        if (typeof muted === "boolean") startsUnmuted = !muted;
+      } catch (err) {
+        // Lecteur pas encore prêt : on garde la règle du premier affichage.
+      }
+    }
+
+    unmountPlayer(channel);
+    video.replaceWith(video.cloneNode(false));
+    mountPlayer(channel, startsUnmuted);
+  }
+
+  /**
+   * Échange le son de deux lecteurs : chacun prend l'état (coupé ou non) de
+   * l'autre. Appelé quand deux streams échangent leurs tuiles
+   * (`promoteToMain()`) : le son reste attaché à la TUILE — par défaut, le
+   * stream principal est celui qu'on écoute, donc celui qu'on bascule en
+   * principal prend le son et l'ancien principal est coupé. Sans effet si un
+   * lecteur n'est pas encore prêt (le SDK Twitch peut lever une erreur).
+   * @param {string} channelA
+   * @param {string} channelB
+   */
+  function swapPlayersAudio(channelA, channelB) {
+    const playerA = state.players.get(channelA);
+    const playerB = state.players.get(channelB);
+    if (!playerA || !playerB) return;
+    try {
+      const mutedA = playerA.getMuted();
+      const mutedB = playerB.getMuted();
+      if (mutedA === mutedB) return;
+      playerA.setMuted(mutedB);
+      playerB.setMuted(mutedA);
+    } catch (err) {
+      // Lecteur pas encore prêt : on laisse le son tel quel.
+    }
+  }
+
+  /**
+   * "Mettre en principal" (couronne d'une tuile : dans son coin au survol, ou
+   * dans sa barre en mode Réorganiser), qu'un modèle de disposition soit
+   * appliqué ou non : ÉCHANGE ce stream avec le stream PRINCIPAL, celui de
+   * l'emplacement 0 (le premier mis en avant, sinon le premier affiché : voir
+   * `applyGridLayout()`). Chacun prend la tuile de l'autre, la disposition ne
+   * bouge pas (les tailles appartiennent aux emplacements, voir
+   * `swapChannels()`), et le son suit la tuile principale
+   * (`swapPlayersAudio()`). Les autres streams restent à leur place, et aucune
+   * vidéo n'est rechargée.
+   *
+   * Avec une mise en avant active, ce sont les étoiles qui donnent les
+   * premiers emplacements (dans l'ordre de `state.featuredChannels`) : l'étoile
+   * du principal passe donc au stream promu. Deux favoris échangent leur rang ;
+   * un stream sans étoile prend celle du principal, qui la perd et va dans la
+   * tuile que le stream promu vient de quitter. Le nombre de favoris ne change
+   * pas, donc la disposition (et ses tailles ajustées à la main, mémorisées
+   * par nombre de favoris) non plus.
+   * @param {string} channel
+   */
+  function promoteToMain(channel) {
+    const visible = getVisibleChannels();
+    const activeFeatured = isFeatureSplitActive(visible) ? getActiveFeaturedChannels(visible) : [];
+    const main = activeFeatured.length > 0 ? activeFeatured[0] : visible[0];
+    if (!main || main === channel || !visible.includes(channel)) return;
+
+    if (activeFeatured.length > 0) {
+      state.featuredChannels = state.featuredChannels.map((featured) => {
+        if (featured === main) return channel;
+        if (featured === channel) return main;
+        return featured;
+      });
+    }
+    swapPlayersAudio(channel, main);
+    // Échange aussi l'ordre d'affichage : sans mise en avant, c'est lui qui
+    // donne les emplacements ; avec, il met l'ancien principal, parmi les
+    // streams sans étoile, exactement à la place du stream promu. Redessine la
+    // disposition et enregistre (étoiles comprises).
+    swapChannels(channel, main);
+    if (activeFeatured.length > 0) {
+      [channel, main].forEach((name) => {
+        const card = el.playersGrid.querySelector(`.player-card[data-channel="${CSS.escape(name)}"]`);
+        if (card) updateFeatureButtonUI(card, name);
+      });
+    }
   }
 
   /**
@@ -2847,8 +3009,8 @@
    * `reorderChannels()`, qui insère la chaîne déplacée et décale celles qui
    * sont entre les deux. Les tailles appartenant aux EMPLACEMENTS (section 5),
    * les deux streams échangent donc leurs tuiles, et la disposition reste
-   * identique. Utilisé par "Mettre en principal" (couronne d'une tuile quand
-   * un modèle de disposition s'applique, fin de la section 11).
+   * identique. Utilisé par "Mettre en principal" (couronne d'une tuile, voir
+   * `promoteToMain()`).
    * @param {string} channelA
    * @param {string} channelB
    */
@@ -3647,15 +3809,12 @@
    *    reste (calcul, redimensionnement, réorganisation, mémorisation) est la
    *    mécanique existante, inchangée.
    *  - Tant que l'écran a la forme du modèle (même nombre de streams, aucune
-   *    mise en avant : `getActiveTemplate()`), les tuiles portent une
-   *    couronne en haut à droite (hors mode Réorganiser), visible au survol
-   *    de la tuile (en permanence sur écran tactile) : pleine sur la
-   *    principale ; sur les autres, un bouton "Mettre en principal"
-   *    (`promoteToMain()`) qui ÉCHANGE ce stream avec le principal
-   *    (`swapChannels()`), son compris — la disposition, elle, ne bouge pas,
-   *    puisque les tailles appartiennent aux emplacements. En mode
-   *    Réorganiser, une couronne à côté de l'étoile signale la tuile
-   *    principale.
+   *    mise en avant : `getActiveTemplate()`), le modèle est signalé comme
+   *    appliqué dans sa liste et dans la galerie. C'est TOUT : appliquer un
+   *    modèle n'ouvre aucun "mode" à part. Les couronnes des tuiles (pleine
+   *    sur la principale, "Mettre en principal" sur les autres, voir
+   *    `promoteToMain()`) et le bouton "Recharger" existent avec ou sans
+   *    modèle (section 6).
    *
    * Les modèles se gèrent dans l'onglet "Modèles de disposition" de la fenêtre
    * "Changer les streams", à côté de celui des dispositions favorites. On les
@@ -4452,7 +4611,7 @@
     showTemplatePanel(template.name, template.id);
   }
 
-  /* ---- Liste des modèles, application, échange avec le principal ---- */
+  /* ---- Liste des modèles, application ---- */
 
   /**
    * Liste des modèles enregistrés (onglet "Modèles de disposition") : vignette,
@@ -4623,58 +4782,13 @@
   function deleteTemplate(id) {
     state.templates = state.templates.filter((template) => template.id !== id);
     // La forme reste affichée (c'est une disposition ajustée comme une autre,
-    // "Réinitialiser la vue" l'efface), mais plus rien n'est "principal".
+    // "Réinitialiser la vue" l'efface), mais aucun modèle n'est plus signalé
+    // comme appliqué.
     if (state.activeTemplateId === id) state.activeTemplateId = null;
     if (templateEditingId === id) templateEditingId = null;
     persistState();
     renderTemplatesList();
     applyGridLayout();
-  }
-
-  /**
-   * Échange le son de deux lecteurs : chacun prend l'état (coupé ou non) de
-   * l'autre. Appelé quand deux streams échangent leurs tuiles
-   * (`promoteToMain()`) : le son reste attaché à la VIGNETTE — par défaut, le
-   * stream principal est celui qu'on écoute, donc celui qu'on bascule en
-   * principal prend le son et l'ancien principal est coupé. Sans effet si un
-   * lecteur n'est pas encore prêt (le SDK Twitch peut lever une erreur).
-   * @param {string} channelA
-   * @param {string} channelB
-   */
-  function swapPlayersAudio(channelA, channelB) {
-    const playerA = state.players.get(channelA);
-    const playerB = state.players.get(channelB);
-    if (!playerA || !playerB) return;
-    try {
-      const mutedA = playerA.getMuted();
-      const mutedB = playerB.getMuted();
-      if (mutedA === mutedB) return;
-      playerA.setMuted(mutedB);
-      playerB.setMuted(mutedA);
-    } catch (err) {
-      // Lecteur pas encore prêt : on laisse le son tel quel.
-    }
-  }
-
-  /**
-   * "Mettre en principal" (couronne en haut à droite d'une tuile quand un
-   * modèle s'applique) :
-   * ÉCHANGE ce stream avec celui de la vignette principale — chacun prend la
-   * tuile de l'autre, la disposition ne bouge pas (voir `swapChannels()`), et
-   * le son suit la vignette principale (`swapPlayersAudio()`). Les autres
-   * streams restent à leur place.
-   * @param {string} channel
-   */
-  function promoteToMain(channel) {
-    const visible = getVisibleChannels();
-    if (!getActiveTemplate(visible)) return;
-    // Pas de mise en avant quand un modèle s'applique : l'emplacement 0 (la
-    // vignette principale) est celui du premier stream affiché.
-    const main = visible[0];
-    if (!main || main === channel || !visible.includes(channel)) return;
-
-    swapPlayersAudio(channel, main);
-    swapChannels(channel, main);
   }
 
   /* ---- Partage d'un modèle par un lien ---- */
