@@ -203,7 +203,8 @@
       tuile "+" dans la zone des lecteurs, ni de bouton "Changer les streams"
       dédié. Le menu contient donc, dans l'ordre : "+", "Réorganiser" (et, dans
       ce mode, "Réinitialiser la vue"), le chat, le bouton d'aide « i », le
-      bouton de langue « EN » / « FR », la bascule thème sombre/clair et, tout à
+      bouton de langue « EN » / « FR », la bascule thème sombre/clair, le
+      masquage automatique de l'en-tête (pour le plein écran F11) et, tout à
       droite, le lien GitHub.
       Pas de bouton "Connexion Twitch" ici : un flux OAuth avait été
       tenté (identité affichée dans le menu de StreamWall), mais retiré
@@ -355,6 +356,31 @@
             d="M20 14.5a8.5 8.5 0 0 1-11-11 8.5 8.5 0 1 0 11 11z"
             fill="currentColor"
           />
+        </svg>
+      </button>
+      <!--
+        Masquage automatique de l'en-tête (pensé pour le plein écran, touche
+        F11), entre la bascule de thème et le lien GitHub : activé, l'en-tête
+        sort de l'écran par le haut, le mur de streams récupère sa hauteur, et
+        l'en-tête ne revient que lorsque la souris touche le haut de l'écran (ou
+        au focus clavier). Tout est en CSS (html[data-header-autohide], voir
+        style.css) ; app.js ne fait que poser l'attribut (applyHeaderAutoHide(),
+        section 9). Le choix n'est PAS mémorisé : au chargement, l'en-tête est
+        toujours affiché (bouton non enfoncé). `aria-pressed` dit si le mode est
+        actif : le bouton prend alors un fond violet, pour qu'on voie d'un coup
+        d'œil que la barre se masque. Icône seule (flèche vers une barre) ; le
+        bouton n'existe que sur un appareil à souris (masqué sur écran tactile,
+        où rien ne permettrait de faire revenir l'en-tête).
+      -->
+      <button id="btn-toggle-header" class="menu-btn menu-btn--icon" type="button" aria-pressed="false"
+        aria-label="Masquer automatiquement la barre du haut (elle réapparaît au survol)"
+        title="Masquer la barre (réapparaît au survol du haut de l'écran)"
+        data-i18n-attr="aria-label:menu.autohide.label;title:menu.autohide.title">
+        <svg class="autohide-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 4h15" />
+          <path d="M12 20V9" />
+          <path d="M7.5 13.5L12 9l4.5 4.5" />
         </svg>
       </button>
       <!--
@@ -809,8 +835,8 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-menu-title">
               <h3 id="help-menu-title">Le menu du haut</h3>
               <figure class="help-figure">
-                <img src="assets/help/help-header.png" width="1520" height="192" loading="lazy" decoding="async"
-                  alt="Capture de l'en-tête : le logo StreamWall à gauche, puis les boutons Plus, Réorganiser, Afficher/Masquer le chat, Aide, le bouton de langue, la bascule de thème et le logo GitHub, numérotés de 1 à 7." />
+                <img src="assets/help/help-header.png?v=1.3.1" width="1520" height="192" loading="lazy" decoding="async"
+                  alt="Capture de l'en-tête : le logo StreamWall à gauche, puis les boutons Plus, Réorganiser, Afficher/Masquer le chat, Aide, le bouton de langue, la bascule de thème, le bouton de masquage de la barre et le logo GitHub, numérotés de 1 à 8." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Ajouter (+)</strong> : ouvre la fenêtre « Changer les streams » pour ajouter un stream ou
@@ -830,6 +856,11 @@
                   <code>?lang=en</code> pour ouvrir le site en anglais.</li>
                 <li><strong>Soleil / lune</strong> : passe du thème sombre au thème clair, et inversement
                   (voir <button type="button" class="help-link" data-help-target="help-theme">Thème clair / sombre</button>).</li>
+                <li><strong>Flèche vers le haut</strong> : masque automatiquement cette barre, pour laisser tout l'écran
+                  aux streams en <strong>plein écran (F11)</strong>. Elle réapparaît dès que la souris touche le haut de
+                  l'écran. Tant que le mode est actif, le bouton est <strong>violet</strong> ; cliquez à nouveau dessus
+                  pour garder la barre affichée. À l'ouverture du site, la barre est toujours affichée. Ce bouton
+                  n'existe pas sur écran tactile.</li>
                 <li><strong>Logo GitHub</strong> (tout à droite) : ouvre le code source du projet sur GitHub, dans un nouvel
                   onglet — votre mur de streams n'est pas quitté.</li>
               </ol>
@@ -840,8 +871,8 @@
             <section class="help-lang" lang="en" aria-labelledby="help-menu-title-en">
               <h3 id="help-menu-title-en">The top menu</h3>
               <figure class="help-figure">
-                <img src="assets/help/en/help-header.png" width="1520" height="192" loading="lazy" decoding="async"
-                  alt="Screenshot of the header: the StreamWall logo on the left, then the Plus, Rearrange, Show/Hide chat and Help buttons, the language button, the theme switch and the GitHub logo, numbered 1 to 7." />
+                <img src="assets/help/en/help-header.png?v=1.3.1" width="1520" height="192" loading="lazy" decoding="async"
+                  alt="Screenshot of the header: the StreamWall logo on the left, then the Plus, Rearrange, Show/Hide chat and Help buttons, the language button, the theme switch, the bar-hiding button and the GitHub logo, numbered 1 to 8." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Add (+)</strong>: opens the “Change streams” window to add a stream or
@@ -861,6 +892,11 @@
                   carry <code>?lang=en</code> to open the site in English.</li>
                 <li><strong>Sun / moon</strong>: switches from the dark theme to the light theme, and back
                   (see <button type="button" class="help-link" data-help-target="help-theme">Light / dark theme</button>).</li>
+                <li><strong>Up arrow</strong>: auto-hides this bar, to give the whole screen to the streams in
+                  <strong>full screen (F11)</strong>. It comes back as soon as the mouse touches the top of the screen.
+                  While the mode is on, the button is <strong>purple</strong>; click it again to keep the bar displayed.
+                  When you open the site, the bar is always displayed. This button does not exist on touch
+                  screens.</li>
                 <li><strong>GitHub logo</strong> (far right): opens the project's source code on GitHub, in a new
                   tab — your stream wall is not left.</li>
               </ol>
@@ -880,7 +916,7 @@
                 « Ajouter des streams » au milieu de la page.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-add-streams.png" width="936" height="712" loading="lazy" decoding="async"
+                <img src="assets/help/help-add-streams.png?v=1.3.1" width="936" height="712" loading="lazy" decoding="async"
                   alt="Capture de la fenêtre Changer les streams : champ de saisie, liste des chaînes avec cases à cocher et boutons de suppression, numérotés de 1 à 3." />
               </figure>
               <ol class="help-legend">
@@ -903,7 +939,7 @@
                 middle of the page.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-add-streams.png" width="936" height="712" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-add-streams.png?v=1.3.1" width="936" height="712" loading="lazy" decoding="async"
                   alt="Screenshot of the Change streams window: input field, list of channels with checkboxes and delete buttons, numbered 1 to 3." />
               </figure>
               <ol class="help-legend">
@@ -923,7 +959,7 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-wall-title">
               <h3 id="help-wall-title">Le mur et le son</h3>
               <figure class="help-figure">
-                <img src="assets/help/help-wall.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-wall.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture du mur de streams : quatre lecteurs vidéo qui se partagent tout l'écran en deux rangées de deux." />
               </figure>
               <ul>
@@ -958,7 +994,7 @@
             <section class="help-lang" lang="en" aria-labelledby="help-wall-title-en">
               <h3 id="help-wall-title-en">The wall and sound</h3>
               <figure class="help-figure">
-                <img src="assets/help/en/help-wall.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-wall.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot of the stream wall: four video players sharing the whole screen in two rows of two." />
               </figure>
               <ul>
@@ -1000,7 +1036,7 @@
                 gardent exactement la même place et la même taille dans les deux modes.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-reorder.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-reorder.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture du mode Réorganiser : chaque tuile porte une barre avec une poignée, les boutons Recharger, couronne, étoile et croix, et des poignées triangulaires dans les coins ; la couronne est violette sur la tuile principale, grise (Mettre en principal) sur les autres, et le menu porte les boutons Réinitialiser la vue et Modèles de disposition ; sept éléments sont numérotés." />
               </figure>
               <ol class="help-legend">
@@ -1031,7 +1067,7 @@
                 keep exactly the same place and the same size in both modes.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-reorder.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-reorder.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot of Rearrange mode: each tile has a bar with a handle, the Reload, crown, star and cross buttons, and triangular handles in the corners; the crown is purple on the main tile, grey (Make main) on the others, and the menu has the Reset view and Layout templates buttons; seven elements are numbered." />
               </figure>
               <ol class="help-legend">
@@ -1064,7 +1100,7 @@
                 l'étoile devient pleine (★). <strong>Deux streams au maximum</strong> peuvent être mis en avant.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-favorites.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-favorites.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture avec deux streams mis en avant : ils occupent chacun un quart de l'écran, côte à côte en haut, et les quatre autres tuiles se répartissent autour." />
               </figure>
               <ol class="help-legend">
@@ -1095,7 +1131,7 @@
                 the star becomes solid (★). <strong>At most two streams</strong> can be featured.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-favorites.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-favorites.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot with two featured streams: each takes a quarter of the screen, side by side at the top, and the four other tiles arrange themselves around them." />
               </figure>
               <ol class="help-legend">
@@ -1130,7 +1166,7 @@
                 restant en place.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-resize.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-resize.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture d'un stream agrandi par son coin bas droit : les autres tuiles se sont réorganisées autour de lui en gardant des tailles comparables ; trois éléments sont numérotés." />
               </figure>
               <ol class="help-legend">
@@ -1160,7 +1196,7 @@
                 staying in place.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-resize.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-resize.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot of a stream enlarged by its bottom-right corner: the other tiles have rearranged themselves around it while keeping comparable sizes; three elements are numbered." />
               </figure>
               <ol class="help-legend">
@@ -1188,7 +1224,7 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-chat-title">
               <h3 id="help-chat-title">Le chat</h3>
               <figure class="help-figure">
-                <img src="assets/help/help-chat.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-chat.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture avec le panneau de chat ouvert à droite : le menu déroulant du choix de chaîne et la case « Garder chargé » en haut, et la discussion en dessous ; trois éléments sont numérotés." />
               </figure>
               <ol class="help-legend">
@@ -1205,7 +1241,7 @@
             <section class="help-lang" lang="en" aria-labelledby="help-chat-title-en">
               <h3 id="help-chat-title-en">The chat</h3>
               <figure class="help-figure">
-                <img src="assets/help/en/help-chat.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-chat.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot with the chat panel open on the right: the channel drop-down and the “Keep loaded” box at the top, and the discussion below; three elements are numbered." />
               </figure>
               <ol class="help-legend">
@@ -1233,7 +1269,7 @@
                 fenêtre « Changer les streams » (bouton <strong>+</strong> du menu).
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-presets.png" width="936" height="444" loading="lazy" decoding="async"
+                <img src="assets/help/help-presets.png?v=1.3.1" width="936" height="440" loading="lazy" decoding="async"
                   alt="Capture de l'onglet Dispositions favorites de la fenêtre Changer les streams : le champ de nom et le bouton Enregistrer, puis une disposition avec son nom, l'icône de tailles mémorisées, et ses boutons Créer un modèle, de partage et de suppression, numérotés de 1 à 5." />
               </figure>
               <ol class="help-legend">
@@ -1275,7 +1311,7 @@
                 “Change streams” window (the <strong>+</strong> button of the menu).
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-presets.png" width="936" height="474" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-presets.png?v=1.3.1" width="936" height="470" loading="lazy" decoding="async"
                   alt="Screenshot of the Favorite layouts tab of the Change streams window: the name field and the Save button, then a layout with its name, the remembered-sizes icon, and its Create a template, share and delete buttons, numbered 1 to 5." />
               </figure>
               <ol class="help-legend">
@@ -1318,7 +1354,7 @@
                 des dispositions favorites, dans la fenêtre « Changer les streams ».
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-templates.png" width="936" height="522" loading="lazy" decoding="async"
+                <img src="assets/help/help-templates.png?v=1.3.1" width="936" height="526" loading="lazy" decoding="async"
                   alt="Capture de l'onglet Modèles de disposition : l'onglet, un modèle enregistré avec sa vignette, son nom, ses boutons Modifier et de partage, puis le bouton Créer un modèle, numérotés de 1 à 5." />
               </figure>
               <ol class="help-legend">
@@ -1337,7 +1373,7 @@
                 déroulant, posé par-dessus le mur.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-templates-panel.png" width="1800" height="860" loading="lazy" decoding="async"
+                <img src="assets/help/help-templates-panel.png?v=1.3.1" width="1800" height="860" loading="lazy" decoding="async"
                   alt="Capture du mode Réorganiser avec le panneau des modèles ouvert : le bouton du menu, la galerie des dispositions conseillées, le nom et le bouton Enregistrer le modèle, et la couronne du stream principal, numérotés de 1 à 4." />
               </figure>
               <ol class="help-legend">
@@ -1357,7 +1393,7 @@
                 manque encore, un message dit combien en ajouter.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-templates-wall.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture d'un mur de six streams disposé selon le modèle Principal + 5 : la couronne pleine de la grande tuile principale et la couronne Mettre en principal d'une petite tuile, numérotées 1 et 2, chaque tuile montrant aussi son bouton Recharger (tous montrés ensemble ici : ils n'apparaissent qu'au survol de leur tuile)." />
               </figure>
               <ol class="help-legend">
@@ -1390,7 +1426,7 @@
                 “Change streams” window.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-templates.png" width="936" height="522" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-templates.png?v=1.3.1" width="936" height="526" loading="lazy" decoding="async"
                   alt="Screenshot of the Layout templates tab: the tab, a saved template with its thumbnail, its name, its Edit and share buttons, then the Create a template button, numbered 1 to 5." />
               </figure>
               <ol class="help-legend">
@@ -1409,7 +1445,7 @@
                 the wall.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-templates-panel.png" width="1800" height="860" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-templates-panel.png?v=1.3.1" width="1800" height="860" loading="lazy" decoding="async"
                   alt="Screenshot of Rearrange mode with the templates panel open: the menu button, the gallery of suggested layouts, the name and the Save template button, and the main stream's crown, numbered 1 to 4." />
               </figure>
               <ol class="help-legend">
@@ -1429,7 +1465,7 @@
                 message tells how many to add.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-templates-wall.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-templates-wall.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot of a wall of six streams laid out with the Main + 5 template: the solid crown of the big main tile and the Make main crown of a small tile, numbered 1 and 2, each tile also showing its Reload button (all shown together here: they only appear when their tile is hovered)." />
               </figure>
               <ol class="help-legend">
@@ -1457,7 +1493,7 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-theme-title">
               <h3 id="help-theme-title">Thème clair / sombre</h3>
               <figure class="help-figure">
-                <img src="assets/help/help-light-theme.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/help-light-theme.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Capture du site en thème clair : en-tête blanc avec le logo à contour foncé, et la bascule de thème numérotée." />
               </figure>
               <ol class="help-legend">
@@ -1469,7 +1505,7 @@
             <section class="help-lang" lang="en" aria-labelledby="help-theme-title-en">
               <h3 id="help-theme-title-en">Light / dark theme</h3>
               <figure class="help-figure">
-                <img src="assets/help/en/help-light-theme.png" width="1100" height="620" loading="lazy" decoding="async"
+                <img src="assets/help/en/help-light-theme.png?v=1.3.1" width="1100" height="620" loading="lazy" decoding="async"
                   alt="Screenshot of the site in the light theme: white header with the dark-outlined logo, and the theme switch numbered." />
               </figure>
               <ol class="help-legend">
@@ -1654,7 +1690,19 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-versions-title">
               <h3 id="help-versions-title">Historique des versions</h3>
               <article class="help-version">
-                <h4>v1.3 <span class="help-version-badge">version actuelle</span></h4>
+                <h4>v1.3.1 <span class="help-version-badge">version actuelle</span></h4>
+                <p class="help-note">10 novembre 2026 · Barre masquée pour le plein écran</p>
+                <ul>
+                  <li>Nouveau bouton dans le menu, entre la bascule de thème et le logo GitHub : il masque
+                    automatiquement la barre du haut, pour laisser tout l'écran aux streams en plein écran (F11). La
+                    barre réapparaît dès que la souris touche le haut de l'écran ; le bouton, violet tant que le mode
+                    est actif, la garde à nouveau affichée. À l'ouverture du site, la barre est toujours
+                    affichée.</li>
+                  <li>Captures d'écran de l'aide mises à jour.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.3</h4>
                 <p class="help-note">12 octobre 2026 · Recharger une tuile, couronne partout</p>
                 <ul>
                   <li>Nouveau bouton « Recharger » sur chaque tuile : il relance le lecteur du stream associé (figé, en
@@ -1709,7 +1757,18 @@
             <section class="help-lang" lang="en" aria-labelledby="help-versions-title-en">
               <h3 id="help-versions-title-en">Version history</h3>
               <article class="help-version">
-                <h4>v1.3 <span class="help-version-badge">current version</span></h4>
+                <h4>v1.3.1 <span class="help-version-badge">current version</span></h4>
+                <p class="help-note">November 10, 2026 · Hidden bar for full screen</p>
+                <ul>
+                  <li>New button in the menu, between the theme switch and the GitHub logo: it auto-hides the top bar,
+                    to give the whole screen to the streams in full screen (F11). The bar comes back as soon as the
+                    mouse touches the top of the screen; the button, purple while the mode is on, keeps it displayed
+                    again. When you open the site, the bar is always displayed.</li>
+                  <li>Help screenshots updated.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.3</h4>
                 <p class="help-note">October 12, 2026 · Reload a tile, crown everywhere</p>
                 <ul>
                   <li>New “Reload” button on each tile: it restarts the player of that stream only (frozen, lagging…),

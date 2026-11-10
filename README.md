@@ -153,9 +153,11 @@ Python.
 - **Site bilingue, français et anglais** : le bouton **EN / FR** du menu traduit toute l'interface, aide et captures
   comprises. Le choix est mémorisé, et `?lang=en` dans l'adresse ouvre le site en anglais.
 - **Thème sombre ou clair**, avec un logo adapté à chacun.
+- **Barre du haut masquée pour le plein écran (F11)** : un bouton du menu (entre le thème et GitHub, violet quand il
+  est actif) la fait disparaître ; elle revient dès que la souris touche le haut de l'écran.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées, ainsi
-  que l'historique des versions (version actuelle : **v1.3**).
+  que l'historique des versions (version actuelle : **v1.3.1**).
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
 ## 🚀 Installation rapide
@@ -194,6 +196,7 @@ Ouvrez ensuite **http://localhost:8080**.
 | **Relancer un stream figé** | Survolez sa tuile, puis **⟳** en haut à droite : seul ce lecteur est rechargé |
 | **Partager mes streams** | Copiez l'adresse de la page (`…#chaine1/chaine2`) ou le lien d'une disposition favorite (tailles et favoris compris) |
 | **Partager une forme de mur** | Le bouton de partage d'un *modèle de disposition* |
+| **Profiter du plein écran (F11)** | Le bouton **flèche vers le haut** du menu masque la barre ; survolez le haut de l'écran pour la retrouver |
 | **Tout comprendre** | Bouton **ⓘ** du menu : l'aide intégrée |
 
 ## 🛠️ Technologies

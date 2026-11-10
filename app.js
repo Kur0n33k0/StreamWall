@@ -206,6 +206,10 @@
    *                 les en-têtes de lecteurs et les poignées de
    *                 redimensionnement)
    * - theme       : "dark" ou "light".
+   * - headerAutoHide : booléen, l'en-tête est-il masqué automatiquement (il ne
+   *                 réapparaît qu'au survol du haut de l'écran, voir
+   *                 `applyHeaderAutoHide()`, section 9) ? Volontairement NON
+   *                 mémorisé : à chaque chargement, l'en-tête est affiché.
    * - dragSourceChannel : mémorise la carte en cours de déplacement pendant
    *                       un drag and drop.
    * - presets     : dispositions favorites, sous la forme
@@ -243,6 +247,7 @@
     keptChats: [],
     reorderMode: false,
     theme: "dark",
+    headerAutoHide: false,
     dragSourceChannel: null,
     presets: [],
     featuredChannels: [],
@@ -275,6 +280,8 @@
     btnResetLayout: document.getElementById("btn-reset-layout"),
     btnToggleChat: document.getElementById("btn-toggle-chat"),
     btnToggleTheme: document.getElementById("btn-toggle-theme"),
+    // Masquage automatique de l'en-tête (plein écran), voir la section 9.
+    btnToggleHeader: document.getElementById("btn-toggle-header"),
     // Bouton de langue (« EN » / « FR »), voir la section 15.
     btnLang: document.getElementById("btn-lang"),
     btnEmptyAdd: document.getElementById("btn-empty-add"),
@@ -562,7 +569,8 @@
    * Sauvegarde l'état courant en localStorage (liste complète des chaînes
    * connues, visibilité du chat, chaîne de chat, mode Réorganiser, thème,
    * dispositions favorites, chaîne mise en avant, modèles de disposition et
-   * modèle appliqué).
+   * modèle appliqué). L'en-tête masqué ne l'est pas : il vaut pour la visite
+   * en cours seulement (voir `applyHeaderAutoHide()`).
    */
   function persistState() {
     try {
@@ -3228,7 +3236,7 @@
   }
 
   /* ==========================================================================
-   * 9. THÈME SOMBRE / CLAIR
+   * 9. THÈME SOMBRE / CLAIR, EN-TÊTE MASQUÉ AUTOMATIQUEMENT
    * ========================================================================== */
 
   /**
@@ -3248,6 +3256,29 @@
     // appliquer/retirer `darkpopout` et rester cohérent avec le thème de
     // l'appli (voir buildChatEmbedUrl() et renderChatOnly()).
     renderChatOnly();
+  }
+
+  /**
+   * Applique `state.headerAutoHide` : l'attribut `data-header-autohide` sur
+   * <html> active le masquage de l'en-tête, entièrement géré en CSS (voir
+   * "EN-TÊTE MASQUÉ AUTOMATIQUEMENT" dans style.css : l'en-tête remonte hors
+   * de l'écran et ne revient qu'au survol du haut de l'écran ou au focus
+   * clavier). Le mur de streams récupère la hauteur libérée : le
+   * ResizeObserver de la zone des lecteurs (section 16) recalcule la
+   * disposition, rien à faire ici.
+   *
+   * Le mode n'est PAS mémorisé (pas de clé localStorage, `persistState()`
+   * n'en sait rien) : à chaque chargement, l'en-tête est affiché par défaut,
+   * et le masquage ne vaut que pour la visite en cours.
+   */
+  function applyHeaderAutoHide() {
+    document.documentElement.toggleAttribute("data-header-autohide", state.headerAutoHide);
+    el.btnToggleHeader.setAttribute("aria-pressed", String(state.headerAutoHide));
+  }
+
+  function toggleHeaderAutoHide() {
+    state.headerAutoHide = !state.headerAutoHide;
+    applyHeaderAutoHide();
   }
 
   /* ==========================================================================
@@ -5402,6 +5433,7 @@
     });
 
     el.btnToggleTheme.addEventListener("click", toggleTheme);
+    el.btnToggleHeader.addEventListener("click", toggleHeaderAutoHide);
 
     // Langue (section 15) : le bouton bascule français <-> anglais ; après
     // chaque changement, i18n.js rappelle onLanguageChange(), qui refait les
@@ -5563,6 +5595,7 @@
     // `lang` du bouton de langue (voir updateLanguageButton()).
     updateLanguageButton();
     applyTheme();
+    applyHeaderAutoHide();
     updateChatPanelVisibility();
     updateReorderModeUI(); // applique aussi renderPlayersGrid() + applyGridLayout()
     renderChatSelect();

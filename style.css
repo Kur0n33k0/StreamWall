@@ -281,6 +281,31 @@ a.menu-btn {
   text-decoration: none;
 }
 
+/* Icône du bouton de masquage automatique de l'en-tête (#btn-toggle-header) :
+   même taille et même couleur que les autres icônes du menu. */
+.autohide-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* Mode actif (la barre se masque) : fond violet plein, comme un bouton
+   d'accent, et icône blanche (lisible sur le violet dans les deux thèmes) —
+   plus visible que la simple bordure violette des autres boutons enfoncés. */
+#btn-toggle-header[aria-pressed="true"] {
+  background: var(--twitch-purple);
+  border-color: var(--twitch-purple);
+}
+
+#btn-toggle-header[aria-pressed="true"]:hover {
+  background: var(--twitch-purple-hover);
+  border-color: var(--twitch-purple-hover);
+}
+
+#btn-toggle-header[aria-pressed="true"] .autohide-icon {
+  color: #fff;
+}
+
 .github-icon {
   width: 18px;
   height: 18px;
@@ -293,6 +318,75 @@ a.menu-btn {
 html[data-theme="dark"] .theme-icon--moon,
 html[data-theme="light"] .theme-icon--sun {
   display: none;
+}
+
+/* ==========================================================================
+   EN-TÊTE MASQUÉ AUTOMATIQUEMENT (plein écran, touche F11)
+   --------------------------------------------------------------------------
+   Mode activé par le bouton #btn-toggle-header (attribut `data-header-autohide`
+   sur <html>, posé par le script inline de index.html puis par app.js, voir
+   applyHeaderAutoHide()). L'en-tête sort alors du flux (`position: fixed`) :
+   le mur de streams récupère ses 56px de hauteur (le ResizeObserver d'app.js
+   recalcule la disposition des tuiles), et l'en-tête est remonté hors de
+   l'écran (`translateY(-100%)`). Il redescend PAR-DESSUS les vidéos :
+    - au survol. Les iframes Twitch captent la souris, la page ne verrait donc
+      jamais le curseur arriver en haut de l'écran : le pseudo-élément ::after,
+      une bande transparente de 6px accrochée SOUS l'en-tête (donc en haut de
+      l'écran quand il est remonté), est posé au-dessus d'elles et fait partie
+      de l'en-tête — le survoler, c'est survoler l'en-tête ;
+    - au focus clavier (Tab), `:focus-visible` plutôt que `:focus-within`, sinon
+      l'en-tête resterait affiché après un simple clic sur l'un de ses boutons ;
+    - tant que le panneau des modèles (#template-panel, enfant de l'en-tête)
+      est ouvert, pour qu'il ne disparaisse pas sous le curseur.
+   Le retrait attend 0,4s (`transition-delay`) : un écart de souris d'un
+   instant ne fait pas remonter l'en-tête. Réservé aux appareils à souris
+   (`hover: hover`) : sur écran tactile, rien ne permettrait de faire revenir
+   l'en-tête, le bouton y est donc masqué et l'en-tête reste normal.
+   `z-index: 50` : au-dessus des tuiles (jusqu'à 3), sous la modale (100).
+   ========================================================================== */
+
+@media (hover: hover) {
+  html[data-header-autohide] .app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    transform: translateY(-100%);
+    transition: transform 0.2s ease 0.4s, box-shadow 0.2s ease 0.4s;
+  }
+
+  /* `top: 100%` part du bas de la boîte de remplissage, donc au-dessus de la
+     bordure inférieure de l'en-tête (1px) : le `+ 1px` la saute, pour que la
+     bande couvre bien les 6 premiers pixels de l'écran. */
+  html[data-header-autohide] .app-header::after {
+    content: "";
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    height: 6px;
+  }
+
+  html[data-header-autohide] .app-header:hover,
+  html[data-header-autohide] .app-header:has(:focus-visible),
+  html[data-header-autohide] .app-header:has(.template-panel:not([hidden])) {
+    transform: none;
+    box-shadow: var(--shadow-modal);
+    transition-delay: 0s;
+  }
+}
+
+@media (hover: none) {
+  #btn-toggle-header {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-header-autohide] .app-header {
+    transition-duration: 0s;
+  }
 }
 
 /* ==========================================================================

@@ -166,13 +166,21 @@ données ni processus serveur.
   permanence sur écran tactile). En mode Réorganiser, les mêmes boutons sont
   dans la barre de la tuile (voir section 19).
 - Menu **« + » / "Réorganiser" / "Afficher-Masquer le chat" / aide « i » /
-  langue « EN » / thème / logo GitHub**, positionné en haut à droite de la page (pas de
+  langue « EN » / thème / masquage de la barre / logo GitHub**, positionné en haut à droite de la page (pas de
   bouton "Changer les streams" séparé dans le menu : voir le point sur le
   bouton « + » ci-dessus ; pas de bouton "Copier le lien" non plus : voir le
   point sur les dispositions favorites). Le **logo GitHub**, tout à droite,
   ouvre le dépôt du projet dans un nouvel onglet (voir "Lien GitHub du menu"
   dans la Personnalisation). Sur téléphone, « Afficher/Masquer le chat » se
   réduit à « Chat » pour que tout tienne.
+- **En-tête masqué automatiquement**, pour le plein écran (touche F11) : le
+  bouton **flèche vers le haut** du menu, entre le thème et GitHub (violet tant
+  qu'il est actif), fait remonter
+  l'en-tête hors de l'écran et donne sa hauteur au mur de streams. L'en-tête
+  redescend par-dessus les vidéos dès que la souris touche le haut de
+  l'écran (ou au focus clavier), et remonte quand elle s'en va. Réservé aux
+  appareils à souris. Le choix n'est pas mémorisé : à l'ouverture du site, la
+  barre est toujours affichée (voir section 20).
 - **Fenêtre d'aide** (bouton **« i »** du menu) : elle explique **toutes les
   options du site, avec des captures d'écran** numérotées et un sommaire
   cliquable — menu, ajout de streams, son, mode Réorganiser, mise en avant,
@@ -1430,7 +1438,7 @@ captures d'écran** : le menu, l'ajout de streams, le son, le mode
 Réorganiser, la mise en avant, le redimensionnement par les coins, le chat,
 les dispositions favorites, les modèles de disposition, le thème, le clavier
 et l'écran tactile, ce qui est mémorisé, et enfin l'historique des versions
-(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.2). Un sommaire à gauche permet d'aller directement à une
+(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.3.1). Un sommaire à gauche permet d'aller directement à une
 rubrique ; sur un écran étroit (≤ 720 px), il passe au-dessus du texte sous
 forme d'une rangée de boutons qui défile horizontalement.
 
@@ -1497,14 +1505,14 @@ seule peut donc être atteinte à la fois. Échap ferme l'une comme l'autre
 `<img loading="lazy">` : la fenêtre étant masquée tant qu'elle n'est pas
 ouverte, **aucune capture n'est téléchargée avant que l'utilisateur ne fasse
 défiler l'aide jusque-là**, et seul le jeu de la langue affichée l'est (elles
-pèsent de 31 à 550 Ko chacune, environ 2,5 Mo par langue). Les attributs
+pèsent de 29 à 530 Ko chacune, environ 2,7 Mo par langue). Les attributs
 `width`/`height` de chaque `<img>` sont les dimensions réelles du fichier :
 ils réservent la place, pour que le texte ne "saute" pas quand une capture
 arrive, et pour que les sauts du sommaire tombent au bon endroit.
 
 | Fichier | Ce qu'il montre | Pastilles |
 | --- | --- | --- |
-| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, langue, thème, logo GitHub (2× pour rester net) | 7 |
+| `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, langue, thème, masquage de la barre, logo GitHub (2× pour rester net) | 8 |
 | `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste (2×) | 3 |
 | `help-wall.png` | le mur de streams, sans rien d'autre | — |
 | `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles, couronne du stream principal, bouton « Modèles de disposition » du menu, bouton « Recharger » d'une tuile | 7 |
@@ -1549,20 +1557,42 @@ avec les mêmes noms de chaînes fictifs. Dans les deux
 cas, si la taille d'une capture change, mettez à jour les attributs
 `width`/`height` de son `<img>` dans `index.html`.
 
-Les trois captures touchées par la v1.3 (bouton « Recharger », couronne
-« Mettre en principal » sur toutes les tuiles) — `help-reorder.png`,
-`help-templates-panel.png` et `help-templates-wall.png`, dans les deux langues —
-ont été refaites le 12 octobre 2026 par un script réécrit sur ce principe (gardé
-hors du dépôt), aux mêmes dimensions. Ses réglages, pour rester cohérent avec les
-autres captures :
+Les **vingt-quatre captures** (les deux jeux) ont été refaites le 10 novembre
+2026, pour la v1.3.1 (bouton de masquage de la barre dans le menu), par un script
+réécrit sur ce principe et gardé hors du dépôt : un Chrome sans fenêtre piloté
+directement par le protocole DevTools (aucune dépendance), qui intercepte les
+requêtes (SDK Twitch et chat remplacés, tout autre domaine externe bloqué). Les
+tailles sont restées les mêmes, sauf `help-presets.png` (936 × 440, 936 × 470 en
+anglais) et `help-templates.png` (936 × 526), dont le texte a changé. Ses
+réglages, pour rester cohérent d'une capture à l'autre :
 
-- **états** : quatre streams en mode Réorganiser (1100 × 620) pour
-  `help-reorder.png` ; six streams en mode Réorganiser (1800 × 860), panneau des
-  modèles ouvert, « Principal + 5 » / « Main + 5 » appliqué par un clic dans la
-  galerie et le nom « Grand écran » / « Big screen » saisi (message du panneau
-  masqué) pour `help-templates-panel.png` ; le même modèle appliqué puis le mode
-  Réorganiser quitté (1100 × 620) pour `help-templates-wall.png`. Thème sombre,
-  aucune étoile, `streamwall:lang` = `fr` ou `en` ;
+- **états** (thème sombre sauf `help-light-theme.png`, en-tête affiché,
+  `streamwall:lang` = `fr` ou `en`) :
+  - `help-header.png` : quatre streams, fenêtre de 760 px de large (menu
+    compact du bloc ≤ 800 px), faux lecteurs masqués pour ne garder que le cadre
+    des tuiles, rognée aux 96 px du haut, en 2× ;
+  - `help-wall.png`, `help-light-theme.png` : quatre streams (1100 × 620) ;
+  - `help-reorder.png` : quatre streams en mode Réorganiser ;
+    `help-favorites.png` : six streams, les deux premiers mis en avant ;
+    `help-resize.png` : cinq streams, le premier agrandi (épingle
+    `{x0: 0, y0: 0, x1: 0.58, y1: 0.66}` sous la signature `0:5` de
+    `streamwall:layouts`) ;
+  - `help-chat.png` : trois streams, chat affiché sur la première chaîne ;
+  - fenêtre "Changer les streams" (1100 × 800, 2×, rognée autour de la fenêtre) :
+    `help-add-streams.png` avec trois chaînes cochées et une décochée, champ de
+    saisie au focus ; `help-presets.png` après l'enregistrement, par la fenêtre
+    elle-même, de « Soirée entre amis » / « Friends night » (trois streams, le
+    premier élargi) ; `help-templates.png` après l'enregistrement de
+    « Principal + 5 » / « Main + 5 » depuis le panneau des modèles. Messages de
+    confirmation et bouton « Valider » masqués ;
+  - six streams en mode Réorganiser (1800 × 860), panneau des modèles ouvert,
+    « Principal + 5 » / « Main + 5 » appliqué par un clic dans la galerie et le
+    nom « Grand écran » / « Big screen » saisi (message du panneau masqué) pour
+    `help-templates-panel.png` ; le même modèle appliqué puis le mode
+    Réorganiser quitté (1100 × 620) pour `help-templates-wall.png` ;
+- **faux chat** : la page `twitch.tv/embed/…/chat` est remplacée par sept
+  messages fictifs (pseudos colorés `alice`, `bob_42`, `chloe`…), en Segoe UI
+  13 px, sur le fond du thème ;
 - **faux lecteurs** (le SDK Twitch est remplacé avant le chargement de la page) :
   dégradé à 135° de `hsl(T 50% 30%)` à `hsl(T+45 55% 15%)`, avec la teinte T =
   210, 285, 150, 20, 330, 60 pour les six chaînes dans l'ordre ; deux disques
@@ -1580,8 +1610,10 @@ autres captures :
   `.player-card-main-floating`, sans transition).
 
 **Le menu sur téléphone.** Avec le bouton « + », le bouton « i », le bouton de
-langue et le lien GitHub, le menu compte sept éléments (six boutons — +,
-Réorganiser, chat, aide, langue, thème — et le lien) ; pour qu'ils tiennent tous
+langue et le lien GitHub, le menu compte sept éléments sur écran tactile (six
+boutons — +, Réorganiser, chat, aide, langue, thème — et le lien ; le bouton de
+masquage de la barre n'y existe pas, voir section 20) et huit dans une fenêtre
+étroite d'ordinateur ; pour qu'ils tiennent tous
 sur un écran de 360 px sans faire défiler le menu, le menu devient **compact**
 jusqu'à 600 px de large : le libellé « Afficher/Masquer le chat » se réduit à
 **« Chat »** (`.menu-btn-extra`, une partie du libellé masquée en CSS ;
@@ -1967,6 +1999,44 @@ sans étoile). Le nombre de favoris ne change pas, donc la disposition — et se
 tailles ajustées à la main, mémorisées par nombre de favoris (section 15) — non
 plus. Les icônes ★/☆ des deux tuiles sont mises à jour aussitôt
 (`updateFeatureButtonUI()`).
+
+### 20. En-tête masqué automatiquement (plein écran F11)
+
+Le bouton `#btn-toggle-header` du menu (flèche vers une barre, entre la bascule
+de thème et le lien GitHub) bascule `state.headerAutoHide`.
+`applyHeaderAutoHide()` (section 9 d'`app.js`) ne fait que poser ou retirer
+l'attribut `data-header-autohide` sur `<html>` et mettre à jour `aria-pressed` —
+le bouton prend alors un **fond violet** (icône blanche), plus visible que la
+simple bordure violette des autres boutons enfoncés, pour qu'on voie d'un coup
+d'œil que la barre se masque.
+
+**Le choix n'est pas mémorisé**, contrairement au thème ou au chat : aucune clé
+`localStorage`, `persistState()` l'ignore. À chaque chargement, l'en-tête est
+**affiché par défaut** (bouton non enfoncé) ; le masquage ne vaut que pour la
+visite en cours. Un visiteur qui rouvre le site trouve donc toujours le menu,
+sans avoir à deviner qu'il faut survoler le haut de l'écran.
+
+Tout le reste est en CSS (bloc "EN-TÊTE MASQUÉ AUTOMATIQUEMENT" de `style.css`) :
+
+- l'en-tête passe en `position: fixed` et sort du flux : `.app-main` récupère
+  ses 56px, et le `ResizeObserver` de la zone des lecteurs (section 4)
+  recalcule la disposition des tuiles, sans code spécifique ;
+- il est remonté hors de l'écran (`transform: translateY(-100%)`) et redescend
+  **par-dessus** les vidéos (ombre portée, `z-index: 50`, sous la modale) ;
+- **détection du survol** : les iframes Twitch captent les évènements de la
+  souris, la page ne voit donc jamais le curseur arriver en haut de l'écran.
+  Le pseudo-élément `.app-header::after` est une bande transparente de 6px
+  accrochée sous l'en-tête — donc tout en haut de l'écran quand il est remonté —
+  posée au-dessus des iframes ; elle fait partie de l'en-tête, donc la survoler
+  déclenche `.app-header:hover`. Revers : ces 6px du haut des tuiles et du chat
+  ne reçoivent plus les clics pendant que le mode est actif ;
+- l'en-tête reste aussi affiché au **focus clavier** (`:has(:focus-visible)` —
+  pas `:focus-within`, qui le garderait affiché après un simple clic sur l'un de
+  ses boutons) et tant que le **panneau des modèles** est ouvert ;
+- il ne remonte qu'après **0,4s** (`transition-delay`), pour pardonner un écart
+  de souris (animation coupée avec `prefers-reduced-motion`) ;
+- **écran tactile** (`hover: none`) : rien ne permettrait de faire revenir
+  l'en-tête, donc le mode n'y a aucun effet et le bouton est masqué.
 
 
 ## Lancer le projet en local
@@ -2425,6 +2495,14 @@ seconde avec l'interface en anglais), puis ajoutez dans chaque bloc de langue un
 `<ol class="help-legend">` (une ligne par pastille, dans l'ordre) ; donnez à
 l'`<img>` un `alt` descriptif, `loading="lazy"` et les `width`/`height`
 réels du fichier.
+
+**Après avoir refait une capture, changez le `?v=` de son adresse** (par exemple
+`assets/help/help-header.png?v=1.3.1` → `?v=1.4`, le numéro de la version
+publiée) : sinon le navigateur, qui a déjà l'image en cache sous la même adresse,
+continue d'afficher l'ancienne — un serveur sans consigne de cache (comme
+`python -m http.server`) la garde même plusieurs jours sans la revérifier, et
+l'hébergement GitHub Pages quelques minutes. Toutes les captures portent
+actuellement `?v=1.3.1`.
 
 ## Limitations connues
 

@@ -96,6 +96,8 @@
       "menu.chat.extra": "Afficher/Masquer le ",
       "menu.chat.word": "chat",
       "menu.chat.label": "Afficher/Masquer le chat",
+      "menu.autohide.label": "Masquer automatiquement la barre du haut (elle réapparaît au survol)",
+      "menu.autohide.title": "Masquer la barre (réapparaît au survol du haut de l'écran)",
       "menu.help.label": "Aide : découvrir les options de StreamWall",
       "menu.help.title": "Aide",
       // Le bouton de langue montre l'AUTRE langue (celle vers laquelle il bascule).
@@ -288,6 +290,8 @@
       "menu.chat.extra": "Show/Hide ",
       "menu.chat.word": "chat",
       "menu.chat.label": "Show/Hide chat",
+      "menu.autohide.label": "Auto-hide the top bar (it reappears on hover)",
+      "menu.autohide.title": "Hide the bar (reappears when hovering the top of the screen)",
       "menu.help.label": "Help: discover StreamWall's options",
       "menu.help.title": "Help",
       "menu.lang.text": "FR",
