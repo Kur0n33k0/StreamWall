@@ -46,7 +46,7 @@ une soirée entre amis ou plusieurs points de vue d'un même événement.
 - **Des modèles de disposition** : arrangez votre mur (ou partez d'une disposition conseillée comme « Principal + 5 ») et
   enregistrez sa forme ; vos streams s'y répartissent ensuite.
 - **Des boutons sur chaque tuile, au survol** : ⟳ recharge ce seul stream s'il est figé, et un clic sur la couronne bascule
-  son stream en principal (son compris) sans rien déranger — avec ou sans modèle.
+  son stream en principal, qui prend le son, sans rien déranger — avec ou sans modèle.
 - **Rien à installer, rien à créer** : c'est un simple site statique. Aucun compte, aucun serveur — vos réglages
   restent dans votre navigateur.
 
@@ -111,8 +111,8 @@ Python.
   - **⟳ Recharger** relance le lecteur de ce seul stream (figé, en retard sur le direct…) ; les autres continuent, et il
     garde son son ;
   - **la couronne** : pleine sur le stream principal ; sur les autres tuiles, **« Mettre en principal »** échange ce
-    stream avec le principal, son compris, **sans changer la disposition** ni recharger les vidéos (avec une mise en
-    avant, l'étoile du principal passe au stream promu).
+    stream avec le principal, **sans changer la disposition** ni recharger les vidéos ; le stream promu **prend le son**
+    et l'ancien principal est coupé (avec une mise en avant, l'étoile du principal passe au stream promu).
 - Rien ne reste sur la vidéo : ces boutons n'apparaissent qu'au survol de leur tuile (au focus clavier aussi, et en
   permanence sur écran tactile).
 
@@ -120,6 +120,8 @@ Python.
 - Bouton **＋** toujours visible dans le menu : saisissez un nom de chaîne ou collez son adresse `twitch.tv/…`.
 - Validation immédiate du nom, auto-complétion des chaînes déjà utilisées, cases à cocher pour masquer une chaîne
   sans l'oublier.
+- Badge **LIVE** (ou **HORS LIGNE**) à côté de chaque chaîne de la liste : vous voyez qui est en direct, même parmi
+  les chaînes que vous n'affichez pas. La liste est triée : les chaînes en direct d'abord, puis par ordre alphabétique.
 
 **Mode Réorganiser**
 - **Glisser-déposer** de n'importe quel point d'une tuile, ou **flèches du clavier**.
@@ -157,7 +159,7 @@ Python.
   est actif) la fait disparaître ; elle revient dès que la souris touche le haut de l'écran.
 - Lien vers le **code source** (logo GitHub, tout à droite du menu).
 - **Fenêtre d'aide intégrée** (bouton ⓘ) avec captures d'écran : toutes les options du site y sont expliquées, ainsi
-  que l'historique des versions (version actuelle : **v1.3.1**).
+  que l'historique des versions (version actuelle : **v1.3.2**).
 - Utilisable **au clavier**, avec gestion du focus dans les fenêtres.
 
 ## 🚀 Installation rapide
@@ -236,7 +238,8 @@ modifier. Autres hébergeurs (Netlify, Vercel, Nginx, Docker…) :
 StreamWall ne possède ni serveur ni base de données : **aucune donnée n'est envoyée à StreamWall**. Vos chaînes, vos
 favoris, vos tailles de tuiles, vos dispositions favorites et vos modèles de disposition sont enregistrés dans le
 `localStorage` de *votre* navigateur. Seuls les lecteurs et le chat, fournis par Twitch, communiquent avec Twitch et suivent ses propres
-règles.
+règles — ainsi que le badge LIVE de la liste des chaînes, qui demande au serveur d'images de Twitch si chaque chaîne
+est en direct (rien n'est envoyé ailleurs).
 
 ## 📁 Structure du projet
 
@@ -253,7 +256,7 @@ règles.
 
 ## 📖 Documentation
 
-La **[documentation technique](documentation.md)** détaille le fonctionnement interne (19 sections : affichage des
+La **[documentation technique](documentation.md)** détaille le fonctionnement interne (21 sections : affichage des
 streams, modèle de données, disposition dynamique, mise en avant, redimensionnement manuel, dispositions favorites,
 fenêtre d'aide, modèles de disposition, boutons des tuiles…), ainsi que :
 

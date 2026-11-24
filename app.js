@@ -99,10 +99,15 @@
  *  15. Boutons de chaque tuile (section 6), modèle appliqué ou non : au
  *      survol d'une tuile (hors mode Réorganiser), "Recharger" relance son
  *      seul lecteur (`reloadPlayer()`) et la couronne "Mettre en principal"
- *      échange ce stream avec le principal, son compris, sans changer la
- *      disposition (`promoteToMain()`) ; la tuile principale porte une
- *      couronne pleine. En mode Réorganiser, les mêmes boutons sont dans la
- *      barre de la tuile.
+ *      échange ce stream avec le principal, sans changer la disposition
+ *      (`promoteToMain()`) : le stream promu prend le son, l'ancien principal
+ *      est coupé ; la tuile principale porte une couronne pleine. En mode
+ *      Réorganiser, les mêmes boutons sont dans la barre de la tuile.
+ *  16. Badge "LIVE" / "HORS LIGNE" de chaque chaîne dans la liste de la
+ *      fenêtre "Changer les streams" (section 10) : le statut "en direct" est
+ *      demandé au CDN d'images de Twitch, sans clé ni backend
+ *      (`fetchChannelLiveStatus()`). La liste est triée : chaînes en direct
+ *      d'abord, puis ordre alphabétique (`getModalChannelsOrder()`).
  *
  * Aucune dépendance externe autre que le SDK officiel Twitch.
  * ============================================================================
@@ -2716,28 +2721,34 @@
   }
 
   /**
-   * Échange le son de deux lecteurs : chacun prend l'état (coupé ou non) de
-   * l'autre. Appelé quand deux streams échangent leurs tuiles
-   * (`promoteToMain()`) : le son reste attaché à la TUILE — par défaut, le
-   * stream principal est celui qu'on écoute, donc celui qu'on bascule en
-   * principal prend le son et l'ancien principal est coupé. Sans effet si un
-   * lecteur n'est pas encore prêt (le SDK Twitch peut lever une erreur).
-   * @param {string} channelA
-   * @param {string} channelB
+   * Donne le son au stream qu'on vient de basculer en principal
+   * (`promoteToMain()`) : son lecteur est TOUJOURS remis en son, et celui de
+   * l'ancien principal est coupé — s'il avait le son, il le perd ; s'il était
+   * déjà coupé, il le reste. On n'écoute donc jamais deux streams à la fois
+   * après un clic sur la couronne, et recliquer sur la couronne de l'ancien
+   * principal fait l'inverse.
+   *
+   * Jusqu'à la v1.3.1, les deux lecteurs ÉCHANGEAIENT leur état : si le
+   * principal avait été coupé à la main, le stream promu restait muet.
+   *
+   * Chaque lecteur est traité à part (le SDK Twitch peut lever une erreur sur
+   * un lecteur pas encore prêt) : l'un peut être réglé même si l'autre ne l'est
+   * pas.
+   * @param {string} promoted le stream qui devient principal
+   * @param {string} previousMain l'ancien principal
    */
-  function swapPlayersAudio(channelA, channelB) {
-    const playerA = state.players.get(channelA);
-    const playerB = state.players.get(channelB);
-    if (!playerA || !playerB) return;
-    try {
-      const mutedA = playerA.getMuted();
-      const mutedB = playerB.getMuted();
-      if (mutedA === mutedB) return;
-      playerA.setMuted(mutedB);
-      playerB.setMuted(mutedA);
-    } catch (err) {
-      // Lecteur pas encore prêt : on laisse le son tel quel.
-    }
+  function givePromotedStreamAudio(promoted, previousMain) {
+    const setMuted = (channel, muted) => {
+      const player = state.players.get(channel);
+      if (!player) return;
+      try {
+        player.setMuted(muted);
+      } catch (err) {
+        // Lecteur pas encore prêt : on laisse son son tel quel.
+      }
+    };
+    setMuted(previousMain, true);
+    setMuted(promoted, false);
   }
 
   /**
@@ -2747,8 +2758,8 @@
    * l'emplacement 0 (le premier mis en avant, sinon le premier affiché : voir
    * `applyGridLayout()`). Chacun prend la tuile de l'autre, la disposition ne
    * bouge pas (les tailles appartiennent aux emplacements, voir
-   * `swapChannels()`), et le son suit la tuile principale
-   * (`swapPlayersAudio()`). Les autres streams restent à leur place, et aucune
+   * `swapChannels()`), et le stream promu prend le son, l'ancien principal
+   * étant coupé (`givePromotedStreamAudio()`). Les autres streams restent à leur place, et aucune
    * vidéo n'est rechargée.
    *
    * Avec une mise en avant active, ce sont les étoiles qui donnent les
@@ -2773,7 +2784,7 @@
         return featured;
       });
     }
-    swapPlayersAudio(channel, main);
+    givePromotedStreamAudio(channel, main);
     // Échange aussi l'ordre d'affichage : sans mise en avant, c'est lui qui
     // donne les emplacements ; avec, il met l'ancien principal, parmi les
     // streams sans étoile, exactement à la place du stream promu. Redessine la
@@ -3377,6 +3388,185 @@
     el.modalAddInput.removeAttribute("aria-invalid");
   }
 
+  /* --------------------------------------------------------------------------
+   * Statut "en direct" des chaînes (badge LIVE de la liste des chaînes)
+   * --------------------------------------------------------------------------
+   * Savoir si une chaîne est en direct passe normalement par l'API Twitch
+   * (Helix, "Get Streams"), qui exige un `Client-Id` ET un jeton OAuth :
+   * impossible sans backend (voir `renderKnownChannelsDatalist()`). On
+   * s'appuie donc sur le CDN public de Twitch, qui sert l'aperçu d'une chaîne
+   * en direct à une adresse fixe :
+   *   https://static-cdn.jtvnw.net/previews-ttv/live_user_<chaîne>-80x45.jpg
+   * Chaîne en direct : l'image est servie telle quelle. Chaîne hors ligne (ou
+   * inexistante) : le CDN REDIRIGE vers une image générique
+   * `ttv-static/404_preview-80x45.jpg`. Le CDN autorise les requêtes d'une
+   * autre origine (CORS), donc `fetch()` voit l'adresse finale
+   * (`response.url`) : on n'envoie qu'une requête `HEAD` (aucune image
+   * téléchargée), sans cache navigateur (`no-store`). Aucune clé, aucun
+   * service tiers : la requête ne part que chez Twitch, comme les lecteurs.
+   *
+   * Limites : c'est un comportement du CDN, pas une API documentée (s'il
+   * change, la vérification échoue et AUCUN badge ne s'affiche, sans autre
+   * effet) ; l'aperçu n'est rafraîchi par Twitch que toutes les quelques
+   * minutes, donc un live qui vient de commencer ou de s'arrêter peut mettre
+   * un peu de temps à être signalé.
+   *
+   * Le résultat de chaque chaîne est gardé `LIVE_STATUS_TTL` ms : rouvrir la
+   * fenêtre ne relance pas toutes les requêtes, et la liste est revérifiée à
+   * ce rythme tant que la fenêtre reste ouverte (`startLiveStatusRefresh()`).
+   */
+
+  /** Durée de validité d'un statut "en direct" (ms). */
+  const LIVE_STATUS_TTL = 60 * 1000;
+
+  /**
+   * Statut connu de chaque chaîne : `live` vaut `true` (en direct), `false`
+   * (hors ligne) ou `null` (pas encore vérifiée, ou vérification impossible) ;
+   * `pending` évite de lancer deux requêtes à la fois pour la même chaîne.
+   * @type {Map<string, {live: boolean|null, checkedAt: number, pending: boolean}>}
+   */
+  const liveStatuses = new Map();
+
+  /** Minuterie de revérification pendant que la fenêtre est ouverte. */
+  let liveStatusTimer = null;
+
+  /**
+   * Demande au CDN de Twitch si une chaîne est en direct.
+   * @param {string} channel
+   * @returns {Promise<boolean|null>} `null` si la réponse est inexploitable
+   */
+  function fetchChannelLiveStatus(channel) {
+    const url = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${encodeURIComponent(channel)}-80x45.jpg`;
+    return fetch(url, { method: "HEAD", cache: "no-store" })
+      .then((response) => {
+        if (!response.ok || !response.url) return null;
+        return !/\/404_preview[^/]*$/.test(response.url);
+      })
+      .catch(() => null);
+  }
+
+  /**
+   * Vérifie le statut des chaînes connues dont le résultat est absent ou
+   * périmé, et met à jour leur badge dès que la réponse arrive.
+   */
+  function refreshLiveStatuses() {
+    const now = Date.now();
+    state.entries.forEach(({ name }) => {
+      const known = liveStatuses.get(name);
+      if (known && (known.pending || now - known.checkedAt < LIVE_STATUS_TTL)) return;
+
+      const record = { live: known ? known.live : null, checkedAt: now, pending: true };
+      liveStatuses.set(name, record);
+      fetchChannelLiveStatus(name).then((live) => {
+        record.live = live;
+        record.pending = false;
+        record.checkedAt = Date.now();
+        scheduleLiveStatusDisplay();
+      });
+    });
+  }
+
+  /** Revérifie la liste à intervalle régulier tant que la fenêtre est ouverte. */
+  function startLiveStatusRefresh() {
+    stopLiveStatusRefresh();
+    refreshLiveStatuses();
+    liveStatusTimer = setInterval(refreshLiveStatuses, LIVE_STATUS_TTL);
+  }
+
+  function stopLiveStatusRefresh() {
+    if (liveStatusTimer !== null) clearInterval(liveStatusTimer);
+    liveStatusTimer = null;
+  }
+
+  /**
+   * Affiche le badge d'une chaîne selon son statut connu : « LIVE » (rouge) en
+   * direct, « HORS LIGNE » (discret) sinon, rien tant que le statut est
+   * inconnu.
+   * @param {HTMLElement} badge
+   * @param {string} channel
+   */
+  function applyLiveBadge(badge, channel) {
+    const known = liveStatuses.get(channel);
+    const live = known ? known.live : null;
+    badge.hidden = live === null;
+    badge.classList.toggle("is-live", live === true);
+    badge.classList.toggle("is-offline", live === false);
+    if (live === null) return;
+    badge.textContent = t(live ? "modal.channel.live" : "modal.channel.offline");
+    badge.title = t(live ? "modal.channel.live.title" : "modal.channel.offline.title", { channel });
+  }
+
+  /** Comparaison alphabétique des noms de chaînes (sans tenir compte de la
+   *  casse ; `numeric` range "chaine2" avant "chaine10"). */
+  const channelNameCollator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+
+  /**
+   * Ordre de la liste des chaînes de la fenêtre : les chaînes EN DIRECT
+   * d'abord, puis toutes les autres (hors ligne, ou statut pas encore connu),
+   * chaque groupe par ordre alphabétique. Ce n'est qu'un ordre d'AFFICHAGE :
+   * `state.entries` (l'ordre des tuiles sur le mur) n'est pas touché.
+   * @returns {Array<{name: string, visible: boolean}>}
+   */
+  function getModalChannelsOrder() {
+    const isLive = (name) => {
+      const known = liveStatuses.get(name);
+      return Boolean(known && known.live === true);
+    };
+    return state.entries
+      .slice()
+      .sort((a, b) => Number(isLive(b.name)) - Number(isLive(a.name)) || channelNameCollator.compare(a.name, b.name));
+  }
+
+  /** Évite de redessiner la liste une fois par réponse quand plusieurs
+   *  statuts arrivent en même temps. */
+  let liveStatusDisplayScheduled = false;
+
+  /**
+   * Un statut vient d'arriver : met à jour les badges, et RÉORDONNE la liste
+   * si une chaîne change de groupe (en direct / pas en direct). Rien à faire
+   * si la fenêtre est fermée (elle sera dessinée à jour à l'ouverture).
+   */
+  function scheduleLiveStatusDisplay() {
+    if (liveStatusDisplayScheduled) return;
+    liveStatusDisplayScheduled = true;
+    requestAnimationFrame(() => {
+      liveStatusDisplayScheduled = false;
+      if (el.modalOverlay.hidden) return;
+
+      const rows = Array.from(el.modalChannelsList.querySelectorAll(".modal-channel-row"));
+      const shownOrder = rows.map((row) => row.dataset.channel).join("\n");
+      const wantedOrder = getModalChannelsOrder().map((entry) => entry.name).join("\n");
+      if (shownOrder === wantedOrder) {
+        rows.forEach((row) => applyLiveBadge(row.querySelector(".modal-channel-live"), row.dataset.channel));
+      } else {
+        rerenderModalChannelsListKeepingFocus();
+      }
+    });
+  }
+
+  /**
+   * Redessine la liste des chaînes sans perdre la place de l'utilisateur :
+   * même défilement, et le focus clavier revient sur le même élément (case à
+   * cocher ou croix) de la même chaîne, à sa nouvelle position.
+   */
+  function rerenderModalChannelsListKeepingFocus() {
+    const active = document.activeElement;
+    const activeRow = active && el.modalChannelsList.contains(active) ? active.closest(".modal-channel-row") : null;
+    const focusedChannel = activeRow ? activeRow.dataset.channel : null;
+    const focusedClass = activeRow ? active.classList[0] : null;
+    const scrollTop = el.modalChannelsList.scrollTop;
+
+    renderModalChannelsList();
+
+    el.modalChannelsList.scrollTop = scrollTop;
+    if (focusedChannel && focusedClass) {
+      const target = el.modalChannelsList.querySelector(
+        `.modal-channel-row[data-channel="${CSS.escape(focusedChannel)}"] .${focusedClass}`
+      );
+      if (target) target.focus();
+    }
+  }
+
   function renderModalChannelsList() {
     el.modalChannelsList.innerHTML = "";
 
@@ -3388,16 +3578,22 @@
       return;
     }
 
-    state.entries.forEach((entry) => {
+    // En direct d'abord, puis par ordre alphabétique (getModalChannelsOrder()).
+    getModalChannelsOrder().forEach((entry) => {
       const row = document.createElement("li");
       row.className = "modal-channel-row";
+      row.dataset.channel = entry.name;
 
+      // Badge « LIVE » / « HORS LIGNE » juste à gauche de la croix : rempli
+      // par applyLiveBadge(), masqué tant que le statut n'est pas connu.
       const checkboxId = `modal-checkbox-${entry.name}`;
       row.innerHTML = `
         <input type="checkbox" class="modal-channel-checkbox" id="${checkboxId}" ${entry.visible ? "checked" : ""} />
         <label for="${checkboxId}" class="modal-channel-label">${entry.name}</label>
+        <span class="modal-channel-live" hidden></span>
         <button type="button" class="modal-channel-forget">×</button>
       `;
+      applyLiveBadge(row.querySelector(".modal-channel-live"), entry.name);
       row.querySelector(".modal-channel-forget").setAttribute("aria-label", t("modal.channel.forget", { channel: entry.name }));
 
       row.querySelector(".modal-channel-checkbox").addEventListener("change", (event) => {
@@ -3424,6 +3620,9 @@
     addChannelEntry(result.name);
     el.modalAddInput.value = "";
     renderModalChannelsList();
+    // La chaîne ajoutée n'a pas encore de statut : seule elle est vérifiée
+    // (celui des autres est encore valide).
+    refreshLiveStatuses();
     el.modalAddInput.focus();
   }
 
@@ -5001,10 +5200,14 @@
     selectModalTab(modalTab);
     el.modalOverlay.hidden = false;
     el.modalAddInput.focus();
+    // Badges « LIVE » de la liste des chaînes (section 10) : vérifiés à
+    // l'ouverture, puis revérifiés tant que la fenêtre reste ouverte.
+    startLiveStatusRefresh();
   }
 
   function closeModal() {
     el.modalOverlay.hidden = true;
+    stopLiveStatusRefresh();
   }
 
   /**

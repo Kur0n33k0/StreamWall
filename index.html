@@ -916,8 +916,8 @@
                 « Ajouter des streams » au milieu de la page.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/help-add-streams.png?v=1.3.1" width="936" height="712" loading="lazy" decoding="async"
-                  alt="Capture de la fenêtre Changer les streams : champ de saisie, liste des chaînes avec cases à cocher et boutons de suppression, numérotés de 1 à 3." />
+                <img src="assets/help/help-add-streams.png?v=1.3.2" width="936" height="712" loading="lazy" decoding="async"
+                  alt="Capture de la fenêtre Changer les streams : champ de saisie, liste des chaînes avec cases à cocher, badges LIVE ou HORS LIGNE et boutons de suppression, numérotés de 1 à 4." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Champ de saisie</strong> : tapez le nom d'une chaîne (par exemple <code>zerator</code>) ou
@@ -926,6 +926,12 @@
                   en auto-complétion les chaînes déjà utilisées sur cet appareil.</li>
                 <li><strong>Case à cocher</strong> : coche = la chaîne est affichée ; décochée, elle disparaît
                   du mur mais reste dans la liste pour la remettre plus tard.</li>
+                <li><strong>LIVE / HORS LIGNE</strong> : indique si la chaîne est <strong>en direct</strong> en ce moment
+                  (badge rouge « LIVE ») ou non (« HORS LIGNE »), qu'elle soit affichée sur le mur ou non. C'est vérifié à
+                  l'ouverture de la fenêtre, puis chaque minute tant qu'elle reste ouverte ; un live qui vient de
+                  commencer ou de s'arrêter peut mettre quelques minutes à être signalé. La liste est <strong>triée</strong> :
+                  les chaînes en direct d'abord, puis les autres, chaque groupe par ordre alphabétique (l'ordre des tuiles
+                  sur le mur, lui, ne change pas).</li>
                 <li><strong>Croix « × »</strong> : oublie définitivement la chaîne (elle sort de la liste).</li>
               </ol>
               <p>« Valider », la touche Échap ou un clic à côté de la fenêtre la referme.</p>
@@ -939,8 +945,8 @@
                 middle of the page.
               </p>
               <figure class="help-figure">
-                <img src="assets/help/en/help-add-streams.png?v=1.3.1" width="936" height="712" loading="lazy" decoding="async"
-                  alt="Screenshot of the Change streams window: input field, list of channels with checkboxes and delete buttons, numbered 1 to 3." />
+                <img src="assets/help/en/help-add-streams.png?v=1.3.2" width="936" height="712" loading="lazy" decoding="async"
+                  alt="Screenshot of the Change streams window: input field, list of channels with checkboxes, LIVE or OFFLINE badges and delete buttons, numbered 1 to 4." />
               </figure>
               <ol class="help-legend">
                 <li><strong>Input field</strong>: type a channel name (for example <code>zerator</code>) or
@@ -949,6 +955,11 @@
                   suggests the channels already used on this device.</li>
                 <li><strong>Checkbox</strong>: ticked = the channel is displayed; unticked, it disappears
                   from the wall but stays in the list so you can bring it back later.</li>
+                <li><strong>LIVE / OFFLINE</strong>: shows whether the channel is <strong>live</strong> right now (red
+                  “LIVE” badge) or not (“OFFLINE”), whether it is displayed on the wall or not. It is checked when the
+                  window opens, then every minute while it stays open; a live that has just started or stopped may take
+                  a few minutes to show. The list is <strong>sorted</strong>: live channels first, then the others, each
+                  group in alphabetical order (the order of the tiles on the wall does not change).</li>
                 <li><strong>Cross “×”</strong>: forgets the channel for good (it leaves the list).</li>
               </ol>
               <p>“Done”, the Escape key or a click outside the window closes it.</p>
@@ -981,8 +992,9 @@
                   son son (ou son silence).</li>
                 <li><strong>La couronne</strong>, à partir de deux streams : pleine et violette sur le stream principal ;
                   sur les autres, c'est le bouton <strong>« Mettre en principal »</strong> : ce stream et le principal
-                  <strong>échangent leurs places</strong>, et le son passe avec. La disposition ne change pas, les
-                  autres streams non plus, et aucune vidéo n'est rechargée. Si le principal est mis en avant (★), son
+                  <strong>échangent leurs places</strong>, et le stream promu <strong>prend le son</strong> : l'ancien
+                  principal est coupé (même si vous l'aviez coupé vous-même, le stream promu a le son). La disposition ne
+                  change pas, les autres streams non plus, et aucune vidéo n'est rechargée. Si le principal est mis en avant (★), son
                   étoile passe au stream promu.</li>
               </ul>
               <p>
@@ -1016,8 +1028,9 @@
                   it keeps its sound (or its silence).</li>
                 <li><strong>The crown</strong>, from two streams on: solid and purple on the main stream; on the others,
                   it is the <strong>“Make main”</strong> button: this stream and the main one <strong>swap
-                  places</strong>, and the sound goes with it. The layout does not change, nor do the other streams, and
-                  no video is reloaded. If the main stream is featured (★), its star goes to the promoted stream.</li>
+                  places</strong>, and the promoted stream <strong>gets the sound</strong>: the former main stream is
+                  muted (even if you had muted it yourself, the promoted stream gets the sound). The layout does not
+                  change, nor do the other streams, and no video is reloaded. If the main stream is featured (★), its star goes to the promoted stream.</li>
               </ul>
               <p>
                 Nothing stays over the video: the buttons disappear when the mouse leaves the tile. With the keyboard,
@@ -1399,8 +1412,8 @@
               <ol class="help-legend">
                 <li><strong>La couronne pleine</strong> : la vignette principale, avec le son.</li>
                 <li><strong>Mettre en principal</strong> (la couronne en haut à droite des autres tuiles) : ce stream et le
-                  principal <strong>échangent leurs places</strong>, et le son passe avec. La disposition ne change pas, les
-                  autres streams non plus.</li>
+                  principal <strong>échangent leurs places</strong> ; le stream promu prend le son et l'ancien principal est
+                  coupé. La disposition ne change pas, les autres streams non plus.</li>
               </ol>
               <p>
                 Ces couronnes ne sont <strong>pas réservées aux modèles</strong> : un modèle n'est qu'une organisation
@@ -1471,8 +1484,8 @@
               <ol class="help-legend">
                 <li><strong>The solid crown</strong>: the main tile, with the sound.</li>
                 <li><strong>Make main</strong> (the crown at the top right of the other tiles): this stream and the main one
-                  <strong>swap places</strong>, and the sound goes with it. The layout does not change, nor do the other
-                  streams.</li>
+                  <strong>swap places</strong>; the promoted stream gets the sound and the former main stream is muted. The
+                  layout does not change, nor do the other streams.</li>
               </ol>
               <p>
                 These crowns are <strong>not reserved for templates</strong>: a template is just a saved arrangement, and
@@ -1690,7 +1703,19 @@
             <section class="help-lang" lang="fr" aria-labelledby="help-versions-title">
               <h3 id="help-versions-title">Historique des versions</h3>
               <article class="help-version">
-                <h4>v1.3.1 <span class="help-version-badge">version actuelle</span></h4>
+                <h4>v1.3.2 <span class="help-version-badge">version actuelle</span></h4>
+                <p class="help-note">24 novembre 2026 · Son de la couronne, chaînes en direct</p>
+                <ul>
+                  <li>Un clic sur la couronne « Mettre en principal » donne toujours le son au stream promu, et coupe
+                    le son du précédent. Avant, les deux échangeaient leur son : si le principal avait été coupé, le
+                    stream promu restait muet.</li>
+                  <li>La liste des chaînes de la fenêtre « Changer les streams » indique, si
+                    chaque chaîne est en direct (« LIVE ») ou non (« HORS LIGNE »).</li>
+                  <li>La liste des streams est triée : les chaînes en direct d'abord, puis les autres, par ordre alphabétique.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.3.1</h4>
                 <p class="help-note">10 novembre 2026 · Barre masquée pour le plein écran</p>
                 <ul>
                   <li>Nouveau bouton dans le menu, entre la bascule de thème et le logo GitHub : il masque
@@ -1757,7 +1782,19 @@
             <section class="help-lang" lang="en" aria-labelledby="help-versions-title-en">
               <h3 id="help-versions-title-en">Version history</h3>
               <article class="help-version">
-                <h4>v1.3.1 <span class="help-version-badge">current version</span></h4>
+                <h4>v1.3.2 <span class="help-version-badge">current version</span></h4>
+                <p class="help-note">November 24, 2026 · Crown sound, live channels</p>
+                <ul>
+                  <li>Clicking the “Make main” crown always gives the sound to the promoted stream, and mutes the former
+                    main stream. Before, the two swapped their sound: if the main stream had been muted, the promoted
+                    stream stayed silent.</li>
+                  <li>The channel list of the “Change streams” window shows, left of the cross, whether each channel is
+                    live (“LIVE”) or not (“OFFLINE”).</li>
+                  <li>This list is sorted: live channels first, then the others, in alphabetical order.</li>
+                </ul>
+              </article>
+              <article class="help-version">
+                <h4>v1.3.1</h4>
                 <p class="help-note">November 10, 2026 · Hidden bar for full screen</p>
                 <ul>
                   <li>New button in the menu, between the theme switch and the GitHub logo: it auto-hides the top bar,

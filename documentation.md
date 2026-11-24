@@ -159,12 +159,19 @@ données ni processus serveur.
   lecteur de ce seul stream (figé, en retard sur le direct…) en gardant son
   son ; à partir de deux streams, une **couronne** pleine signale le stream
   principal, et sur les autres tuiles la couronne **« Mettre en principal »**
-  **échange** ce stream avec le principal, son compris, **sans changer la
-  disposition** ni recharger les vidéos — avec une mise en avant, l'étoile du
-  principal passe au stream promu. Rien ne reste sur la vidéo : les boutons
+  **échange** ce stream avec le principal **sans changer la disposition** ni
+  recharger les vidéos ; le stream promu **prend le son** et l'ancien principal
+  est coupé — avec une mise en avant, l'étoile du principal passe au stream
+  promu. Rien ne reste sur la vidéo : les boutons
   n'apparaissent qu'au survol de leur tuile (au focus clavier aussi, et en
   permanence sur écran tactile). En mode Réorganiser, les mêmes boutons sont
   dans la barre de la tuile (voir section 19).
+- **Badge LIVE dans la liste des chaînes** (fenêtre "Changer les streams") :
+  à gauche de la croix, « LIVE » en rouge si la chaîne est en direct, « HORS
+  LIGNE » sinon — pour toutes les chaînes connues, affichées ou non. Vérifié à
+  l'ouverture de la fenêtre puis chaque minute, sans clé ni backend. La liste
+  est **triée** : chaînes en direct d'abord, puis les autres, par ordre
+  alphabétique (voir section 21).
 - Menu **« + » / "Réorganiser" / "Afficher-Masquer le chat" / aide « i » /
   langue « EN » / thème / masquage de la barre / logo GitHub**, positionné en haut à droite de la page (pas de
   bouton "Changer les streams" séparé dans le menu : voir le point sur le
@@ -1438,7 +1445,7 @@ captures d'écran** : le menu, l'ajout de streams, le son, le mode
 Réorganiser, la mise en avant, le redimensionnement par les coins, le chat,
 les dispositions favorites, les modèles de disposition, le thème, le clavier
 et l'écran tactile, ce qui est mémorisé, et enfin l'historique des versions
-(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.3.1). Un sommaire à gauche permet d'aller directement à une
+(rubrique `#help-versions`, la plus récente en haut, actuellement la v1.3.2). Un sommaire à gauche permet d'aller directement à une
 rubrique ; sur un écran étroit (≤ 720 px), il passe au-dessus du texte sous
 forme d'une rangée de boutons qui défile horizontalement.
 
@@ -1513,7 +1520,7 @@ arrive, et pour que les sauts du sommaire tombent au bon endroit.
 | Fichier | Ce qu'il montre | Pastilles |
 | --- | --- | --- |
 | `help-header.png` | le menu du haut : « + », Réorganiser, chat, aide, langue, thème, masquage de la barre, logo GitHub (2× pour rester net) | 8 |
-| `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste (2×) | 3 |
+| `help-add-streams.png` | le haut de la fenêtre "Changer les streams" : saisie, liste, badges LIVE / HORS LIGNE (2×) | 4 |
 | `help-wall.png` | le mur de streams, sans rien d'autre | — |
 | `help-reorder.png` | le mode Réorganiser : barre d'outils et poignées des tuiles, couronne du stream principal, bouton « Modèles de disposition » du menu, bouton « Recharger » d'une tuile | 7 |
 | `help-favorites.png` | deux streams mis en avant | 2 |
@@ -1580,7 +1587,10 @@ réglages, pour rester cohérent d'une capture à l'autre :
   - `help-chat.png` : trois streams, chat affiché sur la première chaîne ;
   - fenêtre "Changer les streams" (1100 × 800, 2×, rognée autour de la fenêtre) :
     `help-add-streams.png` avec trois chaînes cochées et une décochée, champ de
-    saisie au focus ; `help-presets.png` après l'enregistrement, par la fenêtre
+    saisie au focus, les deux premières en direct (badge LIVE) et les deux
+    autres hors ligne, liste triée (en direct d'abord) — refaite pour la v1.3.2 (24 novembre 2026, adresse
+    `?v=1.3.2`), le script répondant lui-même aux requêtes du CDN de Twitch
+    (section 21) ; `help-presets.png` après l'enregistrement, par la fenêtre
     elle-même, de « Soirée entre amis » / « Friends night » (trois streams, le
     premier élargi) ; `help-templates.png` après l'enregistrement de
     « Principal + 5 » / « Main + 5 » depuis le panneau des modèles. Messages de
@@ -1984,10 +1994,14 @@ contrairement à `reorderChannels()` (section 7), qui insère et décale les
 streams entre les deux. Les tailles appartenant aux emplacements (section 15),
 **la disposition ne bouge pas** : seules les deux vidéos changent de tuile, les
 autres restent en place. Les cartes sont déplacées par `moveCardBefore()`
-(section 7) : avec `moveBefore()`, **aucune vidéo n'est rechargée**. Le **son
-suit la tuile** : `swapPlayersAudio()` échange l'état coupé/non coupé des deux
-lecteurs (`getMuted()` / `setMuted()` du SDK Twitch), donc le stream basculé en
-principal prend le son et l'ancien principal est coupé.
+(section 7) : avec `moveBefore()`, **aucune vidéo n'est rechargée**. Le
+**stream promu prend le son** : `givePromotedStreamAudio()` remet son lecteur
+en son et coupe celui de l'ancien principal (`setMuted()` du SDK Twitch, chaque
+lecteur à part pour qu'une erreur sur l'un n'empêche pas de régler l'autre).
+On n'écoute donc jamais deux streams à la fois après un clic sur la couronne,
+et recliquer sur la couronne de l'ancien principal fait l'inverse. Jusqu'à la
+v1.3.1, les deux lecteurs **échangeaient** leur état coupé/non coupé : si le
+principal avait été coupé à la main, le stream promu restait muet.
 
 **Avec une mise en avant.** Quand une étoile est active (section 5), ce sont les
 étoiles qui donnent les premiers emplacements, dans l'ordre de
@@ -2037,6 +2051,55 @@ Tout le reste est en CSS (bloc "EN-TÊTE MASQUÉ AUTOMATIQUEMENT" de `style.css`
   de souris (animation coupée avec `prefers-reduced-motion`) ;
 - **écran tactile** (`hover: none`) : rien ne permettrait de faire revenir
   l'en-tête, donc le mode n'y a aucun effet et le bouton est masqué.
+
+### 21. Badge LIVE de la liste des chaînes
+
+Dans la fenêtre "Changer les streams", chaque ligne de la liste des chaînes
+porte, juste à gauche de la croix, un badge `.modal-channel-live` : **« LIVE »**
+(fond rouge Twitch) si la chaîne est en direct, **« HORS LIGNE »** / « OFFLINE »
+(texte secondaire, simple contour) sinon, et rien tant que le statut est
+inconnu. Toutes les chaînes connues sont concernées, affichées sur le mur ou
+non.
+
+**Comment le statut est obtenu, sans backend.** L'API officielle (Helix, "Get
+Streams") exige un `Client-Id` et un jeton OAuth, comme pour l'auto-complétion
+(section 11) : impossible sans serveur. StreamWall s'appuie donc sur le CDN
+public de Twitch, qui sert l'aperçu d'une chaîne en direct à une adresse fixe,
+`https://static-cdn.jtvnw.net/previews-ttv/live_user_<chaîne>-80x45.jpg`. En
+direct, l'image est servie telle quelle ; hors ligne (ou chaîne inexistante),
+le CDN **redirige** vers une image générique `ttv-static/404_preview-80x45.jpg`.
+Le CDN autorisant les requêtes d'une autre origine (CORS), `fetch()` voit
+l'adresse finale (`response.url`) : `fetchChannelLiveStatus()` n'envoie qu'une
+requête `HEAD` (aucune image téléchargée), sans cache navigateur
+(`cache: "no-store"`). Aucune clé, aucun service tiers : la requête ne part que
+chez Twitch, comme les lecteurs et le chat.
+
+**Quand.** `openModal()` lance `startLiveStatusRefresh()` : vérification de
+toutes les chaînes, puis nouvelle vérification chaque minute tant que la fenêtre
+reste ouverte ; `closeModal()` l'arrête. Chaque résultat est gardé
+`LIVE_STATUS_TTL` (60 s) dans `liveStatuses` : rouvrir la fenêtre ne relance pas
+toutes les requêtes, et une chaîne ajoutée est vérifiée aussitôt
+(`handleModalAddChannel()`). `applyLiveBadge()` affiche le badge au rendu de la
+liste, et `scheduleLiveStatusDisplay()` le met à jour quand la réponse arrive
+(voir le tri ci-dessous).
+
+**Tri de la liste.** `getModalChannelsOrder()` range les chaînes en direct
+d'abord, puis toutes les autres (hors ligne ou statut inconnu), chaque groupe
+par ordre alphabétique (`Intl.Collator`, sans tenir compte de la casse,
+`numeric` pour ranger « chaine2 » avant « chaine10 »). Ce n'est qu'un ordre
+d'**affichage** : `state.entries`, qui donne l'ordre des tuiles sur le mur,
+n'est pas modifié. À l'ouverture, avant les premières réponses, la liste est
+donc simplement alphabétique ; quand les statuts arrivent,
+`scheduleLiveStatusDisplay()` (une fois par image, pour regrouper les réponses)
+met les badges à jour et, si une chaîne change de groupe, redessine la liste
+avec `rerenderModalChannelsListKeepingFocus()` : même défilement, et le focus
+clavier revient sur la même case à cocher ou la même croix.
+
+**Limites.** C'est un comportement du CDN, pas une API documentée : s'il change,
+la réponse devient inexploitable et **aucun badge** ne s'affiche, sans autre
+effet. Twitch ne rafraîchit l'aperçu que toutes les quelques minutes : un live
+qui vient de commencer ou de s'arrêter peut mettre un peu de temps à être
+signalé. Hors ligne et chaîne inexistante ne sont pas distingués.
 
 
 ## Lancer le projet en local
@@ -2501,8 +2564,8 @@ réels du fichier.
 publiée) : sinon le navigateur, qui a déjà l'image en cache sous la même adresse,
 continue d'afficher l'ancienne — un serveur sans consigne de cache (comme
 `python -m http.server`) la garde même plusieurs jours sans la revérifier, et
-l'hébergement GitHub Pages quelques minutes. Toutes les captures portent
-actuellement `?v=1.3.1`.
+l'hébergement GitHub Pages quelques minutes. Les captures portent actuellement
+`?v=1.3.1`, sauf `help-add-streams.png` (`?v=1.3.2`, refaite pour le badge LIVE).
 
 ## Limitations connues
 

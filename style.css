@@ -1612,6 +1612,38 @@ html[data-theme="light"] .template-panel-editing {
   background: #e91916;
 }
 
+/* Badge de statut d'une chaîne, juste à gauche de la croix (voir
+   applyLiveBadge() dans app.js) : « LIVE » en rouge Twitch quand la chaîne est
+   en direct, « HORS LIGNE » discret (texte secondaire, simple contour) sinon.
+   Masqué (`hidden`) tant que le statut n'est pas connu. */
+.modal-channel-live {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.modal-channel-live[hidden] {
+  display: none;
+}
+
+.modal-channel-live.is-live {
+  background: #e91916;
+  border-color: #e91916;
+  color: #fff;
+}
+
+.modal-channel-live.is-offline {
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 .modal-channels-empty {
   padding: 16px 10px;
   text-align: center;
